@@ -1,0 +1,498 @@
+openapi: 3.0.3
+info:
+  title: Spoo.me API
+  description: Spoo.me is a free and open-source URL shortening service that provides powerful features for creating and managing shortened URLs with comprehensive analytics.
+  version: 0.0.1
+  contact:
+    name: Spoo.me Support
+    url: https://spoo.me/contact
+    email: support@spoo.me
+  license:
+    name: Apache 2.0
+    url: https://github.com/spoo-me/url-shortener/blob/main/LICENSE
+servers:
+  - url: https://spoo.me
+    description: Production server
+paths:
+  /:
+    post:
+      summary: Shorten Long URLs
+      description: This endpoint allows you to shorten a URL. The request payload must contain the URL to be shortened, along with optional parameters for customization.
+      operationId: shortenUrl
+      tags:
+        - URL Shortening
+      parameters:
+        - name: Accept
+          in: header
+          required: true
+          description: Must be set to application/json to receive JSON responses
+          schema:
+            type: string
+            enum:
+              - application/json
+            default: application/json
+          example: application/json
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - url
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: The long URL to be shortened. Must include a valid protocol (http/https) and follow RFC-1034 & RFC-2727 standards.
+                  example: https://example.com
+                alias:
+                  type: string
+                  maxLength: 15
+                  pattern: ^[a-zA-Z0-9]+$
+                  description: Custom alias for the shortened URL. Must be alphanumeric and under 15 characters. Anything beyond 15 characters will be **stripped by the API**.
+                  example: example
+                password:
+                  type: string
+                  minLength: 8
+                  description: Password to access the shortened URL. Must be at least 8 characters long, contain at least one letter, one number, and one special character ('@' or '.').
+                  example: SuperStrongPassword@18322
+                max-clicks:
+                  type: integer
+                  minimum: 1
+                  description: Maximum number of clicks allowed for the shortened URL. Must be a positive integer.
+                  example: 10
+                block-bots:
+                  type: boolean
+                  description: Whether to block bots from accessing the shortened URL.
+                  example: false
+      responses:
+        '200':
+          description: URL successfully shortened
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  short_url:
+                    type: string
+                    format: uri
+                    description: The shortened URL
+                    example: https://spoo.me/example
+        '400':
+          description: Bad Request - Various validation errors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UrlError:
+                  summary: Invalid or missing URL
+                  value:
+                    error: UrlError
+                    message: Invalid or missing URL
+                AliasError:
+                  summary: Invalid or taken alias
+                  value:
+                    error: AliasError
+                    message: Alias is invalid or already taken
+                PasswordError:
+                  summary: Password requirements not met
+                  value:
+                    error: PasswordError
+                    message: Password does not meet requirements
+                MaxClicksError:
+                  summary: Invalid max-clicks value
+                  value:
+                    error: MaxClicksError
+                    message: Max clicks must be a positive integer
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: RateLimitError
+                message: Rate limit exceeded. Please try again later.
+  /emoji:
+    post:
+      summary: Create Emoji URLs
+      description: Spoo.me provides the ability to shorten URLs with custom emojis, creating fun and memorable shortened links.
+      operationId: createEmojiUrl
+      tags:
+        - URL Shortening
+      parameters:
+        - name: Accept
+          in: header
+          required: true
+          description: Must be set to application/json to receive JSON responses
+          schema:
+            type: string
+            enum:
+              - application/json
+            default: application/json
+          example: application/json
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - url
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: The long URL to be shortened. Must include a valid protocol (http/https) and follow RFC-1034 & RFC-2727 standards.
+                  example: https://example.com
+                emojies:
+                  type: string
+                  maxLength: 15
+                  description: Custom emoji sequence for the shortened URL. Must contain only emojis, no other character is allowed. Anything beyond 15 emojis will be **stripped by the API**.
+                  example: 🐍🐍
+                password:
+                  type: string
+                  minLength: 8
+                  description: Password to access the shortened URL. Must be at least 8 characters long, contain at least one letter, one number, and one special character ('@' or '.').
+                  example: Python.Snake63
+                max-clicks:
+                  type: integer
+                  minimum: 1
+                  description: Maximum number of clicks allowed for the shortened URL. Must be a positive integer.
+                  example: 1000
+                block-bots:
+                  type: boolean
+                  description: Whether to block bots from accessing the shortened URL.
+                  example: false
+      responses:
+        '200':
+          description: Emoji URL successfully created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  short_url:
+                    type: string
+                    format: uri
+                    description: The shortened URL with emojis
+                    example: https://spoo.me/🐍🐍
+        '400':
+          description: Bad Request - Various validation errors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UrlError:
+                  summary: Invalid or missing URL
+                  value:
+                    error: UrlError
+                    message: Invalid or missing URL
+                EmojiError:
+                  summary: Invalid or taken emoji sequence
+                  value:
+                    error: EmojiError
+                    message: Emoji sequence is invalid or already taken
+                PasswordError:
+                  summary: Password requirements not met
+                  value:
+                    error: PasswordError
+                    message: Password does not meet requirements
+                MaxClicksError:
+                  summary: Invalid max-clicks value
+                  value:
+                    error: MaxClicksError
+                    message: Max clicks must be a positive integer
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: RateLimitError
+                message: Rate limit exceeded. Please try again later.
+  /stats/{shortCode}:
+    post:
+      summary: Get URL Statistics
+      description: This endpoint allows you to retrieve comprehensive statistics about a shortened URL, including click analytics, browser data, geographical information, and more.
+      operationId: getUrlStatistics
+      tags:
+        - Analytics
+      parameters:
+        - name: shortCode
+          in: path
+          required: true
+          description: The short code of the URL. Can represent the short code of both regular and emoji URLs.
+          schema:
+            type: string
+          example: exa
+      requestBody:
+        required: false
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+                  description: Password of the shortened URL if it's password protected. Required only for password-protected URLs.
+                  example: Example@12
+      responses:
+        '200':
+          description: URL statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UrlStatistics'
+        '400':
+          description: Invalid password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: PasswordError
+                message: Invalid password
+        '404':
+          description: URL not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: UrlError
+                message: The requested URL never existed
+  /export/{shortCode}/{exportFormat}:
+    post:
+      summary: Export URL Data
+      description: This endpoint allows you to export comprehensive data of your shortened URL in multiple formats. The response contains raw data in the specified format.
+      operationId: exportUrlData
+      tags:
+        - Data Export
+      parameters:
+        - name: shortCode
+          in: path
+          required: true
+          description: The short code of the URL you want to export data for. Can represent the short code of both regular and emoji URLs.
+          schema:
+            type: string
+          example: exa
+        - name: exportFormat
+          in: path
+          required: true
+          description: The format for data export
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - xlsx
+              - xml
+          example: json
+      requestBody:
+        required: false
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+                  description: Password of the shortened URL if it's password protected. Required only for password-protected URLs.
+                  example: Example@12
+      responses:
+        '200':
+          description: Data exported successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UrlStatistics'
+            application/zip:
+              schema:
+                $ref: '#/components/schemas/BinaryData'
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                $ref: '#/components/schemas/BinaryData'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/XmlData'
+        '400':
+          description: Bad Request - Invalid password or format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                PasswordError:
+                  summary: Invalid password
+                  value:
+                    error: PasswordError
+                    message: Invalid password
+                FormatError:
+                  summary: Invalid export format
+                  value:
+                    error: FormatError
+                    message: Invalid export format
+        '404':
+          description: URL not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: UrlError
+                message: The requested URL never existed
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error type identifier
+        message:
+          type: string
+          description: Human-readable error message
+      required:
+        - error
+        - message
+    UrlStatistics:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: The short code of the shortened URL
+        short_code:
+          type: string
+          description: The short code of the shortened URL
+        url:
+          type: string
+          format: uri
+          description: Original long URL that the short link redirects to
+        total-clicks:
+          type: integer
+          description: Total number of clicks since the short link was created
+        total_unique_clicks:
+          type: integer
+          description: Total number of unique clicks since the short link was created
+        creation-date:
+          type: string
+          format: date
+          description: Date when the short link was created
+        last-click:
+          type: string
+          format: date-time
+          description: Timestamp of the last time the short link was accessed
+          nullable: true
+        last-click-browser:
+          type: string
+          description: Last browser used to access the short link
+          nullable: true
+        last-click-os:
+          type: string
+          description: Last operating system used to access the short link
+          nullable: true
+        average_daily_clicks:
+          type: number
+          format: float
+          description: Average clicks per day since the link was created
+        average_weekly_clicks:
+          type: number
+          format: float
+          description: Average clicks per week since the link was created
+        average_monthly_clicks:
+          type: number
+          format: float
+          description: Average clicks per month since the link was created
+        average_redirection_time:
+          type: number
+          format: float
+          description: Average redirection time of the short link in milliseconds
+        max-clicks:
+          type: integer
+          description: Maximum clicks set by the user
+          nullable: true
+        password:
+          type: string
+          description: Password set by the user
+          nullable: true
+        expired:
+          type: boolean
+          description: Whether the link has expired
+          nullable: true
+        block-bots:
+          type: boolean
+          description: Whether bots are blocked from accessing the short link
+        counter:
+          type: object
+          description: Data about clicks per day since the link was created
+          additionalProperties:
+            type: integer
+        unique_counter:
+          type: object
+          description: Data about unique clicks per day since the link was created
+          additionalProperties:
+            type: integer
+        browser:
+          type: object
+          description: Data about the browsers used to access the short link
+          additionalProperties:
+            type: integer
+        unique_browser:
+          type: object
+          description: Data about unique browsers used to access the short link
+          additionalProperties:
+            type: integer
+        os_name:
+          type: object
+          description: Data about the operating systems used to access the short link
+          additionalProperties:
+            type: integer
+        unique_os_name:
+          type: object
+          description: Data about unique operating systems used to access the short link
+          additionalProperties:
+            type: integer
+        country:
+          type: object
+          description: Data about the countries from which the short link was accessed
+          additionalProperties:
+            type: integer
+        unique_country:
+          type: object
+          description: Data about unique countries from which the short link was accessed
+          additionalProperties:
+            type: integer
+        referrer:
+          type: object
+          description: Data about the referrers from which the short link was accessed
+          additionalProperties:
+            type: integer
+        unique_referrer:
+          type: object
+          description: Data about unique referrers from which the short link was accessed
+          additionalProperties:
+            type: integer
+        bots:
+          type: object
+          description: Data about the bots that accessed the short link
+          additionalProperties:
+            type: integer
+    BinaryData:
+      type: string
+      format: binary
+      description: Binary file data
+    XmlData:
+      type: string
+      description: XML formatted data
+tags:
+  - name: URL Shortening
+    description: Operations for creating shortened URLs
+  - name: Analytics
+    description: Operations for retrieving URL analytics and statistics
+  - name: Data Export
+    description: Operations for exporting URL data in various formats

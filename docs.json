@@ -8,7 +8,6 @@
     "dark": "#7C3AED"
   },
   "favicon": "/images/logo/logo.png",
-
   "navigation": {
     "groups": [
       {
@@ -17,12 +16,7 @@
       },
       {
         "group": "API Reference",
-        "pages": [
-          "api-reference/shorten-url",
-          "api-reference/emoji-url",
-          "api-reference/url-statistics",
-          "api-reference/export-data"
-        ]
+        "openApi": "openapi.json"
       },
       {
         "group": "Tools & Libraries",
@@ -35,9 +29,14 @@
           "self-hosting/setting-up-mongo",
           "self-hosting/setting-up-redis",
           "self-hosting/creating-discord-webhooks",
-          "self-hosting/cloud-deployment",
-          "self-hosting/docker-deployment",
-          "self-hosting/local-development"
+          {
+            "group": "Deployment",
+            "pages": [
+              "self-hosting/cloud-deployment",
+              "self-hosting/docker-deployment",
+              "self-hosting/local-development"
+            ]
+          }
         ]
       }
     ]
