@@ -1,6 +1,7 @@
 ---
 title: "Spoo.me Python SDK"
 description: ""
+icon: "package"
 ---
 
 The official Python library makes it easy to integrate Spoo.me's URL shortening service into your Python applications.
@@ -158,62 +159,85 @@ except SpooMeError as e:
 
 ### Shortener Class
 
-<Fields>
-  <Field name="shorten()" type="method">
-    Shortens a URL with optional parameters
-    
-    **Parameters:**
-    - `url` (str): The URL to shorten
-    - `alias` (str, optional): Custom alias
-    - `password` (str, optional): Password protection
-    - `max_clicks` (int, optional): Maximum number of clicks
-    - `block_bots` (bool, optional): Block bots from accessing
-    
-    **Returns:** Shortened URL string
-  </Field>
-  
-  <Field name="emoji_shorten()" type="method">
-    Creates emoji-based shortened URLs
-    
-    **Parameters:**
-    - `url` (str): The URL to shorten
-    - `emojies` (str, optional): Custom emoji sequence
-    - `password` (str, optional): Password protection
-    - `max_clicks` (int, optional): Maximum number of clicks
-    - `block_bots` (bool, optional): Block bots from accessing
-    
-    **Returns:** Shortened URL string with emojis
-  </Field>
-</Fields>
+#### `shorten()`
+
+Shortens a URL with optional parameters. Returns a shortened URL string.
+
+<ParamField path="url" type="string" required>
+  The URL to shorten. Must be a valid HTTP or HTTPS URL.
+</ParamField>
+
+<ParamField path="alias" type="string">
+  Custom alias for the shortened URL. If not provided, a random short code will be generated.
+</ParamField>
+
+<ParamField path="password" type="string">
+  Password protection for the shortened URL. Users will need to enter this password to access the original URL.
+</ParamField>
+
+<ParamField path="max_clicks" type="integer">
+  Maximum number of clicks allowed for this shortened URL. Once reached, the URL will become inactive.
+</ParamField>
+
+<ParamField path="block_bots" type="boolean">
+  Whether to block bots from accessing the shortened URL. Default is `false`.
+</ParamField>
+
+#### `emoji_shorten()`
+
+Creates emoji-based shortened URLs. Returns a shortened URL string with emojis.
+
+<ParamField path="url" type="string" required>
+  The URL to shorten. Must be a valid HTTP or HTTPS URL.
+</ParamField>
+
+<ParamField path="emojies" type="string">
+  Custom emoji sequence for the shortened URL. If not provided, random emojis will be used.
+</ParamField>
+
+<ParamField path="password" type="string">
+  Password protection for the shortened URL. Users will need to enter this password to access the original URL.
+</ParamField>
+
+<ParamField path="max_clicks" type="integer">
+  Maximum number of clicks allowed for this shortened URL. Once reached, the URL will become inactive.
+</ParamField>
+
+<ParamField path="block_bots" type="boolean">
+  Whether to block bots from accessing the shortened URL. Default is `false`.
+</ParamField>
 
 ### Statistics Class
 
-<Fields>
-  <Field name="get_stats()" type="method">
-    Retrieves statistics for a shortened URL
-    
-    **Parameters:**
-    - `short_code` (str): The short code of the URL
-    - `password` (str, optional): Password if URL is protected
-    
-    **Returns:** Dictionary containing detailed statistics
-  </Field>
-</Fields>
+#### `get_stats()`
+
+Retrieves statistics for a shortened URL. Returns a dictionary containing detailed statistics.
+
+<ParamField path="short_code" type="string" required>
+  The short code of the URL for which to retrieve statistics.
+</ParamField>
+
+<ParamField path="password" type="string">
+  Password if the URL is protected. Required only for password-protected URLs.
+</ParamField>
 
 ### DataExport Class
 
-<Fields>
-  <Field name="export_data()" type="method">
-    Exports URL data in various formats
-    
-    **Parameters:**
-    - `short_code` (str): The short code of the URL
-    - `format` (str): Export format ("json", "csv", "xlsx", "xml")
-    - `password` (str, optional): Password if URL is protected
-    
-    **Returns:** Raw data in the specified format
-  </Field>
-</Fields>
+#### `export_data()`
+
+Exports URL data in various formats. Returns raw data in the specified format.
+
+<ParamField path="short_code" type="string" required>
+  The short code of the URL for which to export data.
+</ParamField>
+
+<ParamField path="format" type="string" required>
+  Export format. Supported formats: `"json"`, `"csv"`, `"xlsx"`, `"xml"`.
+</ParamField>
+
+<ParamField path="password" type="string">
+  Password if the URL is protected. Required only for password-protected URLs.
+</ParamField>
 
 ## Configuration
 

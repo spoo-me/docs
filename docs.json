@@ -16,7 +16,31 @@
       },
       {
         "group": "API Reference",
-        "openApi": "openapi.json"
+        "openApi": "openapi.json",
+        "pages": [
+          {
+            "group": "Shorten URL",
+            "icon": "unlink",
+            "pages": [
+              "api-reference/url-shortening/shorten-long-urls",
+              "api-reference/url-shortening/create-emoji-urls"
+            ]
+          },
+          {
+            "group": "URL Statistics",
+            "icon": "chart-spline",
+            "pages": [
+              "api-reference/analytics/get-url-statistics"
+            ]
+          },
+          {
+            "group": "Export Data",
+            "icon": "file-down",
+            "pages": [
+              "api-reference/data-export/export-url-data"
+            ]
+          }
+        ]
       },
       {
         "group": "Tools & Libraries",
@@ -31,6 +55,7 @@
           "self-hosting/creating-discord-webhooks",
           {
             "group": "Deployment",
+            "icon": "server",
             "pages": [
               "self-hosting/cloud-deployment",
               "self-hosting/docker-deployment",
@@ -45,6 +70,9 @@
     "light": "/images/logo/logo-black.png",
     "dark": "/images/logo/logo.png",
     "href": "https://spoo.me"
+  },
+  "icons": {
+    "library": "lucide"
   },
   "navbar": {
     "links": [
