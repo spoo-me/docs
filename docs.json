@@ -1,102 +1,75 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
-  "name": "Mint Starter Kit",
+  "theme": "maple",
+  "name": "Spoo.me API",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#A855F7",
+    "light": "#C084FC",
+    "dark": "#7C3AED"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "/images/logo/logo.png",
+
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Documentation",
         "groups": [
           {
-            "group": "Get Started",
+            "group": "Getting Started",
             "pages": [
-              "index",
+              "introduction",
               "quickstart",
-              "development"
+              "rate-limits"
             ]
           },
           {
-            "group": "Essentials",
+            "group": "API Reference",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/settings",
-              "essentials/navigation",
-              "essentials/reusable-snippets"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "API Reference",
-        "groups": [
-          {
-            "group": "API Documentation",
-            "pages": [
-              "api-reference/introduction"
+              "api-reference/shorten-url",
+              "api-reference/emoji-url",
+              "api-reference/url-statistics",
+              "api-reference/export-data"
             ]
           },
           {
-            "group": "Endpoint Examples",
+            "group": "Tools & Libraries",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "tools/python-library",
+              "tools/spoobot"
             ]
           }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Community",
-          "href": "https://mintlify.com/community",
-          "icon": "slack"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
+    ]
   },
   "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+    "light": "/images/logo/logo-black.png",
+    "dark": "/images/logo/logo.png",
+    "href": "https://spoo.me"
   },
   "navbar": {
     "links": [
       {
+        "label": "Community",
+        "href": "https://spoo.me/discord"
+      },
+      {
         "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "href": "https://spoo.me/contact"
       }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
+    ]
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
+      "discord": "https://spoo.me/discord",
+      "github": "https://spoo.me/github",
+      "twitter": "https://x.com/spoo_me",
+      "instagram": "https://www.instagram.com/spoo.me",
+      "linkedin": "https://www.linkedin.com/company/spoo-me",
+      "youtube": "https://www.youtube.com/@spoo-me"
     }
+  },
+  "topbar": {
+    "style": "gradient"
   }
 }

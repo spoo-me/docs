@@ -1,0 +1,343 @@
+---
+title: "Spoo.me Python Library"
+description: ""
+icon: "python"
+---
+
+The official Python library makes it easy to integrate Spoo.me's URL shortening service into your Python applications.
+
+## Installation
+
+Install the library using pip:
+
+<CodeGroup>
+```bash pip
+pip install py_spoo_url
+```
+
+```bash pip3
+pip3 install py_spoo_url
+```
+
+```bash uv
+uv add py_spoo_url
+```
+</CodeGroup>
+
+## Quick Start
+
+Here's a simple example to get you started:
+
+```python
+from py_spoo_url import Shorten, Statistics
+
+# Initialize the shortener
+shortener = Shortener()
+
+# Shorten a URL
+long_url = "https://www.example.com"
+short_url = shortener.shorten(long_url)
+print(f"Shortened URL: {short_url}")
+```
+
+## Features
+
+<CardGroup cols={2}>
+  <Card
+    title="URL Shortening"
+    icon="link"
+    color="#A855F7"
+  >
+    Shorten URLs with custom aliases and settings
+  </Card>
+  <Card
+    title="Statistics"
+    icon="chart-line"
+    color="#A855F7"
+  >
+    Get detailed analytics for your shortened URLs
+  </Card>
+  <Card
+    title="Data Export"
+    icon="download"
+    color="#A855F7"
+  >
+    Export your URL data in various formats
+  </Card>
+  <Card
+    title="Rate Limiting"
+    icon="clock"
+    color="#A855F7"
+  >
+    Built-in rate limiting to respect API limits
+  </Card>
+</CardGroup>
+
+## Usage Examples
+
+### Basic URL Shortening
+
+```python
+from py_spoo_url import Shortener
+
+shortener = Shortener()
+
+# Simple shortening
+result = shortener.shorten("https://example.com")
+print(result)  # https://spoo.me/abc123
+```
+
+### Advanced URL Shortening
+
+```python
+from py_spoo_url import Shortener
+
+shortener = Shortener()
+
+# Shorten with custom parameters
+result = shortener.shorten(
+    url="https://example.com",
+    alias="myalias",
+    password="SuperSecretPassword@444",
+    max_clicks=100
+)
+print(f"Shortened URL: {result}")
+```
+
+### URL Statistics
+
+```python
+from py_spoo_url import Statistics
+
+stats = Statistics()
+
+# Get statistics for a shortened URL
+url_stats = stats.get_stats("abc123")  # short code
+print(url_stats)
+
+# Get statistics for password-protected URL
+protected_stats = stats.get_stats("xyz789", password="yourpassword")
+print(protected_stats)
+```
+
+### Data Export
+
+```python
+from py_spoo_url import DataExport
+
+exporter = DataExport()
+
+# Export data in JSON format
+json_data = exporter.export_data("abc123", format="json")
+
+# Export data in Excel format
+excel_data = exporter.export_data("abc123", format="xlsx")
+
+# Save exported data to file
+with open("url_data.xlsx", "wb") as f:
+    f.write(excel_data)
+```
+
+### Error Handling
+
+```python
+from py_spoo_url import Shortener, SpooMeError
+
+shortener = Shortener()
+
+try:
+    result = shortener.shorten("https://example.com", alias="taken-alias")
+    print(result)
+except SpooMeError as e:
+    print(f"Error: {e.error_type} - {e.message}")
+    # Handle specific error types
+    if e.error_type == "AliasError":
+        print("The alias is already taken, try another one")
+```
+
+## API Reference
+
+### Shortener Class
+
+<Fields>
+  <Field name="shorten()" type="method">
+    Shortens a URL with optional parameters
+    
+    **Parameters:**
+    - `url` (str): The URL to shorten
+    - `alias` (str, optional): Custom alias
+    - `password` (str, optional): Password protection
+    - `max_clicks` (int, optional): Maximum number of clicks
+    - `block_bots` (bool, optional): Block bots from accessing
+    
+    **Returns:** Shortened URL string
+  </Field>
+  
+  <Field name="emoji_shorten()" type="method">
+    Creates emoji-based shortened URLs
+    
+    **Parameters:**
+    - `url` (str): The URL to shorten
+    - `emojies` (str, optional): Custom emoji sequence
+    - `password` (str, optional): Password protection
+    - `max_clicks` (int, optional): Maximum number of clicks
+    - `block_bots` (bool, optional): Block bots from accessing
+    
+    **Returns:** Shortened URL string with emojis
+  </Field>
+</Fields>
+
+### Statistics Class
+
+<Fields>
+  <Field name="get_stats()" type="method">
+    Retrieves statistics for a shortened URL
+    
+    **Parameters:**
+    - `short_code` (str): The short code of the URL
+    - `password` (str, optional): Password if URL is protected
+    
+    **Returns:** Dictionary containing detailed statistics
+  </Field>
+</Fields>
+
+### DataExport Class
+
+<Fields>
+  <Field name="export_data()" type="method">
+    Exports URL data in various formats
+    
+    **Parameters:**
+    - `short_code` (str): The short code of the URL
+    - `format` (str): Export format ("json", "csv", "xlsx", "xml")
+    - `password` (str, optional): Password if URL is protected
+    
+    **Returns:** Raw data in the specified format
+  </Field>
+</Fields>
+
+## Configuration
+
+### Custom Base URL
+
+```python
+from py_spoo_url import Shortener
+
+# Use custom base URL (if needed)
+shortener = Shortener(base_url="https://spoo.me")
+```
+
+### Rate Limiting Configuration
+
+```python
+from py_spoo_url import Shortener
+
+# Configure rate limiting
+shortener = Shortener(
+    rate_limit_per_minute=5,
+    rate_limit_per_hour=50,
+    rate_limit_per_day=500
+)
+```
+
+## Error Types
+
+The library provides specific error types for different scenarios:
+
+<Accordion title="SpooMeError">
+Base exception class for all Spoo.me related errors.
+
+**Attributes:**
+- `error_type`: The type of error (e.g., "UrlError", "AliasError")
+- `message`: Detailed error message
+- `status_code`: HTTP status code
+</Accordion>
+
+<Accordion title="UrlError">
+Raised when the provided URL is invalid or missing.
+
+```python
+try:
+    shortener.shorten("invalid-url")
+except UrlError as e:
+    print(f"Invalid URL: {e.message}")
+```
+</Accordion>
+
+<Accordion title="AliasError">
+Raised when the requested alias is invalid or already taken.
+
+```python
+try:
+    shortener.shorten("https://example.com", alias="taken")
+except AliasError as e:
+    print(f"Alias error: {e.message}")
+```
+</Accordion>
+
+<Accordion title="PasswordError">
+Raised when the password doesn't meet requirements.
+
+```python
+try:
+    shortener.shorten("https://example.com", password="weak")
+except PasswordError as e:
+    print(f"Password error: {e.message}")
+```
+</Accordion>
+
+<Accordion title="RateLimitError">
+Raised when API rate limits are exceeded.
+
+```python
+try:
+    shortener.shorten("https://example.com")
+except RateLimitError as e:
+    print(f"Rate limit exceeded. Retry after: {e.retry_after} seconds")
+```
+</Accordion>
+
+## Complete Documentation
+
+For comprehensive documentation, code examples, and advanced usage patterns, visit the complete library documentation:
+
+<Card
+  title="View Complete Documentation"
+  icon="book-open"
+  href="https://py-spoo-url.readthedocs.io/"
+>
+  Access detailed documentation, API reference, and advanced examples
+</Card>
+
+## Contributing
+
+The library is open source and welcomes contributions:
+
+<Card
+  title="GitHub Repository"
+  icon="github"
+  href="https://github.com/spoo-me/py-spoo-url"
+>
+  Contribute to the project, report issues, or suggest improvements
+</Card>
+
+## Support
+
+If you encounter any issues with the Python library:
+
+<CardGroup cols={2}>
+  <Card
+    title="GitHub Issues"
+    icon="github"
+    href="https://github.com/spoo-me/py-spoo-url/issues"
+  >
+    Report bugs or request features
+  </Card>
+  <Card
+    title="Discord Support"
+    icon="discord"
+    href="https://discord.gg/spoo-me"
+  >
+    Get help from the community
+  </Card>
+</CardGroup> 

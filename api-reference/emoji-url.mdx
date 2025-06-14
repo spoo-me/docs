@@ -1,0 +1,353 @@
+---
+title: "Emoji URLs"
+description: ""
+openapi: "POST /emoji"
+---
+
+Spoo.me provides the ability to shorten URLs with custom emojis, creating fun and memorable shortened links.
+
+## Endpoint
+
+<CodeGroup>
+```http Request
+POST https://spoo.me/emoji
+```
+</CodeGroup>
+
+## Headers
+
+| Header | Type | Required | Value |
+|--------|------|----------|-------------|
+| Accept | string | Yes | `application/json` to receive JSON response |
+| Content-Type | string | Yes | `application/x-www-form-urlencoded` |
+
+<Warning>
+Both headers are **compulsory** for proper API functionality.
+</Warning>
+
+## Request Body
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| url | string | Yes | The long URL to be shortened. Must include a **valid protocol** (http/https) and follow **RFC-1034 & RFC-2727** standards. |
+| emojies | string | No | Custom emoji sequence for the shortened URL. Must contain only **emojis**, no other character is allowed. |
+| password | string | No | Password to access the shortened URL. Must be at least **8 characters** long, contain at least one letter, one number, and one special character ('@' or '.'). Cannot be consecutive. |
+| max-clicks | integer | No | Maximum number of clicks allowed for the shortened URL. Must be a **positive integer**. |
+| block-bots | boolean | No | Whether to block bots from accessing the shortened URL. |
+
+<Warning>
+The `emojies` parameter is optional, but if you don't provide it, the API will generate a random emoji sequence for you.
+The maxiumum length of the emoji sequence is **15 characters**, anything beyond 15 characters will be **stripped by the API**.
+
+**For example:**
+`😀😁😂🤣😃😄😅😆😉😊😋😎😍😘🥰😙🥲` emoji sequence will be stripped to `😀😁😂🤣😃😄😅😆😉😊😋😎😍😘`
+</Warning>
+
+## Code Examples
+
+<CodeGroup>
+```python Python
+import requests
+
+url = "https://spoo.me/emoji/"
+
+payload = {
+    "url": "https://example.com",
+    "emojies": "🐍🐍",
+    "max-clicks": 1000,
+    "password": "Python.Snake63"
+}
+
+headers = {
+    "Accept": "application/json",
+}
+
+response = requests.post(url, data=payload, headers=headers)
+
+if response.status_code == 200:
+    print(response.json())
+else:
+    print(response.text)
+```
+
+```javascript Node.js
+const axios = require('axios');
+
+const url = 'https://spoo.me/emoji/';
+
+const payload = {
+    url: 'https://example.com',
+    emojies: '🐍🐍',
+    'max-clicks': 1000,
+    password: 'Python.Snake63'
+};
+
+const headers = {
+    'Accept': 'application/json',
+    'Content-Type': 'application/x-www-form-urlencoded'
+};
+
+axios.post(url, new URLSearchParams(payload), { headers })
+    .then(response => {
+        console.log('Emoji URL:', response.data);
+    })
+    .catch(error => {
+        console.error('Error:', error.response?.status);
+        console.error(error.response?.data);
+    });
+```
+
+```javascript JavaScript (Fetch)
+const url = 'https://spoo.me/emoji/';
+
+const payload = new URLSearchParams({
+    url: 'https://example.com',
+    emojies: '🐍🐍',
+    'max-clicks': '1000',
+    password: 'Python.Snake63'
+});
+
+const headers = {
+    'Accept': 'application/json',
+    'Content-Type': 'application/x-www-form-urlencoded'
+};
+
+fetch(url, {
+    method: 'POST',
+    headers: headers,
+    body: payload
+})
+.then(response => response.json())
+.then(data => {
+    console.log('Emoji URL:', data);
+})
+.catch(error => {
+    console.error('Error:', error);
+});
+```
+
+```csharp C#
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Threading.Tasks;
+
+class Program
+{
+    static async Task Main(string[] args)
+    {
+        using (var client = new HttpClient())
+        {
+            var url = "https://spoo.me/emoji/";
+            
+            var payload = new List<KeyValuePair<string, string>>
+            {
+                new KeyValuePair<string, string>("url", "https://example.com"),
+                new KeyValuePair<string, string>("emojies", "🐍🐍"),
+                new KeyValuePair<string, string>("max-clicks", "1000"),
+                new KeyValuePair<string, string>("password", "Python.Snake63")
+            };
+            
+            client.DefaultRequestHeaders.Add("Accept", "application/json");
+            
+            var response = await client.PostAsync(url, new FormUrlEncodedContent(payload));
+            var content = await response.Content.ReadAsStringAsync();
+            
+            if (response.IsSuccessStatusCode)
+            {
+                Console.WriteLine("Emoji URL: " + content);
+            }
+            else
+            {
+                Console.WriteLine($"Error: {response.StatusCode}");
+                Console.WriteLine(content);
+            }
+        }
+    }
+}
+```
+
+```java Java
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
+public class SpooMeEmoji {
+    public static void main(String[] args) throws IOException {
+        String urlString = "https://spoo.me/emoji/";
+        URL url = new URL(urlString);
+        
+        String payload = "url=" + URLEncoder.encode("https://example.com", StandardCharsets.UTF_8) +
+                        "&emojies=" + URLEncoder.encode("🐍🐍", StandardCharsets.UTF_8) +
+                        "&max-clicks=" + URLEncoder.encode("1000", StandardCharsets.UTF_8) +
+                        "&password=" + URLEncoder.encode("Python.Snake63", StandardCharsets.UTF_8);
+        
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("POST");
+        connection.setRequestProperty("Accept", "application/json");
+        connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        connection.setDoOutput(true);
+        
+        try (OutputStream os = connection.getOutputStream()) {
+            byte[] input = payload.getBytes(StandardCharsets.UTF_8);
+            os.write(input, 0, input.length);
+        }
+        
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8))) {
+            StringBuilder response = new StringBuilder();
+            String responseLine;
+            while ((responseLine = br.readLine()) != null) {
+                response.append(responseLine.trim());
+            }
+            System.out.println("Emoji URL: " + response.toString());
+        }
+    }
+}
+```
+
+```go Go
+package main
+
+import (
+    "fmt"
+    "io"
+    "net/http"
+    "net/url"
+    "strings"
+)
+
+func main() {
+    apiURL := "https://spoo.me/emoji/"
+    
+    data := url.Values{}
+    data.Set("url", "https://example.com")
+    data.Set("emojies", "🐍🐍")
+    data.Set("max-clicks", "1000")
+    data.Set("password", "Python.Snake63")
+    
+    req, err := http.NewRequest("POST", apiURL, strings.NewReader(data.Encode()))
+    if err != nil {
+        fmt.Printf("Error creating request: %v\n", err)
+        return
+    }
+    
+    req.Header.Set("Accept", "application/json")
+    req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+    
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    if err != nil {
+        fmt.Printf("Error making request: %v\n", err)
+        return
+    }
+    defer resp.Body.Close()
+    
+    body, err := io.ReadAll(resp.Body)
+    if err != nil {
+        fmt.Printf("Error reading response: %v\n", err)
+        return
+    }
+    
+    if resp.StatusCode == 200 {
+        fmt.Printf("Emoji URL: %s\n", string(body))
+    } else {
+        fmt.Printf("Error: %d\n", resp.StatusCode)
+        fmt.Printf("%s\n", string(body))
+    }
+}
+```
+
+```ruby Ruby
+require 'net/http'
+require 'uri'
+require 'json'
+
+uri = URI('https://spoo.me/emoji/')
+
+params = {
+    'url' => 'https://example.com',
+    'emojies' => '🐍🐍',
+    'max-clicks' => '1000',
+    'password' => 'Python.Snake63'
+}
+
+http = Net::HTTP.new(uri.host, uri.port)
+http.use_ssl = true
+
+request = Net::HTTP::Post.new(uri)
+request['Accept'] = 'application/json'
+request['Content-Type'] = 'application/x-www-form-urlencoded'
+request.body = URI.encode_www_form(params)
+
+response = http.request(request)
+
+if response.code == '200'
+    puts "Emoji URL: #{response.body}"
+else
+    puts "Error: #{response.code}"
+    puts response.body
+end
+```
+</CodeGroup>
+
+## Response
+
+<CodeGroup>
+```json Success Response
+{
+  "short_url": "https://spoo.me/🐍🐍"
+}
+```
+</CodeGroup>
+
+## Error Responses
+
+<Accordion title="UrlError (400)">
+The request does not contain the long URL or contains an invalid URL. The URL must contain a valid protocol like https, http and must follow RFC-1034 & RFC-2727.
+
+```json
+{
+  "error": "UrlError",
+  "message": "Invalid or missing URL"
+}
+```
+</Accordion>
+
+<Accordion title="EmojiError (400)">
+The user requested emoji sequence is invalid or already taken. The emoji sequence must contain only emojis, no other character is allowed.
+
+```json
+{
+  "error": "EmojiError", 
+  "message": "Emoji sequence is invalid or already taken"
+}
+```
+</Accordion>
+
+<Accordion title="PasswordError (400)">
+The user entered password must be at least 8 characters long, must contain at least a letter and a number and a special character either '@' or '.' and cannot be consecutive.
+
+```json
+{
+  "error": "PasswordError",
+  "message": "Password does not meet requirements"
+}
+```
+</Accordion>
+
+<Accordion title="MaxClicksError (400)">
+The user entered max-clicks is not a positive integer.
+
+```json
+{
+  "error": "MaxClicksError",
+  "message": "Max clicks must be a positive integer"
+}
+```
+</Accordion>
+
+<Note>
+  Emoji URLs are a fun way to create memorable shortened links. The emoji sequence acts as the "alias" for your URL, making it easy to remember and share.
+</Note> 

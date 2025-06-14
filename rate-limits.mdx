@@ -1,0 +1,86 @@
+---
+title: "API Rate Limits"
+description: "Understanding Spoo.me API rate limits and best practices"
+icon: "clock"
+---
+
+Spoo.me API implements rate limiting to ensure fair usage and maintain service quality for all users.
+
+## Current Rate Limits
+
+The following rate limits apply to the URL shortening endpoints:
+
+<CardGroup cols={3}>
+  <Card
+    title="Per Minute"
+    icon="clock"
+    color="#A855F7"
+  >
+    maximum **5 short URLs** per IP
+  </Card>
+  <Card
+    title="Per Hour"
+    icon="hourglass"
+    color="#A855F7"
+  >
+    maximum **50 short URLs** per IP
+  </Card>
+  <Card
+    title="Per Day"
+    icon="calendar-day"
+    color="#A855F7"
+  >
+    maximum **500 short URLs** per IP
+  </Card>
+</CardGroup>
+
+## Affected Endpoints
+
+Rate limits apply to the following endpoints:
+
+- `POST /` - Shorten URLs
+- `POST /emoji` - Create emoji URLs
+
+<Note>
+  Statistics and export endpoints (`/stats` and `/export`) are not subject to the same rate limits.
+</Note>
+
+## Rate Limit Headers
+
+When you make requests to rate-limited endpoints, the response will include headers indicating your current usage:
+
+```http
+X-RateLimit-Limit: 5
+X-RateLimit-Remaining: 4
+X-RateLimit-Reset: 1640995200
+```
+
+## Handling Rate Limits
+
+When you exceed the rate limit, you'll receive a `429 Too Many Requests` response:
+
+```json
+{
+  "error": "Rate limit exceeded",
+  "message": "You have exceeded the rate limit. Please try again later.",
+  "retry_after": 60
+}
+```
+
+## Best Practices
+
+<Steps>
+  <Step title="Implement Retry Logic">
+    Build retry logic into your application to handle rate limit responses gracefully.
+  </Step>
+  <Step title="Monitor Usage">
+    Keep track of your API usage to stay within limits.
+  </Step>
+  <Step title="Call API Client Side">
+    If possible move the API call to the client side, instead of the server to use the client's IP instead of the same server IP for every request
+  </Step>
+</Steps>
+
+## Need Higher Limits?
+
+If you need higher rate limits for your application, please contact our support team at [support@spoo.me](mailto:support@spoo.me) with details about your use case. 

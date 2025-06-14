@@ -1,0 +1,246 @@
+---
+title: "SpooBot"
+description: ""
+icon: "discord"
+---
+
+SpooBot is the official Discord bot for Spoo.me that brings URL shortening capabilities directly to your Discord server. With SpooBot, you can **shorten URLs**, **get statistics**, and even **generate code examples** in various programming languages.
+
+## Features
+
+<CardGroup cols={3}>
+  <Card
+    title="URL Shortening"
+    icon="link"
+    color="#A855F7"
+  >
+    Shorten URLs directly in Discord with custom settings
+  </Card>
+  <Card
+    title="Statistics"
+    icon="chart-line"
+    color="#A855F7"
+  >
+    Get detailed analytics for your shortened URLs
+  </Card>
+  <Card
+    title="Code Generation"
+    icon="code"
+    color="#A855F7"
+  >
+    Generate code examples in multiple programming languages
+  </Card>
+</CardGroup>
+
+## Add SpooBot to Your Server
+
+<Card
+  title="Add SpooBot"
+  icon="plus"
+  href="https://spoo.me/spooBot"
+>
+  Click here to add SpooBot to your Discord server
+</Card>
+
+## Commands
+
+### `/shorten` - Shorten URLs
+
+Shorten long URLs with optional custom settings.
+
+**Usage:**
+```
+/shorten url:<URL> [alias:<custom_alias>] [password:<password>] [max-clicks:<number>]
+```
+
+**Parameters:**
+- `url` (required): The URL you want to shorten
+- `alias` (optional): Custom alias for the shortened URL
+- `password` (optional): Password to protect the URL
+- `max-clicks` (optional): Maximum number of clicks allowed
+
+**Examples:**
+```
+/shorten url:https://example.com
+/shorten url:https://example.com alias:mylink
+/shorten url:https://example.com password:mypass123@ max-clicks:100
+```
+
+### `/stats` - Get URL Statistics
+
+Retrieve detailed statistics for a shortened URL.
+
+**Usage:**
+```
+/stats short-code:<code> [password:<password>]
+```
+
+**Parameters:**
+- `short-code` (required): The short code of the URL (without the domain)
+- `password` (optional): Password if the URL is protected
+
+**Examples:**
+```
+/stats short-code:abc123
+/stats short-code:xyz789 password:mypass123@
+```
+
+### `/get-code` - Generate Code Examples
+
+Generate code examples for URL shortening in various programming languages.
+
+**Usage:**
+```
+/get-code language:<language> [url:<URL>] [alias:<alias>] [password:<password>]
+```
+
+**Supported Languages:**
+- Python
+- JavaScript (Node.js)
+- JavaScript (Fetch API)
+- C#
+- Java
+- Go
+- Ruby
+- PHP
+- cURL
+
+**Parameters:**
+- `language` (required): Programming language for the code example
+- `url` (optional): Custom URL for the example (defaults to example.com)
+- `alias` (optional): Custom alias for the example
+- `password` (optional): Password for the example
+
+**Examples:**
+```
+/get-code language:python
+/get-code language:javascript url:https://mysite.com alias:myalias
+/get-code language:curl password:mypass123@
+```
+
+## Bot Features
+
+### Interactive Responses
+
+SpooBot provides rich, interactive responses with:
+
+- **Embedded messages** with color-coded status indicators
+- **Button interactions** for quick actions
+- **Error handling** with helpful suggestions
+- **Rate limit notifications** to keep users informed
+
+### Statistics Display
+
+When using `/stats`, SpooBot displays comprehensive analytics including:
+
+<Accordion title="Click Analytics">
+- Total clicks and unique clicks
+- Average daily, weekly, and monthly clicks
+- Click distribution over time
+- Last click information
+
+![Click Analytics](/images/clicks-graph.webp)
+
+</Accordion>
+
+<Accordion title="Geographic Data">
+- Countries where the link was accessed
+- Unique country statistics
+- Geographic distribution charts
+
+![Geographic Data](/images/countries-graph.png)
+</Accordion>
+
+<Accordion title="Technical Data">
+- Browser usage statistics
+- Operating system information
+- Referrer data
+- Bot access information
+</Accordion>
+
+<Accordion title="Security Information">
+- Password protection status
+- Bot blocking status
+- Click limits and expiration
+- Average redirection time
+</Accordion>
+
+### Code Generation Features
+
+The `/get-code` command provides:
+
+- **Syntax highlighting** for better readability
+- **Complete examples** with error handling
+- **Multiple language support** for diverse development needs
+- **Customizable parameters** for specific use cases
+- **Warnings** if some of the passed parameters are incorrect
+
+## Rate Limits
+
+SpooBot respects the same rate limits as the Spoo.me API:
+
+<Warning>
+**Rate Limits:**
+- 5 requests per minute
+- 50 requests per hour  
+- 500 requests per day
+
+Rate limits are applied per Discord user, not per server.
+</Warning>
+
+## Support and Community
+
+### Getting Help
+
+<CardGroup cols={2}>
+  <Card
+    title="Discord Server"
+    icon="discord"
+    href="https://discord.gg/spoo-me"
+  >
+    Join our official Discord server for support and updates
+  </Card>
+  <Card
+    title="Bot Commands"
+    icon="question"
+  >
+    Type `/help` in any channel where SpooBot is present
+  </Card>
+</CardGroup>
+
+<Card
+  title="GitHub Repository"
+  icon="github"
+  href="https://github.com/spoo-me/spoobot"
+>
+  SpooBot is open source - contribute or report issues
+</Card>
+
+## Troubleshooting
+
+<Accordion title="Bot not responding to commands">
+**Possible solutions:**
+1. Ensure SpooBot has "Use Slash Commands" permission
+2. Check if the bot is online (green status)
+3. Try using commands in a different channel
+4. Re-add the bot with proper permissions
+</Accordion>
+
+<Accordion title="Rate limit errors">
+**What to do:**
+1. Wait for the rate limit to reset
+2. Reduce the frequency of commands
+3. Check your current usage with server administrators
+</Accordion>
+
+<Accordion title="Statistics not showing">
+**Troubleshooting steps:**
+1. Verify the short code is correct
+2. Include password if the URL is protected
+3. Ensure the URL exists and has been accessed
+4. Try the command again after a few minutes
+</Accordion>
+
+<Info>
+SpooBot is actively maintained and regularly updated with new features. Join our Discord server to stay informed about updates and new capabilities!
+</Info> 

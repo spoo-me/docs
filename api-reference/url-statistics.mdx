@@ -1,0 +1,388 @@
+---
+title: "URL Statistics"
+description: ""
+openapi: "POST /stats/{shortCode}"
+---
+
+This endpoint allows you to retrieve comprehensive statistics about a shortened URL, including click analytics, browser data, geographical information, and more.
+
+## Endpoint
+
+<CodeGroup>
+```http Request
+POST https://spoo.me/stats/{shortCode}
+```
+</CodeGroup>
+
+<Note>
+`shortCode` can represent the short code of both regular and emoji URLs.
+</Note>
+
+## Headers
+
+| Header | Type | Required | Value |
+|--------|------|----------|-------------|
+| Content-Type | string | Yes |`application/x-www-form-urlencoded` |
+
+## Request Body
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| password | string | No | Password of the shortened URL if it's password protected. Required only for password-protected URLs. |
+
+## Code Examples
+
+<CodeGroup>
+```python Python
+import requests
+import json
+
+# Replace these with your actual values
+short_code = "exa"
+base_url = "https://spoo.me"
+
+payload = {                      # not required if your short url is not password protected
+    "password": "Example@12"
+}
+
+# Make the request
+response = requests.post(
+    f"{base_url}/stats/{short_code}",
+    data=payload
+)
+
+# Check the response
+if response.status_code == 200:
+    # If the request was successful, print the URL statistics
+    url_stats = response.json()
+    print(json.dumps(url_stats, indent=4))
+else:
+    # If the request failed, print the error message
+    print(f"Error: {response.status_code}")
+    print(response.text)
+```
+
+```javascript Node.js
+const axios = require('axios');
+
+const shortCode = 'exa';
+const baseUrl = 'https://spoo.me';
+
+const payload = {
+    password: 'Example@12'  // not required if URL is not password protected
+};
+
+const headers = {
+    'Content-Type': 'application/x-www-form-urlencoded'
+};
+
+axios.post(`${baseUrl}/stats/${shortCode}`, new URLSearchParams(payload), { headers })
+    .then(response => {
+        console.log('URL Statistics:', JSON.stringify(response.data, null, 4));
+    })
+    .catch(error => {
+        console.error('Error:', error.response?.status);
+        console.error(error.response?.data);
+    });
+```
+
+```javascript JavaScript (Fetch)
+const shortCode = 'exa';
+const baseUrl = 'https://spoo.me';
+
+const payload = new URLSearchParams({
+    password: 'Example@12'  // not required if URL is not password protected
+});
+
+const headers = {
+    'Content-Type': 'application/x-www-form-urlencoded'
+};
+
+fetch(`${baseUrl}/stats/${shortCode}`, {
+    method: 'POST',
+    headers: headers,
+    body: payload
+})
+.then(response => response.json())
+.then(data => {
+    console.log('URL Statistics:', JSON.stringify(data, null, 4));
+})
+.catch(error => {
+    console.error('Error:', error);
+});
+```
+
+```csharp C#
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
+
+class Program
+{
+    static async Task Main(string[] args)
+    {
+        using (var client = new HttpClient())
+        {
+            var shortCode = "exa";
+            var baseUrl = "https://spoo.me";
+            
+            var payload = new List<KeyValuePair<string, string>>
+            {
+                new KeyValuePair<string, string>("password", "Example@12")
+            };
+            
+            var response = await client.PostAsync($"{baseUrl}/stats/{shortCode}", new FormUrlEncodedContent(payload));
+            var content = await response.Content.ReadAsStringAsync();
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var formattedJson = JsonConvert.DeserializeObject(content);
+                Console.WriteLine("URL Statistics: " + JsonConvert.SerializeObject(formattedJson, Formatting.Indented));
+            }
+            else
+            {
+                Console.WriteLine($"Error: {response.StatusCode}");
+                Console.WriteLine(content);
+            }
+        }
+    }
+}
+```
+
+```java Java
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
+public class SpooMeStats {
+    public static void main(String[] args) throws IOException {
+        String shortCode = "exa";
+        String baseUrl = "https://spoo.me";
+        String urlString = baseUrl + "/stats/" + shortCode;
+        URL url = new URL(urlString);
+        
+        String payload = "password=" + URLEncoder.encode("Example@12", StandardCharsets.UTF_8);
+        
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("POST");
+        connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        connection.setDoOutput(true);
+        
+        try (OutputStream os = connection.getOutputStream()) {
+            byte[] input = payload.getBytes(StandardCharsets.UTF_8);
+            os.write(input, 0, input.length);
+        }
+        
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8))) {
+            StringBuilder response = new StringBuilder();
+            String responseLine;
+            while ((responseLine = br.readLine()) != null) {
+                response.append(responseLine.trim());
+            }
+            System.out.println("URL Statistics: " + response.toString());
+        }
+    }
+}
+```
+
+```go Go
+package main
+
+import (
+    "fmt"
+    "io"
+    "net/http"
+    "net/url"
+    "strings"
+)
+
+func main() {
+    shortCode := "exa"
+    baseURL := "https://spoo.me"
+    apiURL := fmt.Sprintf("%s/stats/%s", baseURL, shortCode)
+    
+    data := url.Values{}
+    data.Set("password", "Example@12")
+    
+    req, err := http.NewRequest("POST", apiURL, strings.NewReader(data.Encode()))
+    if err != nil {
+        fmt.Printf("Error creating request: %v\n", err)
+        return
+    }
+    
+    req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+    
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    if err != nil {
+        fmt.Printf("Error making request: %v\n", err)
+        return
+    }
+    defer resp.Body.Close()
+    
+    body, err := io.ReadAll(resp.Body)
+    if err != nil {
+        fmt.Printf("Error reading response: %v\n", err)
+        return
+    }
+    
+    if resp.StatusCode == 200 {
+        fmt.Printf("URL Statistics: %s\n", string(body))
+    } else {
+        fmt.Printf("Error: %d\n", resp.StatusCode)
+        fmt.Printf("%s\n", string(body))
+    }
+}
+```
+
+```ruby Ruby
+require 'net/http'
+require 'uri'
+require 'json'
+
+short_code = 'exa'
+base_url = 'https://spoo.me'
+uri = URI("#{base_url}/stats/#{short_code}")
+
+params = {
+    'password' => 'Example@12'  # not required if URL is not password protected
+}
+
+http = Net::HTTP.new(uri.host, uri.port)
+http.use_ssl = true
+
+request = Net::HTTP::Post.new(uri)
+request['Content-Type'] = 'application/x-www-form-urlencoded'
+request.body = URI.encode_www_form(params)
+
+response = http.request(request)
+
+if response.code == '200'
+    puts "URL Statistics: #{JSON.pretty_generate(JSON.parse(response.body))}"
+else
+    puts "Error: #{response.code}"
+    puts response.body
+end
+```
+</CodeGroup>
+
+## Response
+
+<CodeGroup>
+```json Example Response
+{
+    "_id": "exa",
+    "average_daily_clicks": 1.0,
+    "average_monthly_clicks": 0.03,
+    "average_redirection_time": 263.04,
+    "average_weekly_clicks": 0.14,
+    "block-bots": false,
+    "bots": {
+        "Googlebot": 1
+    },
+    "browser": {
+        "Edge": 1
+    },
+    "counter": {
+        "2023-12-18": 1
+    },
+    "country": {
+        "France": 1
+    },
+    "creation-date": "2023-12-18",
+    "expired": null,
+    "last-click": "2023-12-18 22:06:02.298005+00:00",
+    "last-click-browser": "Edge",
+    "last-click-os": "Windows",
+    "max-clicks": null,
+    "os_name": {
+        "Windows": 1
+    },
+    "password": "Example@12",
+    "referrer": {
+        "spoo.me": 1
+    },
+    "short_code": "exa",
+    "total-clicks": 1,
+    "total_unique_clicks": 1,
+    "unique_browser": {
+        "Edge": 1
+    },
+    "unique_counter": {
+        "2023-12-18": 1
+    },
+    "unique_country": {
+        "France": 1
+    },
+    "unique_os_name": {
+        "Windows": 1
+    },
+    "unique_referrer": {
+        "spoo.me": 1
+    },
+    "url": "https://example.com"
+}
+```
+</CodeGroup>
+
+## Response Analysis
+
+The response contains comprehensive analytics data about your shortened URL:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| _id | string | The short code of the shortened URL |
+| average_daily_clicks | float | Average clicks per day since the link was created |
+| average_monthly_clicks | float | Average clicks per month since the link was created |
+| average_weekly_clicks | float | Average clicks per week since the link was created |
+| average_redirection_time | float | Average redirection time of the short link in milliseconds |
+| block-bots | boolean | Whether bots are blocked from accessing the short link |
+| bots | object | Data about the bots that accessed the short link |
+| browser | object | Data about the browsers used to access the short link |
+| counter | object | Data about clicks per day since the link was created |
+| country | object | Data about the countries from which the short link was accessed |
+| creation-date | string | Date when the short link was created |
+| expired | boolean\|null | Whether the link has expired (null if no expiration set) |
+| last-click | string | Timestamp of the last time the short link was accessed |
+| last-click-browser | string | Last browser used to access the short link |
+| last-click-os | string | Last operating system used to access the short link |
+| max-clicks | integer\|null | Maximum clicks set by the user (null if not set) |
+| os_name | object | Data about the operating systems used to access the short link |
+| password | string\|null | Password set by the user (null if not password protected) |
+| referrer | object | Data about the referrers from which the short link was accessed |
+| short_code | string | The short code of the shortened URL |
+| total-clicks | integer | Total number of clicks since the short link was created |
+| total_unique_clicks | integer | Total number of unique clicks since the short link was created |
+| unique_browser | object | Data about unique browsers used to access the short link |
+| unique_counter | object | Data about unique clicks per day since the link was created |
+| unique_country | object | Data about unique countries from which the short link was accessed |
+| unique_os_name | object | Data about unique operating systems used to access the short link |
+| unique_referrer | object | Data about unique referrers from which the short link was accessed |
+| url | string | Original long URL that the short link redirects to |
+
+## Error Responses
+
+<Accordion title="UrlError (404)">
+The requested URL (short code) never existed.
+
+```json
+{
+  "error": "UrlError",
+  "message": "The requested URL never existed"
+}
+```
+</Accordion>
+
+<Accordion title="PasswordError (400)">
+The entered password is invalid for the password-protected URL.
+
+```json
+{
+  "error": "PasswordError",
+  "message": "Invalid password"
+}
+```
+</Accordion>
