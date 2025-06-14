@@ -1,0 +1,340 @@
+---
+title: "Cloud Deployment"
+description: ""
+icon: "cloud"
+---
+
+Cloud deployment is the easiest and fastest way to get your Spoo.me instance running. These platforms offer generous free tiers and handle server management automatically, making them perfect for beginners or anyone who wants a hassle-free deployment.
+
+<Warning>
+Before proceeding, ensure you have completed the prerequisite steps:
+- [Set up MongoDB database](/self-hosting/setting-up-mongo)
+- [Create Discord webhooks](/self-hosting/creating-contact-webhooks)
+</Warning>
+
+## Platform Comparison
+
+Choose the platform that best fits your needs:
+
+| Platform | Free Tier | Custom Domain | Pros | Best For |
+|----------|-----------|---------------|------|----------|
+| **Vercel** | Generous | ✅ Free | Excellent performance, great DX | Most users |
+| **Railway** | $5 credit | ✅ Free | Simple setup, good performance | Developers |
+| **Render** | 750 hours/month | ✅ Free | Reliable, good free tier | Stable hosting |
+| **Koyeb** | Limited | ❌ Paid only | Good performance | Testing only |
+
+<Tip>
+**Recommended**: Start with Vercel for the best combination of features and ease of use.
+</Tip>
+
+## Method 1: Vercel Deployment (Recommended)
+
+Vercel offers the most generous free plan and excellent performance for Spoo.me deployments.
+
+<Steps>
+<Step title="Prepare Your GitHub Account">
+    1. Create a [GitHub account](https://github.com/signup) if you don't have one
+    2. Sign up for [Vercel](https://vercel.com/signup) and connect your GitHub account
+    
+    <Info>
+    Vercel will need access to your GitHub account to create and deploy repositories.
+    </Info>
+</Step>
+
+<Step title="Deploy with One Click">
+    Click the deploy button to start the deployment process:
+    
+    <a href="https://vercel.com/new/clone?repository-url=https://github.com/spoo-me/url-shortener&env=MONGODB_URI,CONTACT_WEBHOOK,URL_REPORT_WEBHOOK" target="_blank">
+        <img src="https://vercel.com/button" alt="Deploy with Vercel" />
+    </a>
+    
+    This will:
+    - Fork the Spoo.me repository to your GitHub account
+    - Set up a new Vercel project
+    - Prompt you for environment variables
+</Step>
+
+<Step title="Configure Environment Variables">
+    In the deployment configuration, enter your environment variables:
+    
+    <ParamField path="MONGODB_URI" type="string" required>
+    Your MongoDB connection string from the [MongoDB setup guide](/self-hosting/setting-up-mongo)
+    </ParamField>
+    
+    <ParamField path="CONTACT_WEBHOOK" type="string" required>
+    Discord webhook URL for contact form notifications
+    </ParamField>
+    
+    <ParamField path="URL_REPORT_WEBHOOK" type="string" required>
+    Discord webhook URL for URL report notifications
+    </ParamField>
+
+    <ParamField path="REDIS_URI" type="string" optional>
+    Redis connection string for caching. Optional, but recommended for production.
+    </ParamField>
+    
+    <Warning>
+    Double-check your environment variables before deploying. Incorrect values will cause deployment failures.
+    </Warning>
+</Step>
+
+<Step title="Complete Deployment">
+    1. Click **"Deploy"** and wait for the build process to complete
+    2. Once finished, you'll receive a deployment URL like `https://your-project.vercel.app`
+    3. Test your deployment by visiting the URL
+    
+    <Check>
+    Your Spoo.me instance should now be live and fully functional!
+    </Check>
+</Step>
+
+<Step title="Add Custom Domain (Optional)">
+    To use your own domain:
+    
+    1. Go to your Vercel project dashboard
+    2. Navigate to **Settings** → **Domains**
+    3. Add your custom domain
+    4. Configure DNS records as instructed by Vercel
+    
+    <Tip>
+    Vercel provides free SSL certificates for custom domains automatically.
+    </Tip>
+</Step>
+</Steps>
+
+## Method 2: Railway Deployment
+
+Railway offers $5 in free credits upon account verification, which typically lasts 5-7 months.
+
+<Steps>
+<Step title="Set Up Railway Account">
+    1. Create a [Railway account](https://railway.app/login)
+    2. Verify your account with your email
+    3. Connect your GitHub account for additional verification
+    
+    <Info>
+    Account verification is required to receive the $5 free credit.
+    </Info>
+</Step>
+
+<Step title="Deploy from Template">
+    Click the Railway deployment button:
+    
+    <a href="https://railway.com/deploy/_6W-dI?referralCode=C97i2L" target="_blank">
+        <img src="https://railway.app/button.svg" alt="Deploy on Railway" />
+    </a>
+    
+    If prompted, configure Railway to access your GitHub account.
+</Step>
+
+<Step title="Configure Environment Variables">
+    Railway will prompt you to fill in the required environment variables. The environment variables are the same as the ones you set up in vercel deployment.
+    
+    Enter the values you prepared in the prerequisite steps.
+</Step>
+
+<Step title="Deploy and Access">
+    1. Click **"Deploy"** to start the deployment
+    2. Wait for the build process to complete
+    3. Copy the deployment URL from the **Deployments** tab
+    4. Your URL will look like: `https://your-project.up.railway.app`
+    
+    <Info>
+    You may encounter a 502 error initially. This typically resolves within a few minutes as the service starts up.
+    </Info>
+</Step>
+</Steps>
+
+## Method 3: Render Deployment
+
+Render provides 750 hours of free hosting per month, which is sufficient for most Spoo.me deployments.
+
+<Steps>
+<Step title="Create Render Account">
+    Sign up for a free [Render account](https://render.com/register).
+</Step>
+
+<Step title="Deploy from Blueprint">
+    Use the Render deployment button:
+    
+    <a href="https://render.com/deploy?repo=https://github.com/spoo-me/url-shortener" target="_blank">
+        <img src="https://render.com/images/deploy-to-render-button.svg" alt="Deploy to Render" />
+    </a>
+</Step>
+
+<Step title="Configure Blueprint">
+    1. Enter a **Blueprint Name** (e.g., "Spoo.me URL Shortener")
+    2. Fill in the environment variables section. The environment variables are the same as the ones you set up in vercel deployment.
+    3. Click **"Deploy Blueprint"** to start deployment
+</Step>
+
+<Step title="Access Your Deployment">
+    1. Wait for the deployment to complete
+    2. Your app will be available at: `https://your-project.onrender.com`
+    3. Test the deployment by creating a short URL
+    
+    <Tip>
+    Render automatically provides SSL certificates and handles scaling for you.
+    </Tip>
+</Step>
+</Steps>
+
+## Method 4: Koyeb Deployment
+
+Koyeb offers one free deployment, though custom domains require a paid plan.
+
+<Steps>
+<Step title="Create Koyeb Account">
+    Sign up for a [Koyeb account](https://app.koyeb.com/signup).
+</Step>
+
+<Step title="Deploy from GitHub">
+    1. Click the Koyeb deployment button:
+    
+    <a href="https://app.koyeb.com/deploy?type=git&builder=buildpack&repository=github.com/spoo-me/url-shortener&branch=main&name=url-shortener&run_command=gunicorn%20main:app&env[MONGODB_URI]=your-mongo-uri&env[CONTACT_WEBHOOK]=your-webhook-uri&env[URL_REPORT_WEBHOOK]=you-webhook-uri&ports=8000;http;/" target="_blank">
+        <img src="https://www.koyeb.com/static/images/deploy/button.svg" alt="Deploy to Koyeb" />
+    </a>
+    
+    2. Configure your deployment settings as needed
+</Step>
+
+<Step title="Set Environment Variables">
+    In the deployment configuration:
+    
+    1. Scroll to **Environment Variables**
+    2. Add your the required variables. The environment variables are the same as the ones you set up in vercel deployment.
+    3. Click **"Deploy"**
+</Step>
+
+<Step title="Access Your App">
+    Your deployment will be available at: `https://your-project.koyeb.app`
+    
+    <Warning>
+    Koyeb's free plan doesn't support custom domains. Consider upgrading or using another platform if you need a custom domain.
+    </Warning>
+</Step>
+</Steps>
+
+## Post-Deployment Configuration
+
+After successful deployment on any platform:
+
+<Steps>
+<Step title="Test Core Functionality">
+    1. **URL Shortening**: Create a test short URL
+    2. **Analytics**: Check that click tracking works
+    3. **Contact Form**: Submit a test contact form
+    4. **URL Reporting**: Test the URL reporting feature
+    
+    <Check>
+    Verify that webhook notifications appear in your Discord channels.
+    </Check>
+</Step>
+
+<Step title="Monitor Performance">
+    Most platforms provide built-in monitoring:
+    
+    - **Vercel**: Analytics tab in project dashboard
+    - **Railway**: Metrics tab in service dashboard  
+    - **Render**: Metrics section in service dashboard
+    - **Koyeb**: Monitoring tab in service dashboard
+    
+    <Tip>
+    Set up alerts for downtime or high error rates to stay informed about your service health.
+    </Tip>
+</Step>
+
+<Step title="Set Up Custom Domain (If Needed)">
+    If you want to use your own domain:
+    
+    1. Purchase a domain from a registrar
+    2. Proxy with cloudflare or any other DNS manager for faster DNS propagation
+    3. Configure DNS records as instructed
+    4. Wait for DNS propagation (usually a few minutes if you use cloudflare)
+</Step>
+</Steps>
+
+## Limitations of Cloud Deployment
+
+While cloud deployment is convenient, there are some limitations to consider:
+
+<Warning>
+**Limited Customization**: You cannot modify the application code or add custom features like analytics integrations or custom SEO elements.
+</Warning>
+
+- **No code modifications**: The deployed version is exactly as provided in the repository, except when using vercel because they create a private fork on your gitHub account before deploying.
+- **Platform dependencies**: Your deployment depends on the chosen platform's reliability and pricing
+- **Resource limits**: Free tiers have usage limits that may affect high-traffic deployments
+
+<Info>
+If you need more control or customization, consider [Docker deployment](/self-hosting/docker-deployment) or [local development](/self-hosting/local-development) instead.
+</Info>
+
+## Troubleshooting Common Issues
+
+<AccordionGroup>
+<Accordion title="Build/Deployment Failures">
+**Symptoms**: Deployment fails during build process
+
+**Solutions**:
+- Verify all environment variables are correctly set
+- Check that your MongoDB connection string is valid
+- Ensure webhook URLs are properly formatted
+- Review build logs for specific error messages
+</Accordion>
+
+<Accordion title="Database Connection Errors">
+**Symptoms**: App loads but can't create/retrieve URLs
+
+**Solutions**:
+- Test your MongoDB connection string manually
+- Verify your MongoDB Atlas IP whitelist includes 0.0.0.0/0
+- Check that your database user has proper permissions
+- Ensure your cluster is running and accessible
+</Accordion>
+
+<Accordion title="Webhook Not Working">
+**Symptoms**: Forms submit but no Discord notifications
+
+**Solutions**:
+- Test webhook URLs manually using curl
+- Verify Discord channels still exist
+- Check that webhook permissions haven't been revoked
+- Ensure webhook URLs are correctly configured in environment variables
+</Accordion>
+
+<Accordion title="Custom Domain Issues">
+**Symptoms**: Custom domain doesn't work or shows SSL errors
+
+**Solutions**:
+- Verify DNS records are correctly configured
+- Wait for DNS propagation (up to 48 hours)
+- Check that your domain registrar supports the required record types
+- Ensure SSL certificates have been issued (usually automatic)
+</Accordion>
+</AccordionGroup>
+
+## Cost Considerations
+
+All recommended platforms offer generous free tiers:
+
+- **Vercel**: Free for personal projects, very high limits
+- **Railway**: $5 credit covers ~5-7 months of usage
+- **Render**: 750 free hours per month (enough for continuous hosting)
+- **Koyeb**: Limited free tier, paid plans start at $5/month
+
+<Tip>
+For most personal or small business use cases, the free tiers are more than sufficient. You can always upgrade later if needed.
+</Tip>
+
+## Next Steps
+
+<CardGroup cols={2}>
+<Card title="Docker Deployment" icon="docker" href="/self-hosting/docker-deployment">
+    Need more control? Try containerized deployment
+</Card>
+
+<Card title="Local Development" icon="code" href="/self-hosting/local-development">
+    Set up a local development environment for customization
+</Card>
+</CardGroup>

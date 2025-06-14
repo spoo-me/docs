@@ -1,0 +1,601 @@
+---
+title: "Docker Deployment"
+description: ""
+icon: "docker"
+---
+
+Docker deployment provides a consistent environment for Spoo.me across different platforms and makes it easy to scale your deployment. This method is ideal for users familiar with containerization who want more control than cloud deployment offers.
+
+<Warning>
+**Prerequisites Required**: Docker experience and familiarity with domains and web hosting is highly recommended. Proceed only if you understand containerization concepts.
+</Warning>
+
+## Prerequisites
+
+Before starting, ensure you have:
+
+- **Docker** and **Docker Compose** installed on your system
+- Basic knowledge of Docker containers and networking
+- Completed the [MongoDB setup](/self-hosting/setting-up-mongo) and [webhook creation](/self-hosting/creating-contact-webhooks)
+
+<Tabs>
+<Tab title="Ubuntu/Debian">
+```bash
+# Update package index
+sudo apt update
+
+# Install Docker
+sudo apt install -y docker.io docker-compose
+
+# Add your user to the docker group
+sudo usermod -aG docker $USER
+
+# Start Docker service
+sudo systemctl start docker
+sudo systemctl enable docker
+
+# Verify installation
+docker --version
+docker-compose --version
+```
+</Tab>
+
+<Tab title="CentOS/RHEL">
+```bash
+# Install Docker
+sudo yum install -y docker docker-compose
+
+# Start Docker service
+sudo systemctl start docker
+sudo systemctl enable docker
+
+# Add user to docker group
+sudo usermod -aG docker $USER
+
+# Verify installation
+docker --version
+docker-compose --version
+```
+</Tab>
+
+<Tab title="macOS">
+```bash
+# Install Docker Desktop from https://docker.com/get-started
+# Or use Homebrew
+brew install --cask docker
+
+# Start Docker Desktop application
+# Verify installation
+docker --version
+docker-compose --version
+```
+</Tab>
+
+<Tab title="Windows">
+Install Docker Desktop from [docker.com](https://docker.com/get-started)
+
+After installation, verify in PowerShell:
+```powershell
+docker --version
+docker-compose --version
+```
+</Tab>
+</Tabs>
+
+## Quick Start Deployment
+
+<Steps>
+<Step title="Clone the Repository">
+    First, clone the Spoo.me repository to your local machine:
+    
+    ```bash
+    git clone https://github.com/spoo-me/url-shortener.git
+    cd url-shortener
+    ```
+    
+    <Info>
+    This downloads the complete Spoo.me source code and Docker configuration files.
+    </Info>
+</Step>
+
+<Step title="Prepare Environment Configuration">
+    Copy the example environment file and configure it:
+    
+    ```bash
+    # Copy the example environment file
+    cp .env.example .env
+    
+    # Edit the environment file
+    nano .env  # or use your preferred editor
+    ```
+    
+    Fill in your environment variables:
+    
+    ```bash
+    # MongoDB Connection
+    MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/spoo-me?retryWrites=true&w=majority
+    
+    # Discord Webhooks
+    CONTACT_WEBHOOK=https://discord.com/api/webhooks/your-contact-webhook-url
+    URL_REPORT_WEBHOOK=https://discord.com/api/webhooks/your-report-webhook-url
+    
+    # Optional: Use internal MongoDB (see Advanced Configuration)
+    # MONGODB_URI=mongodb://mongo:27017/spoo-me
+    ```
+    
+    <Warning>
+    Never commit your `.env` file to version control. It contains sensitive credentials.
+    </Warning>
+</Step>
+
+<Step title="Build and Start Containers">
+    Use Docker Compose to build and start all services:
+    
+    ```bash
+    # Build and start all containers
+    docker-compose up --build
+    ```
+    
+    This command will:
+    - Build the Spoo.me application container
+    - Pull necessary base images
+    - Start all services defined in `docker-compose.yml`
+    - Show logs from all containers
+    
+    <Info>
+    The first build may take 5-10 minutes depending on your internet connection and system performance.
+    </Info>
+</Step>
+
+<Step title="Access Your Deployment">
+    Once the containers are running, access your Spoo.me instance:
+    
+    - **Local access**: http://localhost:8000
+    - **Network access**: http://your-server-ip:8000
+    
+    <Check>
+    Test URL shortening functionality to verify the deployment is working correctly.
+    </Check>
+</Step>
+</Steps>
+
+## Advanced Configuration
+
+### Using Internal MongoDB
+
+For complete containerization, you can use MongoDB as a Docker container:
+
+<Steps>
+<Step title="Enable MongoDB Container">
+    Edit your `docker-compose.yml` to include a MongoDB service:
+    
+    ```yaml
+    version: '3.8'
+    
+    services:
+      app:
+        build: .
+        ports:
+          - "8000:8000"
+        environment:
+          - MONGODB_URI=mongodb://mongo:27017/spoo-me
+          - CONTACT_WEBHOOK=${CONTACT_WEBHOOK}
+          - URL_REPORT_WEBHOOK=${URL_REPORT_WEBHOOK}
+        depends_on:
+          - mongo
+        networks:
+          - spoo-network
+    
+      mongo:
+        image: mongo:7.0
+        restart: unless-stopped
+        ports:
+          - "27017:27017"
+        volumes:
+          - mongodb_data:/data/db
+        networks:
+          - spoo-network
+    
+    volumes:
+      mongodb_data:
+    
+    networks:
+      spoo-network:
+        driver: bridge
+    ```
+</Step>
+
+<Step title="Update Environment Variables">
+    In your `.env` file, update the MongoDB URI:
+    
+    ```bash
+    # Use internal MongoDB container
+    MONGODB_URI=mongodb://mongo:27017/spoo-me
+    
+    # Keep your webhook URLs
+    CONTACT_WEBHOOK=your-discord-webhook-url
+    URL_REPORT_WEBHOOK=your-report-webhook-url
+    ```
+</Step>
+
+<Step title="Deploy with Internal MongoDB">
+    ```bash
+    # Stop existing containers
+    docker-compose down
+    
+    # Start with new configuration
+    docker-compose up --build
+    ```
+    
+    <Tip>
+    Internal MongoDB is perfect for development but consider using MongoDB Atlas for production deployments.
+    </Tip>
+</Step>
+</Steps>
+
+### Production Configuration
+
+For production deployments, consider these additional configurations:
+
+<Steps>
+<Step title="Configure Reverse Proxy">
+    Set up Nginx as a reverse proxy for better performance and SSL:
+    
+    ```yaml
+    # Add to docker-compose.yml
+    nginx:
+      image: nginx:alpine
+      ports:
+        - "80:80"
+        - "443:443"
+      volumes:
+        - ./nginx.conf:/etc/nginx/nginx.conf
+        - ./ssl:/etc/nginx/ssl
+      depends_on:
+        - app
+      networks:
+        - spoo-network
+    ```
+    
+    Create `nginx.conf`:
+    
+    ```nginx
+    events {
+        worker_connections 1024;
+    }
+    
+    http {
+        upstream app {
+            server app:8000;
+        }
+    
+        server {
+            listen 80;
+            server_name your-domain.com;
+            
+            location / {
+                proxy_pass http://app;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
+        }
+    }
+    ```
+</Step>
+
+<Step title="Add SSL Certificates">
+    For HTTPS support, add SSL certificates:
+    
+    ```bash
+    # Create SSL directory
+    mkdir ssl
+    
+    # Add your SSL certificates
+    cp your-certificate.crt ssl/
+    cp your-private-key.key ssl/
+    ```
+    
+    Update `nginx.conf` for HTTPS:
+    
+    ```nginx
+    server {
+        listen 443 ssl;
+        server_name your-domain.com;
+        
+        ssl_certificate /etc/nginx/ssl/your-certificate.crt;
+        ssl_certificate_key /etc/nginx/ssl/your-private-key.key;
+        
+        location / {
+            proxy_pass http://app;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+    }
+    ```
+</Step>
+
+<Step title="Configure Persistent Storage">
+    Ensure data persistence with proper volume configuration:
+    
+    ```yaml
+    volumes:
+      mongodb_data:
+        driver: local
+        driver_opts:
+          type: none
+          o: bind
+          device: /var/lib/spoo-me/mongodb
+      
+      app_logs:
+        driver: local
+        driver_opts:
+          type: none
+          o: bind
+          device: /var/log/spoo-me
+    ```
+    
+    Create the directories:
+    
+    ```bash
+    sudo mkdir -p /var/lib/spoo-me/mongodb
+    sudo mkdir -p /var/log/spoo-me
+    sudo chown -R $USER:$USER /var/lib/spoo-me /var/log/spoo-me
+    ```
+</Step>
+</Steps>
+
+## Management Commands
+
+### Container Management
+
+<Tabs>
+<Tab title="Start/Stop Services">
+```bash
+# Start all services
+docker-compose up -d
+
+# Stop all services
+docker-compose down
+
+# Restart specific service
+docker-compose restart app
+
+# View running containers
+docker-compose ps
+```
+</Tab>
+
+<Tab title="Logs and Monitoring">
+```bash
+# View logs for all services
+docker-compose logs
+
+# View logs for specific service
+docker-compose logs app
+
+# Follow logs in real-time
+docker-compose logs -f app
+
+# View container resource usage
+docker stats
+```
+</Tab>
+
+<Tab title="Updates and Maintenance">
+```bash
+# Pull latest code changes
+git pull origin main
+
+# Rebuild containers with latest changes
+docker-compose up --build
+
+# Remove unused containers and images
+docker system prune -a
+
+# Update base images
+docker-compose pull
+```
+</Tab>
+</Tabs>
+
+### Database Management
+
+<AccordionGroup>
+<Accordion title="MongoDB Backup">
+```bash
+# Create backup of MongoDB data
+docker-compose exec mongo mongodump --out /data/backup
+
+# Copy backup to host
+docker cp container_name:/data/backup ./mongodb-backup
+
+# Restore from backup
+docker-compose exec mongo mongorestore /data/backup
+```
+</Accordion>
+
+<Accordion title="Database Access">
+```bash
+# Access MongoDB shell
+docker-compose exec mongo mongosh
+
+# View database collections
+docker-compose exec mongo mongosh --eval "show collections"
+
+# Check database stats
+docker-compose exec mongo mongosh --eval "db.stats()"
+```
+</Accordion>
+</AccordionGroup>
+
+## Scaling and Performance
+
+### Horizontal Scaling
+
+For high-traffic deployments, scale your application:
+
+```yaml
+# docker-compose.yml
+version: '3.8'
+
+services:
+  app:
+    build: .
+    deploy:
+      replicas: 3
+    environment:
+      - MONGODB_URI=${MONGODB_URI}
+      - CONTACT_WEBHOOK=${CONTACT_WEBHOOK}
+      - URL_REPORT_WEBHOOK=${URL_REPORT_WEBHOOK}
+    networks:
+      - spoo-network
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx-lb.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - app
+    networks:
+      - spoo-network
+```
+
+### Load Balancing Configuration
+
+Create `nginx-lb.conf` for load balancing:
+
+```nginx
+events {
+    worker_connections 1024;
+}
+
+http {
+    upstream app_servers {
+        server app_1:8000;
+        server app_2:8000;
+        server app_3:8000;
+    }
+
+    server {
+        listen 80;
+        
+        location / {
+            proxy_pass http://app_servers;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+    }
+}
+```
+
+## Security Considerations
+
+<Warning>
+Follow these security best practices for production deployments:
+</Warning>
+
+- **Environment Variables**: Use Docker secrets for sensitive data in production
+- **Network Security**: Configure proper firewall rules and network isolation
+- **Regular Updates**: Keep Docker images and base systems updated
+- **Access Control**: Limit container privileges and use non-root users
+- **SSL/TLS**: Always use HTTPS in production environments
+- **Monitoring**: Set up logging and monitoring for security events
+
+## Troubleshooting
+
+<AccordionGroup>
+<Accordion title="Container Build Failures">
+**Common Issues**:
+- Missing environment variables
+- Network connectivity problems
+- Insufficient disk space
+- Docker daemon not running
+
+**Solutions**:
+```bash
+# Check Docker daemon status
+sudo systemctl status docker
+
+# Clean up Docker system
+docker system prune -a
+
+# Check available disk space
+df -h
+
+# Rebuild without cache
+docker-compose build --no-cache
+```
+</Accordion>
+
+<Accordion title="Database Connection Issues">
+**Symptoms**: Application starts but can't connect to MongoDB
+
+**Solutions**:
+- Verify MongoDB container is running: `docker-compose ps`
+- Check network connectivity: `docker-compose exec app ping mongo`
+- Validate connection string in `.env` file
+- Review MongoDB container logs: `docker-compose logs mongo`
+</Accordion>
+
+<Accordion title="Port Conflicts">
+**Symptoms**: Cannot bind to port 8000 or other configured ports
+
+**Solutions**:
+```bash
+# Check what's using the port
+sudo netstat -tulpn | grep :8000
+
+# Kill the process using the port
+sudo kill -9 <PID>
+
+# Or change the port in docker-compose.yml
+ports:
+  - "8001:8000"  # Use different host port
+```
+</Accordion>
+
+<Accordion title="Performance Issues">
+**Symptoms**: Slow response times or high resource usage
+
+**Solutions**:
+- Monitor resource usage: `docker stats`
+- Increase container resources in `docker-compose.yml`
+- Optimize MongoDB queries and indexes
+- Implement caching with Redis
+- Scale horizontally with multiple app containers
+</Accordion>
+</AccordionGroup>
+
+## Benefits of Docker Deployment
+
+✅ **Environmental Consistency**: Same environment across development, staging, and production
+
+✅ **Easy Scaling**: Scale individual services based on demand
+
+✅ **Isolation**: Each service runs in its own container
+
+✅ **Version Control**: Track changes to your deployment configuration
+
+✅ **Rollback Capability**: Easily revert to previous versions
+
+✅ **Resource Efficiency**: Better resource utilization than traditional VMs
+
+## Next Steps
+
+<CardGroup cols={2}>
+<Card title="Local Development" icon="code" href="/self-hosting/local-development">
+    Set up a local development environment for customization
+</Card>
+
+<Card title="Redis Integration" icon="memory" href="/self-hosting/setting-up-redis">
+    Add Redis for caching and improved performance
+</Card>
+</CardGroup>

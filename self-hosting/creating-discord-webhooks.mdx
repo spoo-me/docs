@@ -1,0 +1,290 @@
+---
+title: "Creating Discord Webhooks"
+description: ""
+icon: "webhook"
+---
+
+Discord webhooks allow your Spoo.me instance to send notifications directly to your Discord server when users submit contact forms or report URLs. This integration keeps you informed about user interactions and potential issues.
+
+<Info>
+You'll need **two separate webhooks**: one for contact form submissions and another for URL reports. Both follow the same creation process but serve different purposes.
+</Info>
+
+## Prerequisites
+
+Before creating webhooks, ensure you have:
+
+- A Discord server where you have administrator permissions
+- Two dedicated channels for notifications (recommended)
+
+<Tip>
+Create separate channels like `#contact-forms` and `#url-reports` to organize different types of notifications.
+</Tip>
+
+## Creating the Contact Form Webhook
+
+This webhook will receive all contact form submissions from your Spoo.me instance.
+
+<Steps>
+<Step title="Navigate to Server Settings">
+    1. Open Discord and go to your server
+    2. Right-click on the channel where you want contact form notifications
+    3. Select **"Edit Channel"** from the context menu
+    
+    <Info>
+    Choose a channel that's easily accessible but not too busy, as you'll receive notifications here.
+    </Info>
+</Step>
+
+<Step title="Access Integrations">
+    1. In the channel settings, click on the **"Integrations"** tab in the sidebar
+    2. Look for the **"Webhooks"** section
+    3. Click **"Create Webhook"** or **"New Webhook"**
+    
+    <Frame>
+    <img src="/images/discord-integrations.png" alt="Discord channel integrations settings showing webhook options" />
+    </Frame>
+</Step>
+
+<Step title="Configure the Webhook">
+    1. **Name**: Set the webhook name to "Contact Form" or "Spoo.me Contact"
+    2. **Avatar**: Upload a custom avatar or use the default
+    3. **Channel**: Ensure it's pointing to the correct channel
+    4. Click **"Copy Webhook URL"** to get the webhook URL
+    
+    <Warning>
+    **Important**: Save this webhook URL immediately. You won't be able to see it again once you close this dialog.
+    </Warning>
+</Step>
+
+<Step title="Save the Webhook URL">
+    Your contact form webhook URL should look like this:
+    
+    ```
+    https://discord.com/api/webhooks/1234567890123456789/AbCdEfGhIjKlMnOpQrStUvWxYz1234567890AbCdEfGhIjKlMnOpQrStUvWxYz
+    ```
+    
+    Save this as your `CONTACT_WEBHOOK` environment variable.
+    
+    <Check>
+    Test the webhook by clicking "Test Webhook" in the Discord interface to ensure it's working.
+    </Check>
+</Step>
+</Steps>
+
+## Creating the URL Report Webhook
+
+This webhook will receive notifications when users report potentially harmful or inappropriate URLs.
+
+<Steps>
+<Step title="Select Report Channel">
+    1. Navigate to the channel designated for URL reports (e.g., `#url-reports`)
+    2. Right-click on the channel
+    3. Select **"Edit Channel"**
+    
+    <Tip>
+    Consider making this channel private or restricted to moderators only, as URL reports may contain sensitive information.
+    </Tip>
+</Step>
+
+<Step title="Create Second Webhook">
+    1. Go to **"Integrations"** → **"Webhooks"**
+    2. Click **"Create Webhook"**
+    3. **Name**: Set to "URL Reports" or "Spoo.me Reports"
+    4. **Channel**: Ensure it points to your reports channel
+    5. Click **"Copy Webhook URL"**
+    
+    <Info>
+    This webhook will send structured messages containing details about reported URLs, including the original URL, reporter information, and reason for reporting.
+    </Info>
+</Step>
+
+<Step title="Save the Report Webhook URL">
+    Your URL report webhook URL format is identical to the contact webhook:
+    
+    ```
+    https://discord.com/api/webhooks/0987654321098765432/ZyXwVuTsRqPoNmLkJiHgFeDcBa0987654321ZyXwVuTsRqPoNmLkJiHgFeDcBa
+    ```
+    
+    Save this as your `URL_REPORT_WEBHOOK` environment variable.
+</Step>
+</Steps>
+
+## Environment Variables Setup
+
+Once you have both webhook URLs, you'll need to configure them as environment variables in your deployment:
+
+```bash
+# Contact form webhook
+CONTACT_WEBHOOK=https://discord.com/api/webhooks/1234567890123456789/AbCdEfGhIjKlMnOpQrStUvWxYz1234567890AbCdEfGhIjKlMnOpQrStUvWxYz
+
+# URL report webhook  
+URL_REPORT_WEBHOOK=https://discord.com/api/webhooks/0987654321098765432/ZyXwVuTsRqPoNmLkJiHgFeDcBa0987654321ZyXwVuTsRqPoNmLkJiHgFeDcBa
+```
+
+<Warning>
+**Security Note**: These webhook URLs are sensitive credentials. Never commit them to version control or share them publicly. Anyone with access to these URLs can send messages to your Discord channels.
+</Warning>
+
+## Webhook Message Examples
+
+Here's what notifications will look like in your Discord channels:
+
+### Contact Form Notifications
+
+When someone submits a contact form, you'll receive a message like:
+
+```
+📧 **New Contact Form Submission**
+
+**Name:** John Doe
+**Email:** john@example.com
+**Subject:** Feature Request
+**Message:** Hi, I'd love to see analytics export functionality added to the service. Is this something you're considering?
+
+**IP Address:** 192.168.1.100
+```
+
+### URL Report Notifications
+
+When someone reports a URL, you'll receive:
+
+```
+🚨 **URL Reported**
+
+**Reported URL:** https://spoo.me/abc123 → https://suspicious-site.com
+**Reason:** Phishing attempt
+
+**Reporter IP:** 203.0.113.50
+```
+
+## Testing Your Webhooks
+
+Before deploying your Spoo.me instance, test both webhooks to ensure they're working correctly:
+
+<Tabs>
+<Tab title="Using curl">
+Test your contact webhook:
+
+```curl
+curl -X POST "YOUR_CONTACT_WEBHOOK_URL" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "content": "🧪 **Test Message**\n\nThis is a test of the contact form webhook. If you see this message, the webhook is configured correctly!"
+  }'
+```
+
+Test your report webhook:
+
+```curl
+curl -X POST "YOUR_URL_REPORT_WEBHOOK_URL" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "content": "🧪 **Test Message**\n\nThis is a test of the URL report webhook. If you see this message, the webhook is configured correctly!"
+  }'
+```
+</Tab>
+
+<Tab title="Using Discord Interface">
+1. Go back to your webhook settings in Discord
+2. Click **"Test Webhook"** for each webhook
+3. Send a test message to verify the webhook is active
+4. Check that messages appear in the correct channels
+</Tab>
+</Tabs>
+
+<Check>
+If you see test messages in both channels, your webhooks are properly configured and ready to use.
+</Check>
+
+## Alternative Webhook Services (`Coming Soon`)
+
+While Discord is the most common choice, you can also use other webhook services:
+
+<AccordionGroup>
+<Accordion title="Slack Webhooks">
+Create incoming webhooks in Slack:
+1. Go to your Slack workspace settings
+2. Navigate to Apps → Custom Integrations → Incoming WebHooks
+3. Choose a channel and create the webhook
+4. Use the provided webhook URL in your environment variables
+
+Format: `https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX`
+</Accordion>
+
+<Accordion title="Microsoft Teams">
+Set up Teams webhooks:
+1. Go to your Teams channel
+2. Click "⋯" → Connectors
+3. Find "Incoming Webhook" and configure
+4. Copy the webhook URL for your environment variables
+
+Format: `https://outlook.office.com/webhook/...`
+</Accordion>
+
+<Accordion title="Custom Webhook Endpoint">
+You can also create your own webhook endpoint:
+1. Set up a server endpoint that accepts POST requests
+2. Process the JSON payload containing form data
+3. Implement your own notification logic (email, SMS, etc.)
+
+Your endpoint should accept JSON payloads with contact form and report data.
+</Accordion>
+</AccordionGroup>
+
+## Security Best Practices
+
+<Warning>
+Follow these security practices when handling webhooks:
+</Warning>
+
+- **Restrict webhook URLs**: Only share them with trusted team members
+- **Use HTTPS**: Ensure all webhook URLs use HTTPS for encrypted transmission
+- **Rotate regularly**: Consider regenerating webhook URLs periodically
+- **Monitor usage**: Keep an eye on webhook activity for unusual patterns
+- **Validate payloads**: If using custom endpoints, validate incoming data
+
+## Troubleshooting
+
+<AccordionGroup>
+<Accordion title="Webhook not receiving messages">
+- Verify the webhook URL is correctly copied
+- Check that the Discord channel still exists
+- Ensure the webhook hasn't been deleted
+- Test with a simple curl command to isolate the issue
+</Accordion>
+
+<Accordion title="Messages appear in wrong channel">
+- Double-check which channel each webhook is configured for
+- Verify you're using the correct webhook URL for each purpose
+- Regenerate the webhook if needed and update your environment variables
+</Accordion>
+
+<Accordion title="Rate limiting issues">
+- Discord webhooks are rate-limited to 30 requests per minute
+- Implement queuing if expecting high volume of notifications
+- Consider batching multiple reports into single messages
+</Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+With your webhooks configured, you're ready to proceed with deployment:
+
+<CardGroup cols={2}>
+<Card title="Cloud Deployment" icon="cloud" href="/self-hosting/cloud-deployment">
+    Quick deployment using platforms like Vercel or Railway
+</Card>
+
+<Card title="Docker Deployment" icon="docker" href="/self-hosting/docker-deployment">
+    Containerized deployment with Docker
+</Card>
+
+<Card title="Local Development" icon="code" href="/self-hosting/local-development">
+    Manual setup for development and testing
+</Card>
+
+<Card title="Redis Setup" icon="memory" href="/self-hosting/setting-up-redis">
+    Optional Redis configuration for improved performance
+</Card>
+</CardGroup>

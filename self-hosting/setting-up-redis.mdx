@@ -1,0 +1,294 @@
+---
+title: "Setting Up Redis (Optional)"
+description: ""
+icon: "database"
+---
+
+Redis is an in-memory data structure store that can significantly improve the performance of your Spoo.me deployment by providing caching capabilities. While Redis is optional, it's highly recommended for production deployments that expect high traffic volumes.
+
+<Info>
+Redis integration is **completely optional**. Your Spoo.me instance will work perfectly without Redis, but adding it can improve response times and reduce database load.
+</Info>
+
+## Benefits of Adding Redis
+
+✅ **Faster Response Times**: Cache frequently accessed URLs and analytics data
+
+✅ **Reduced Database Load**: Fewer queries to MongoDB for popular URLs
+
+✅ **Rate Limiting**: Implement sophisticated rate limiting and abuse prevention
+
+## When to Add Redis
+
+Consider adding Redis to your deployment if:
+
+- You want to **improve user experience** with faster load times
+- You expect **high traffic volumes** (>1000 URLs shortened per day)
+- Your MongoDB is showing **performance bottlenecks**
+- You're running **multiple server instances or using serverless platforms like vercel** and need shared caching
+
+<Warning>
+For small-scale personal deployments with low traffic, Redis may add unnecessary complexity without significant benefits.
+</Warning>
+
+## Installation Options
+
+Choose the Redis setup method that best fits your deployment:
+
+<Tabs>
+<Tab title="Cloud Redis (Recommended)">
+**Best for**: Production deployments and cloud hosting
+
+Cloud Redis services handle maintenance, backups, and scaling automatically.
+
+### Vercel Redis
+- **Free Tier**: 30mb storage, perfect for caching
+- **Managed Service**: Automatic updates and monitoring
+- **Closer to Vercel Nodes**: If you're using Vercel, Redis is closer to your application nodes, reducing latency
+
+### Redis Cloud (Redis Labs)
+- **Free Tier**: 30MB storage, perfect for caching
+- **Managed Service**: Automatic updates and monitoring
+- **Global Availability**: Low-latency access worldwide
+
+### AWS ElastiCache
+- **Integration**: Perfect if using AWS for hosting
+- **Scaling**: Easy to scale up as needed
+- **Security**: VPC integration and encryption
+
+### Google Cloud Memorystore
+- **Integration**: Ideal for Google Cloud deployments
+- **Performance**: High-performance SSD storage
+- **Monitoring**: Built-in monitoring and alerting
+</Tab>
+
+<Tab title="Self-Hosted Redis">
+**Best for**: Local development and custom server deployments
+
+<Tabs>
+<Tab title="Ubuntu/Debian">
+```bash
+# Update package index
+sudo apt update
+
+# Install Redis
+sudo apt install -y redis-server
+
+# Start Redis service
+sudo systemctl start redis-server
+sudo systemctl enable redis-server
+
+# Test installation
+redis-cli ping
+# Should return: PONG
+```
+</Tab>
+
+<Tab title="CentOS/RHEL">
+```bash
+# Install Redis
+sudo yum install -y redis
+# or for newer versions:
+sudo dnf install -y redis
+
+# Start Redis service
+sudo systemctl start redis
+sudo systemctl enable redis
+
+# Test installation
+redis-cli ping
+```
+</Tab>
+
+<Tab title="macOS">
+```bash
+# Install using Homebrew
+brew install redis
+
+# Start Redis
+brew services start redis
+
+# Test installation
+redis-cli ping
+```
+</Tab>
+
+<Tab title="Windows">
+Redis doesn't officially support Windows, but you can use:
+
+1. **WSL (Windows Subsystem for Linux)**: Install Redis in WSL
+2. **Docker**: Run Redis in a Docker container
+3. **Redis for Windows**: Use the Microsoft port (not recommended for production)
+
+```powershell
+# Using Docker (recommended)
+docker run -d --name redis -p 6379:6379 redis:alpine
+```
+</Tab>
+</Tabs>
+</Tab>
+
+<Tab title="Docker Redis">
+**Best for**: Containerized deployments and development
+
+```bash
+# Run Redis in Docker
+docker run -d \
+  --name redis \
+  -p 6379:6379 \
+  -v redis_data:/data \
+  redis:alpine
+
+# Or add to your docker-compose.yml
+```
+
+```yaml
+version: '3.8'
+services:
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+volumes:
+  redis_data:
+```
+</Tab>
+</Tabs>
+
+## Cloud Redis Setup (Recommended)
+
+### Redis Cloud Setup
+
+<Steps>
+<Step title="Create Redis Cloud Account">
+    1. Visit [Redis Cloud](https://redis.com/try-free/) and sign up for a free account
+    2. Verify your email address
+    3. Complete the account setup process
+    
+    <Info>
+    The free tier provides 30MB of storage, which is sufficient for caching in most Spoo.me deployments.
+    </Info>
+</Step>
+
+<Step title="Create a Database">
+    1. In the Redis Cloud dashboard, click **"New Database"**
+    2. Choose **"Fixed"** plan (free tier)
+    3. Select your preferred **cloud provider** (AWS recommended)
+    4. Choose a **region** closest to your Spoo.me deployment
+    5. Set a **database name** (e.g., "spoo-me-cache")
+    6. Click **"Create Database"**
+    
+    <Check>
+    Wait for the database to be created. This usually takes 2-3 minutes.
+    </Check>
+</Step>
+
+<Step title="Get Connection Details">
+    Once your database is ready:
+    
+    1. Click on your database name
+    2. Go to the **"Configuration"** tab
+    3. Copy the **"Public endpoint"** (something like: `redis-12345.c1.us-west-2.cache.amazonaws.com:6379`)
+    4. Note the **"Default user password"**
+    
+    Your Redis URL will be in this format:
+    ```
+    redis://default:your-password@redis-12345.c1.us-west-2.cache.amazonaws.com:6379
+    ```
+</Step>
+
+<Step title="Test Connection">
+    Test your Redis connection:
+    
+    ```bash
+    # Install redis-cli if not already installed
+    sudo apt install redis-tools  # Ubuntu/Debian
+    brew install redis            # macOS
+    
+    # Test connection
+    redis-cli -u "redis://default:your-password@your-redis-endpoint:6379" ping
+    ```
+    
+    <Check>
+    You should receive a "PONG" response confirming the connection works.
+    </Check>
+</Step>
+</Steps>
+
+## Configuring Spoo.me with Redis
+
+### Environment Variables
+
+Add Redis configuration to your `.env` file:
+
+```bash
+# Redis Configuration
+REDIS_URI=redis://default:your-password@your-redis-endpoint:6379
+REDIS_TTL_SECONDS=3600          # Cache TTL in seconds (1 hour)
+```
+
+## Troubleshooting Redis Issues
+
+<AccordionGroup>
+<Accordion title="Connection Errors">
+**Symptoms**: Cannot connect to Redis server
+
+**Solutions**:
+- Verify Redis URL format and credentials
+- Check if Redis server is running: `redis-cli ping`
+- Verify network connectivity and firewall rules
+- Check Redis configuration file for binding issues
+- Ensure Redis service is started: `sudo systemctl status redis`
+</Accordion>
+
+<Accordion title="Performance Issues">
+**Symptoms**: Slow Redis responses or high memory usage
+
+**Solutions**:
+- Monitor memory usage: `redis-cli info memory`
+- Check for slow queries: `redis-cli slowlog get`
+- Adjust memory limits and eviction policies
+- Consider using Redis clustering for large datasets
+- Optimize your caching strategy and TTL values
+</Accordion>
+
+<Accordion title="Cache Inconsistency">
+**Symptoms**: Stale data being served from cache
+
+**Solutions**:
+- Implement cache invalidation on data updates
+- Use appropriate TTL values for different data types
+- Add cache versioning for critical data
+- Implement cache warming strategies
+- Monitor cache hit rates and adjust accordingly
+</Accordion>
+
+<Accordion title="Redis Running Out of Memory">
+**Symptoms**: Redis stops accepting writes, memory errors
+
+**Solutions**:
+```bash
+# Check current memory usage
+redis-cli info memory
+
+# Set memory limit and eviction policy
+redis-cli config set maxmemory 256mb
+redis-cli config set maxmemory-policy allkeys-lru
+
+# Clear specific keys if needed
+redis-cli del "pattern:*"
+
+# Monitor memory usage over time
+watch -n 1 'redis-cli info memory | grep used_memory_human'
+```
+</Accordion>
+</AccordionGroup>
+
+<Info>
+Redis integration is optional but can significantly improve your Spoo.me deployment's performance and scalability. Start with basic caching and gradually add more advanced features as needed.
+</Info>

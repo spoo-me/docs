@@ -1,0 +1,216 @@
+---
+title: "Setting Up MongoDB"
+description: ""
+icon: "database"
+---
+
+MongoDB is a NoSQL database that Spoo.me uses to store URLs, analytics data, and user information. You can either set up a MongoDB server on your own infrastructure or use a cloud service like MongoDB Atlas.
+
+<Tip>
+We **strongly recommend** using MongoDB Atlas as it offers a generous free tier, automatic backups, and professional management without the complexity of self-hosting.
+</Tip>
+
+## MongoDB Atlas Setup (Recommended)
+
+MongoDB Atlas provides a free M0 tier that's perfect for most Spoo.me deployments and can handle thousands of URLs without any cost.
+
+<Steps>
+<Step title="Create MongoDB Atlas Account">
+    Navigate to [MongoDB Atlas](https://www.mongodb.com/atlas) and sign up for a free account.
+    
+    <Check>
+    Verify your email address when prompted to activate your account.
+    </Check>
+</Step>
+
+<Step title="Create a New Cluster">
+    After logging in, you'll see the Atlas dashboard.
+    
+    1. Click on **"Build a Database"** or **"Create"** button
+    2. Choose the **"M0 Sandbox"** option (this is the free tier)
+    3. Select your preferred cloud provider (AWS is recommended)
+    4. Choose a region closest to your target audience for better performance
+    5. Give your cluster a memorable name (e.g., "spoo-me-cluster")
+    6. Click **"Create Deployment"**
+    
+    <Info>
+    The cluster creation process typically takes 3-5 minutes to complete.
+    </Info>
+</Step>
+
+<Step title="Create Database User">
+    Once your cluster is ready, you'll see a "Connect to Cluster" dialog.
+    
+    1. In the **"Username"** field, enter a username (e.g., "spoo-admin")
+    2. Click **"Autogenerate Secure Password"** or create your own strong password
+    3. **Important**: Copy and save the password immediately - you won't see it again
+    4. Click **"Create Database User"**
+    
+    <Warning>
+    Store your username and password securely. You'll need these credentials for your connection string.
+    </Warning>
+</Step>
+
+<Step title="Configure Network Access">
+    Set up IP address access for your deployment.
+    
+    1. Click **"Choose a connection method"**
+    2. Select **"Drivers"** 
+    3. In the IP Access List, click **"Add a Different IP Address"**
+    4. Click **"Allow access from anywhere"** (adds 0.0.0.0/0)
+    5. Click **"Confirm"**
+    
+    <Warning>
+    While "Allow access from anywhere" is convenient for development, consider restricting IP access to your server's IP address in production for better security.
+    </Warning>
+</Step>
+
+<Step title="Get Connection String">
+    Now you'll get your MongoDB connection string.
+    
+    1. Choose **"Node.js"** as your driver
+    2. Copy the connection string - it should look like this:
+    
+    ```
+    mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+    ```
+    
+    3. Replace `<username>` with your database username
+    4. Replace `<password>` with your database password
+    5. Save this complete connection string securely
+    
+    <Check>
+    Your final connection string should look like:
+    `mongodb+srv://spoo-admin:yourpassword@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
+    </Check>
+</Step>
+</Steps>
+
+## Connection String Security
+
+Your MongoDB connection string contains sensitive credentials and should be treated as a secret.
+
+<Warning>
+**Never commit your connection string to version control or share it publicly.** Always use environment variables to store database credentials.
+</Warning>
+
+### Environment Variable Usage
+
+When deploying your Spoo.me instance, you'll use your connection string as the `MONGODB_URI` environment variable:
+
+```bash
+MONGODB_URI=mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+```
+
+## Alternative: Self-Hosted MongoDB
+
+If you prefer to host MongoDB on your own server, you can install MongoDB Community Edition:
+
+<Tabs>
+<Tab title="Ubuntu/Debian">
+```bash
+# Import MongoDB public GPG key
+wget -qO - https://www.mongodb.org/static/pgp/server-7.0.asc | sudo apt-key add -
+
+# Add MongoDB repository
+echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+
+# Update package database
+sudo apt-get update
+
+# Install MongoDB
+sudo apt-get install -y mongodb-org
+
+# Start MongoDB service
+sudo systemctl start mongod
+sudo systemctl enable mongod
+```
+
+Your connection string would be:
+```
+mongodb://localhost:27017
+```
+</Tab>
+
+<Tab title="Windows">
+# Download MongoDB Community Edition
+https://www.mongodb.com/try/download/community
+
+# Install MongoDB command line tools
+https://www.mongodb.com/try/download/database-tools
+
+# Start MongoDB server
+```bash
+mongod --dbpath "C:\your-preffered-path" --port 27017
+```
+
+# Connection string
+`mongodb://localhost:27017`
+
+</Tab>
+
+<Tab title="Docker">
+```bash
+# Run MongoDB in Docker container
+docker run -d \
+  --name mongodb \
+  -p 27017:27017 \
+  -v mongodb_data:/data/db \
+  mongo:7.0
+
+# Connection string
+mongodb://localhost:27017
+```
+</Tab>
+</Tabs>
+
+<Info>
+Self-hosted MongoDB requires additional configuration for security, backups, and monitoring. MongoDB Atlas handles these concerns automatically.
+</Info>
+
+## Verification
+
+To verify your MongoDB setup is working correctly:
+
+1. **For MongoDB Atlas**: Use the "Connect" button in your cluster dashboard and test the connection
+2. **For self-hosted**: Run `mongosh` command to connect to your local instance
+
+<Check>
+Once you have your `MONGODB_URI` connection string ready, you can proceed to the next step of setting up webhooks or choosing your deployment method.
+</Check>
+
+## Troubleshooting
+
+<AccordionGroup>
+<Accordion title="Connection timeout errors">
+- Verify your IP address is in the Atlas IP Access List
+- Check if your network firewall blocks MongoDB ports (27017)
+- Ensure your connection string format is correct
+</Accordion>
+
+<Accordion title="Authentication failed">
+- Double-check your username and password in the connection string
+- Ensure the database user has proper permissions
+- Verify the database name if you're connecting to a specific database
+</Accordion>
+
+<Accordion title="SSL/TLS connection issues">
+- MongoDB Atlas requires SSL connections by default
+- Ensure your connection string includes the SSL parameters
+- For self-hosted MongoDB, configure SSL certificates if needed
+</Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+With MongoDB configured, you can now:
+
+<CardGroup cols={2}>
+<Card title="Create Webhooks" icon="webhook" href="/self-hosting/creating-contact-webhooks">
+    Set up Discord webhooks for contact forms and URL reporting
+</Card>
+
+<Card title="Choose Deployment Method" icon="rocket" href="/self-hosting/cloud-deployment">
+    Select your preferred deployment approach
+</Card>
+</CardGroup>

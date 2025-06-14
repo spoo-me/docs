@@ -1,0 +1,134 @@
+---
+title: "Introduction"
+description: ""
+icon: "book-open"
+---
+
+
+Spoo.me offers multiple deployment methods to suit different technical expertise levels and infrastructure preferences. Each method provides varying degrees of control, customization, and complexity.
+
+<Info>
+Our support is tailored to individual needs. Should you have any inquiries, we invite you to pose them on our [Discord server](https://spoo.me/discord).
+</Info>
+
+## Server Architecture
+
+Understanding how Spoo.me works will help you choose the right deployment method and configuration for your needs.
+
+<Frame>
+```mermaid
+graph TD
+    A[User Request] --> B[Spoo.me Application]
+    B --> C{Request Type}
+    
+    C -->|URL Redirect| D[URL Lookup]
+    C -->|Shorten URL| E[URL Creation]
+    C -->|Analytics| F[Statistics Query]
+    C -->|Contact Form| G[Contact Handler]
+    C -->|Report URL| H[Report Handler]
+    
+    D --> I{Check Redis Cache}
+    I -->|Cache Hit| J[Return Cached URL]
+    I -->|Cache Miss| K[(MongoDB Database)]
+    K --> L[Update Redis Cache]
+    L --> M[Return Shortened URL]
+    
+    E --> K
+    F --> K
+    K --> N[Return Analytics]
+    
+    G --> O[Discord Webhook<br/>Contact Form]
+    H --> P[Discord Webhook<br/>URL Reports]
+    
+    J --> Q[Redirect User]
+    N --> R[Analytics Response]
+    Q --> S[User]
+    R --> S
+```
+</Frame>
+
+## Prerequisites
+
+Before deploying Spoo.me, you'll need to set up the following components:
+
+<Steps>
+<Step title="Set up MongoDB Database">
+    MongoDB is required to store URLs, analytics, and user data. We recommend using MongoDB Atlas for its free tier and ease of setup.
+    
+    <Card title="MongoDB Setup Guide" icon="database" href="/self-hosting/setting-up-mongo">
+        Complete guide to setting up MongoDB Atlas or self-hosted MongoDB
+    </Card>
+</Step>
+
+<Step title="Create Discord Webhooks">
+    Webhooks are needed for the contact form and URL reporting functionality.
+    
+    <Card title="Webhook Creation Guide" icon="webhook" href="/self-hosting/creating-contact-webhooks">
+        Step-by-step instructions for creating Discord webhooks
+    </Card>
+</Step>
+</Steps>
+
+## Deployment Methods
+
+Choose the deployment method that best fits your technical expertise and requirements:
+
+<CardGroup cols={2}>
+<Card title="Cloud Deployment" icon="cloud" href="/self-hosting/cloud-deployment">
+    **Recommended for beginners**
+    
+    Deploy with one-click using platforms like Vercel, Railway, or Render. Perfect for getting started quickly with minimal configuration.
+    
+    - ✅ Easy setup
+    - ✅ Free hosting options
+    - ✅ Automatic scaling
+    - ❌ Limited customization
+</Card>
+
+<Card title="Docker Deployment" icon="docker" href="/self-hosting/docker-deployment">
+    **For intermediate users**
+    
+    Use Docker containers for consistent deployment across different environments. Ideal for users familiar with containerization.
+    
+    - ✅ Consistent environment
+    - ✅ Easy scaling
+    - ✅ Good customization
+    - ⚠️ Requires Docker knowledge
+</Card>
+
+<Card title="Local Development" icon="code" href="/self-hosting/local-development">
+    **For advanced users**
+    
+    Manual setup with full control over the environment. Best for development, testing, and maximum customization.
+    
+    - ✅ Full control
+    - ✅ Maximum customization
+    - ✅ Best for development
+    - ❌ Requires technical expertise
+</Card>
+
+<Card title="Redis Setup (Optional)" icon="memory" href="/self-hosting/setting-up-redis">
+    **Performance Enhancement**
+    
+    Optional Redis configuration for improved caching and performance in high-traffic deployments.
+    
+    - ✅ Better performance
+    - ✅ Caching support
+    - ⚠️ Additional complexity
+</Card>
+</CardGroup>
+
+## What You'll Get
+
+After successful deployment, your self-hosted Spoo.me instance will include:
+
+- 🔗 **URL Shortening**: Core functionality to create short URLs
+- 📊 **Analytics Dashboard**: Track clicks, referrers, and geographic data  
+- 📱 **Responsive Design**: Works perfectly on all devices
+- 🛡️ **Security Features**: Built-in protection against abuse
+- 📧 **Contact Forms**: Direct communication with webhook integration
+- 🚨 **URL Reporting**: Allow users to report problematic URLs
+
+<Tip>
+For the best experience, ensure you have completed the prerequisite steps (MongoDB and webhooks) before proceeding with any deployment method.
+</Tip>

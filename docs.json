@@ -10,34 +10,34 @@
   "favicon": "/images/logo/logo.png",
 
   "navigation": {
-    "tabs": [
+    "groups": [
       {
-        "tab": "Documentation",
-        "groups": [
-          {
-            "group": "Getting Started",
-            "pages": [
-              "introduction",
-              "quickstart",
-              "rate-limits"
-            ]
-          },
-          {
-            "group": "API Reference",
-            "pages": [
-              "api-reference/shorten-url",
-              "api-reference/emoji-url",
-              "api-reference/url-statistics",
-              "api-reference/export-data"
-            ]
-          },
-          {
-            "group": "Tools & Libraries",
-            "pages": [
-              "tools/python-library",
-              "tools/spoobot"
-            ]
-          }
+        "group": "Getting Started",
+        "pages": ["introduction", "quickstart", "rate-limits"]
+      },
+      {
+        "group": "API Reference",
+        "pages": [
+          "api-reference/shorten-url",
+          "api-reference/emoji-url",
+          "api-reference/url-statistics",
+          "api-reference/export-data"
+        ]
+      },
+      {
+        "group": "Tools & Libraries",
+        "pages": ["tools/python-library", "tools/spoobot"]
+      },
+      {
+        "group": "Self Hosting",
+        "pages": [
+          "self-hosting/introduction",
+          "self-hosting/setting-up-mongo",
+          "self-hosting/setting-up-redis",
+          "self-hosting/creating-discord-webhooks",
+          "self-hosting/cloud-deployment",
+          "self-hosting/docker-deployment",
+          "self-hosting/local-development"
         ]
       }
     ]

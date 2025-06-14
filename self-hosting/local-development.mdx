@@ -1,0 +1,494 @@
+---
+title: "Local Development Setup"
+description: ""
+icon: "code"
+---
+
+Local development provides the maximum flexibility and control over your Spoo.me deployment. This method is ideal for developers who want to customize the codebase, add new features, or thoroughly understand how the application works.
+
+<Warning>
+**Advanced Users Only**: This method requires experience with Python development, uv package manager, and server management. It's recommended for developers comfortable with command-line tools and debugging.
+</Warning>
+
+## Benefits of Local Development
+
+✅ **Full Control**: Complete access to modify code, add features, and customize functionality
+
+✅ **Development Environment**: Perfect for testing changes before deployment
+
+✅ **Custom Integrations**: Add analytics, SEO optimizations, or third-party integrations
+
+✅ **Performance Tuning**: Optimize database queries and server configuration
+
+✅ **Learning Opportunity**: Understand the complete application architecture
+
+## Prerequisites
+
+Before starting, ensure you have:
+
+- **Python 3.10 or higher** installed on your system
+- **Git** for version control
+- Basic knowledge of Python development and virtual environments
+- Basic knowledge of uv package manager
+- Completed [MongoDB setup](/self-hosting/setting-up-mongo) and [webhook creation](/self-hosting/creating-contact-webhooks)
+
+<Tabs>
+<Tab title="Windows">
+```powershell
+# Check Python version
+python --version
+
+# Check Git installation
+git --version
+
+# Install Python if needed
+# Download from https://python.org/downloads
+```
+</Tab>
+
+<Tab title="macOS">
+```bash
+# Check Python version
+python3 --version
+
+# Install using Homebrew (recommended)
+brew install python3 git
+
+# Or download from https://python.org/downloads
+```
+</Tab>
+
+<Tab title="Ubuntu/Debian">
+```bash
+# Update package index
+sudo apt update
+
+# Install Python and Git
+sudo apt install -y python3 python3-pip python3-venv git
+
+# Verify installation
+python3 --version
+git --version
+```
+</Tab>
+
+<Tab title="CentOS/RHEL">
+```bash
+# Install Python and Git
+sudo yum install -y python3 python3-pip git
+
+# Or for newer versions
+sudo dnf install -y python3 python3-pip git
+
+# Verify installation
+python3 --version
+git --version
+```
+</Tab>
+</Tabs>
+
+## Setting Up the Development Environment
+
+<Steps>
+<Step title="Clone the Repository">
+    Start by cloning the Spoo.me repository to your local machine:
+    
+    ```bash
+    # Clone the repository
+    git clone https://github.com/spoo-me/url-shortener.git
+    
+    # Navigate to the project directory
+    cd url-shortener
+    
+    # List files to verify successful clone
+    ls -la
+    ```
+    
+    <Info>
+    This downloads the complete source code, including all necessary configuration files and dependencies.
+    </Info>
+</Step>
+
+<Step title="Installing Dependencies">
+    We use uv to automatically setup the development environment and install the dependencies:
+    
+    <Tabs>
+    <Tab title="Windows">
+    ```cmd
+    # Install uv
+    pip install uv
+
+    # Sync and install dependencies
+    uv sync
+    ```
+    </Tab>
+    
+    <Tab title="macOS/Linux">
+    ```bash
+    # Install uv
+    pip3 install uv
+
+    # Sync and install dependencies
+    uv sync
+    ```
+    </Tab>
+    </Tabs>
+    
+    <Check>
+    Your command prompt should now show `(venv)` at the beginning, indicating the virtual environment is active.
+    </Check>
+</Step>
+
+<Step title="Configure Environment Variables">
+    Create and configure your environment file:
+    
+    ```bash
+    # Create environment file
+    touch .env  # On Windows: type nul > .env
+    
+    # Edit the file with your preferred editor
+    nano .env  # or code .env, vim .env, etc.
+    ```
+    
+    Add your configuration variables:
+    
+    ```bash
+    # MongoDB Configuration
+    MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/spoo-me?retryWrites=true&w=majority
+    
+    # Discord Webhooks
+    CONTACT_WEBHOOK=https://discord.com/api/webhooks/your-contact-webhook-id/your-webhook-token
+    URL_REPORT_WEBHOOK=https://discord.com/api/webhooks/your-report-webhook-id/your-webhook-token
+
+    # Redis Configuration
+    REDIS_URI=redis://localhost:6379
+
+    # Optional: Redis Configuration
+    REDIS_TTL_SECONDS=3600
+
+    # Optional: Development Settings
+    DEBUG=True
+    PORT=8000
+    HOST=0.0.0.0
+    ```
+    
+    <Warning>
+    Never commit your `.env` file to version control. Add it to `.gitignore` to prevent accidental commits.
+    </Warning>
+</Step>
+</Steps>
+
+## Starting the Development Server
+
+<Steps>
+<Step title="Start the Application">
+    Launch the Spoo.me development server:
+    
+    ```bash
+    # Start the server
+    uv run main.py
+    ```
+    
+    You should see output similar to:
+    
+    ```
+    * Running on http://0.0.0.0:8000
+    * Debug mode: on
+    * Restarting with stat
+    * Debugger is active!
+    ```
+    
+    <Info>
+    The server runs in debug mode by default, which means it will automatically restart when you make code changes.
+    </Info>
+</Step>
+
+<Step title="Access Your Application">
+    Open your web browser and navigate to:
+    
+    - **Local access**: http://localhost:8000
+    - **Network access**: http://your-ip-address:8000
+    
+    <Check>
+    You should see the Spoo.me homepage. Test the URL shortening functionality to ensure everything is working correctly.
+    </Check>
+</Step>
+
+<Step title="Test Core Features">
+    Verify all functionality is working:
+    
+    1. **URL Shortening**: Create a test short URL
+    2. **Analytics**: Click the short URL and check analytics
+    3. **Contact Form**: Submit the contact form to test webhooks
+    4. **URL Reporting**: Test the URL reporting feature
+    
+    <Tip>
+    Check your Discord channels to verify webhook notifications are being received.
+    </Tip>
+</Step>
+</Steps>
+
+## Development Workflow
+
+### Code Structure Overview
+
+Understanding the project structure will help you navigate and modify the code:
+
+```
+── url-shortener/
+    ├── main.py
+    ├── blueprints/
+    │   ├── api.py
+    │   ├── contact.py
+    │   ├── docs.py
+    │   ├── limiter.py
+    │   ├── redirector.py
+    │   ├── seo.py
+    │   ├── stats.py
+    │   └── url_shortener.py
+    ├── cache/
+    │   ├── __init__.py
+    │   ├── base_cache.py
+    │   ├── cache_updates.py
+    │   ├── cache_url.py
+    │   ├── dual_cache.py
+    │   └── redis_client.py
+    ├── misc/
+    │   ├── GeoLite2-Country.mmdb
+    ├── static/
+    │   ├── css/
+    │   ├── images/
+    │   └── js/
+    ├── templates/
+    │   ├── api.html
+    │   ├── index.html
+    │   ├── stats.html
+    ├── utils/
+    │   ├── __init__.py
+    │   ├── analytics_utils.py
+    │   ├── contact_utils.py
+    │   ├── export_utils.py
+    │   ├── general.py
+    │   ├── mongo_utils.py
+    │   ├── pipeline_utils.py
+    │   └── url_utils.py
+    └── .github/
+        ├── dependabot.yml
+        └── workflows/
+            ├── api_test.yaml
+            ├── github-ci.yaml
+            └── minify.yaml
+```
+
+### Making Code Changes
+
+<Steps>
+<Step title="Create a Development Branch">
+    Always work on a separate branch for new features:
+    
+    ```bash
+    # Create and switch to a new branch
+    git checkout -b feature/my-new-feature
+    
+    # Or for bug fixes
+    git checkout -b fix/bug-description
+    ```
+</Step>
+
+<Step title="Make Your Changes">
+    Edit the relevant files using your preferred code editor:
+    
+    ```bash
+    # Open project in VS Code
+    code .
+    
+    # Or use any other editor
+    vim main.py
+    nano templates/index.html
+    ```
+    
+    <Tip>
+    The development server automatically reloads when you save changes, so you can see updates immediately.
+    </Tip>
+</Step>
+
+<Step title="Test Your Changes">
+    Always test your modifications thoroughly:
+    
+    1. Test in the browser
+    2. Check console output for errors
+    3. Verify database operations
+    4. Test edge cases and error handling
+    
+    ```bash
+    # Run any custom tests you've created
+    python -m pytest tests/
+    
+    # Or run manual tests
+    python test_custom_feature.py
+    ```
+</Step>
+
+<Step title="Commit Your Changes">
+    Use descriptive commit messages:
+    
+    ```bash
+    # Stage your changes
+    git add .
+    
+    # Commit with descriptive message
+    git commit -m "Add custom analytics dashboard feature"
+    
+    # Push to your branch
+    git push origin feature/my-new-feature
+    ```
+</Step>
+</Steps>
+
+## Production Deployment
+
+When you're ready to deploy your customized version:
+
+<Steps>
+<Step title="Production Environment Setup">
+    Create a production environment file:
+    
+    ```bash
+    # .env.production
+    DEBUG=False
+    PORT=8000
+    HOST=0.0.0.0
+    MONGODB_URI=your-production-mongodb-uri
+    CONTACT_WEBHOOK=your-production-webhook
+    URL_REPORT_WEBHOOK=your-production-report-webhook
+    ```
+</Step>
+
+<Step title="Install Production Dependencies">
+    ```bash
+    # Install additional production packages
+    pip install gunicorn  # WSGI server
+    pip install nginx     # Reverse proxy (if needed)
+    
+    # Update requirements
+    pip freeze > requirements.txt
+    ```
+</Step>
+
+<Step title="Create Production Startup Script">
+    Create `start_production.sh`:
+    
+    ```bash
+    #!/bin/bash
+    source venv/bin/activate
+    export $(cat .env.production | xargs)
+    gunicorn -w 4 -b 0.0.0.0:8000 main:app
+    ```
+    
+    Make it executable:
+    ```bash
+    chmod +x start_production.sh
+    ```
+</Step>
+
+<Step title="Set Up Process Management">
+    Use a process manager like systemd or supervisord:
+    
+    ```ini
+    # /etc/systemd/system/spoo-me.service
+    [Unit]
+    Description=Spoo.me URL Shortener
+    After=network.target
+    
+    [Service]
+    Type=simple
+    User=your-username
+    WorkingDirectory=/path/to/url-shortener
+    ExecStart=/path/to/url-shortener/start_production.sh
+    Restart=always
+    
+    [Install]
+    WantedBy=multi-user.target
+    ```
+    
+    Enable and start the service:
+    ```bash
+    sudo systemctl enable spoo-me
+    sudo systemctl start spoo-me
+    ```
+</Step>
+</Steps>
+
+## Troubleshooting
+
+<AccordionGroup>
+<Accordion title="Import Errors">
+**Symptoms**: `ModuleNotFoundError` or import-related errors
+
+**Solutions**:
+- Ensure your virtual environment is activated
+- Verify all dependencies are installed: `pip install -r requirements.txt`
+- Check Python path and working directory
+- Install missing packages manually: `pip install package-name`
+</Accordion>
+
+<Accordion title="Database Connection Issues">
+**Symptoms**: Cannot connect to MongoDB or database errors
+
+**Solutions**:
+- Verify your `MONGODB_URI` in the `.env` file
+- Test connection with the database test script
+- Check MongoDB Atlas IP whitelist settings
+- Ensure your MongoDB cluster is running
+</Accordion>
+
+<Accordion title="Port Already in Use">
+**Symptoms**: `Address already in use` error when starting server
+
+**Solutions**:
+```bash
+# Find process using port 8000
+netstat -tulpn | grep :8000  # Linux/macOS
+netstat -ano | findstr :8000  # Windows
+
+# Kill the process
+kill -9 <PID>  # Linux/macOS
+taskkill /PID <PID> /F  # Windows
+
+# Or change port in .env file
+PORT=8001
+```
+</Accordion>
+
+<Accordion title="Template or Static File Issues">
+**Symptoms**: 404 errors for CSS/JS files or template rendering errors
+
+**Solutions**:
+- Verify file paths in templates match actual file locations
+- Check Flask static and template folder configuration
+- Ensure static files are in the correct directory structure
+- Clear browser cache and hard refresh
+</Accordion>
+</AccordionGroup>
+
+## Contributing Back to the Project
+
+If you've made improvements that could benefit others:
+
+<Steps>
+<Step title="Fork the Original Repository">
+    Create your own fork on GitHub to contribute changes back.
+</Step>
+
+<Step title="Create Feature Branches">
+    Work on separate branches for each feature or fix.
+</Step>
+
+<Step title="Submit Pull Requests">
+    Share your improvements with the community through pull requests.
+</Step>
+</Steps>
+
+<Tip>
+Check the project's contribution guidelines and code standards before submitting changes.
+</Tip>
