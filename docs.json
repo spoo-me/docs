@@ -67,8 +67,8 @@
     ]
   },
   "logo": {
-    "light": "/images/logo/logo-black.png",
-    "dark": "/images/logo/logo.png",
+    "light": "/images/logo/logo-full-light.png",
+    "dark": "/images/logo/logo-full-dark.png",
     "href": "https://spoo.me"
   },
   "icons": {
