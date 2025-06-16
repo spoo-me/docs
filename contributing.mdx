@@ -1,0 +1,1111 @@
+---
+title: "Contributing to Spoo.me"
+description: ""
+icon: "heart"
+---
+
+We're thrilled that you're interested in contributing to Spoo.me! This guide will help you get started with contributing to our lightning-fast URL shortening service, whether you're fixing bugs, adding features, or improving documentation.
+
+<Info>
+Join our [Discord community](https://spoo.me/discord) for real-time discussions, questions, and collaboration with other contributors and maintainers.
+</Info>
+
+## Project Architecture
+
+Understanding Spoo.me's architecture will help you navigate the codebase and make meaningful contributions.
+
+<Frame>
+```mermaid
+graph TD
+    A[User Request] --> B[Flask Application]
+    B --> C{Request Type}
+    
+    C -->|URL Redirect| D[URL Lookup]
+    C -->|Shorten URL| E[URL Creation]
+    C -->|Analytics| F[Statistics Query]
+    C -->|Contact Form| G[Contact Handler]
+    C -->|Report URL| H[Report Handler]
+    
+    D --> I{Check Redis Cache}
+    I -->|Cache Hit| J[Return Cached URL]
+    I -->|Cache Miss| K[(MongoDB Database)]
+    K --> L[Update Redis Cache]
+    L --> M[Return Shortened URL]
+    
+    E --> K
+    F --> K
+    K --> N[Return Analytics]
+    
+    G --> O[Discord Webhook<br/>Contact Form]
+    H --> P[Discord Webhook<br/>URL Reports]
+    
+    J --> Q[Redirect User]
+    N --> R[Analytics Response]
+    Q --> S[User]
+    R --> S
+```
+</Frame>
+
+### Technology Stack
+
+**Backend Framework**
+- **Flask**: Python web framework for handling HTTP requests
+- **Jinja2**: Template engine for rendering HTML pages
+- **Gunicorn**: WSGI HTTP Server for production deployment
+
+**Database & Caching**
+- **MongoDB**: Primary database for URL storage and analytics
+- **Redis**: Caching layer for improved performance
+
+**Development Tools**
+- **uv**: Modern Python package manager and project management
+- **Ruff**: Fast Python linter and formatter
+- **GitHub Actions**: CI/CD pipeline for automated testing
+
+## Prerequisites
+
+Before contributing, ensure you have the following installed and basic knowledge of these technologies:
+
+<Steps>
+<Step title="System Requirements">
+    <Tabs>
+    <Tab title="Windows">
+    ```powershell
+    # Python 3.10 or higher
+    python --version
+    
+    # Git for version control
+    git --version
+    
+    # Install if needed from official websites
+    ```
+    </Tab>
+    
+    <Tab title="macOS">
+    ```bash
+    # Install via Homebrew (recommended)
+    brew install python3 git
+    
+    # Verify installation
+    python3 --version
+    git --version
+    ```
+    </Tab>
+    
+    <Tab title="Linux">
+    ```bash
+    # Ubuntu/Debian
+    sudo apt update
+    sudo apt install -y python3 python3-pip git
+    
+    # CentOS/RHEL
+    sudo dnf install -y python3 python3-pip git
+    
+    # Verify installation
+    python3 --version
+    git --version
+    ```
+    </Tab>
+    </Tabs>
+</Step>
+
+<Step title="Required Knowledge">
+    Basic familiarity with:
+    
+    - **Python**: Core language for the backend
+    - **Flask**: Web framework fundamentals
+    - **MongoDB**: NoSQL database operations
+    - **Redis**: Caching concepts (optional but helpful)
+    - **Jinja2**: Template syntax for HTML rendering
+    - **Git/GitHub**: Version control and collaboration
+    
+    <Tip>
+    Don't worry if you're not an expert in all these areas! You can learn as you contribute, and our community is here to help.
+    </Tip>
+</Step>
+
+<Step title="External Services Setup">
+    For full functionality, you'll need:
+    
+    - **MongoDB Atlas** account (free tier available)
+    - **Discord server** for webhook testing (optional for basic development)
+    - **Redis instance** (local or cloud, optional for basic development)
+    
+    <Info>
+    These can be set up during the development environment setup process.
+    </Info>
+</Step>
+</Steps>
+
+## Getting Started
+
+Follow these steps to set up your development environment and make your first contribution.
+
+<Steps>
+<Step title="Fork and Clone the Repository">
+    ```bash
+    # Fork the repository on GitHub first, then clone your fork
+    git clone https://github.com/YOUR_USERNAME/url-shortener.git
+    
+    # Navigate to the project directory
+    cd url-shortener
+    
+    # Add the original repository as upstream
+    git remote add upstream https://github.com/spoo-me/url-shortener.git
+    
+    # Verify remotes
+    git remote -v
+    ```
+    
+    <Check>
+    You should see both `origin` (your fork) and `upstream` (original repository) remotes.
+    </Check>
+</Step>
+
+<Step title="Install uv Package Manager">
+    ```bash
+    # Install uv globally
+    pip install uv
+    
+    # Verify installation
+    uv --version
+    ```
+    
+    <Info>
+    uv is a fast Python package installer and resolver that manages virtual environments automatically.
+    </Info>
+</Step>
+
+<Step title="Set Up Development Environment">
+    ```bash
+    # Sync dependencies and create virtual environment
+    uv sync
+    
+    # This automatically:
+    # - Creates a virtual environment
+    # - Installs all dependencies from pyproject.toml
+    # - Sets up the development environment
+    ```
+    
+    <Check>
+    Your terminal should now show the virtual environment is active.
+    </Check>
+</Step>
+
+<Step title="Configure Environment Variables">
+    Create your local environment configuration:
+    
+    ```bash
+    # Create environment file
+    touch .env  # On Windows: type nul > .env
+    ```
+    
+    Add the required configuration:
+    
+    ```bash
+    # Basic Development Configuration
+    DEBUG=True
+    PORT=8000
+    HOST=0.0.0.0
+    
+    # MongoDB Configuration (required)
+    MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/spoo-me?retryWrites=true&w=majority
+    
+    # Optional: Redis Configuration (for caching)
+    REDIS_URI=redis://localhost:6379
+    REDIS_TTL_SECONDS=3600
+    
+    # Optional: Discord Webhooks (for contact/report features)
+    CONTACT_WEBHOOK=https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN
+    URL_REPORT_WEBHOOK=https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN
+    ```
+    
+    <Warning>
+    Never commit your `.env` file! It's already in `.gitignore` to prevent accidental commits.
+    </Warning>
+</Step>
+
+<Step title="Start MongoDB">
+    Choose one of these options:
+    
+    <Tabs>
+    <Tab title="MongoDB Atlas (Recommended)">
+    1. Sign up for [MongoDB Atlas](https://cloud.mongodb.com) (free tier available)
+    2. Create a new cluster
+    3. Add your IP address to the access list
+    4. Create a database user
+    5. Get your connection string and add it to `.env`
+    
+    <Card title="MongoDB Setup Guide" icon="database" href="/self-hosting/setting-up-mongo">
+        Detailed MongoDB Atlas setup instructions
+    </Card>
+    </Tab>
+    
+    <Tab title="Local MongoDB">
+    ```bash
+    # Install MongoDB locally
+    # Ubuntu/Debian
+    sudo apt install -y mongodb
+    
+    # macOS
+    brew install mongodb/brew/mongodb-community
+    
+    # Start MongoDB service
+    sudo systemctl start mongodb  # Linux
+    brew services start mongodb-community  # macOS
+    
+    # Use local connection string
+    MONGODB_URI=mongodb://localhost:27017/spoo-me
+    ```
+    </Tab>
+    </Tabs>
+</Step>
+
+<Step title="Start Redis (Optional)">
+    For enhanced performance with caching:
+    
+    <Tabs>
+    <Tab title="Local Redis">
+    ```bash
+    # Install Redis
+    # Ubuntu/Debian
+    sudo apt install -y redis-server
+    
+    # macOS
+    brew install redis
+    
+    # Start Redis
+    sudo systemctl start redis  # Linux
+    brew services start redis   # macOS
+    
+    # Test Redis connection
+    redis-cli ping
+    ```
+    </Tab>
+    
+    <Tab title="Skip Redis">
+    If you don't set up Redis, the application will work without caching (performance will be slower but functional for development).
+    </Tab>
+    </Tabs>
+</Step>
+
+<Step title="Run the Development Server">
+    ```bash
+    # Start the Spoo.me development server
+    uv run main.py
+    ```
+    
+    You should see output like:
+    ```
+    * Running on http://0.0.0.0:8000
+    * Debug mode: on
+    * Restarting with stat
+    * Debugger is active!
+    ```
+    
+    <Check>
+    Visit http://localhost:8000 to see your local Spoo.me instance running!
+    </Check>
+</Step>
+
+<Step title="Verify Everything Works">
+    Test the core functionality:
+    
+    1. **URL Shortening**: Create a test short URL
+    2. **URL Redirection**: Click the short URL to verify it redirects
+    3. **Analytics**: Check if click statistics are recorded
+    4. **API Endpoints**: Test `/api/shorten` endpoint
+    
+    <Tip>
+    The development server auto-reloads when you make changes, so you can see updates immediately.
+    </Tip>
+</Step>
+</Steps>
+
+## How to Contribute
+
+We welcome various types of contributions. Here's how to get started with each:
+
+### 🐛 Reporting Bugs
+
+Found a bug? Help us fix it by providing detailed information.
+
+<Steps>
+<Step title="Check Existing Issues">
+    Before creating a new issue, search [existing issues](https://github.com/spoo-me/url-shortener/issues) to avoid duplicates.
+</Step>
+
+<Step title="Use Bug Report Template">
+    Create a new issue using our bug report template, which includes:
+    
+    - **Bug Description**: Clear, concise description of the issue
+    - **Steps to Reproduce**: Exact steps to reproduce the behavior
+    - **Expected Behavior**: What you expected to happen
+    - **Actual Behavior**: What actually happened
+    - **Environment**: OS, Python version, browser (if applicable)
+    - **Screenshots**: Visual evidence if applicable
+    - **Additional Context**: Any other relevant information
+</Step>
+
+<Step title="Provide Complete Information">
+    Include:
+    ```bash
+    # System information
+    python -m platform
+    python --version
+    uv --version
+    ```
+</Step>
+</Steps>
+
+### 💡 Suggesting Features
+
+Have an idea to improve Spoo.me? We'd love to hear it!
+
+<Steps>
+<Step title="Check the Roadmap">
+    Review our [project roadmap](https://github.com/spoo-me/url-shortener/projects) to see planned features.
+</Step>
+
+<Step title="Use Feature Request Template">
+    Create a feature request including:
+    
+    - **Feature Summary**: Brief description of the proposed feature
+    - **Problem Statement**: What problem does this solve?
+    - **Proposed Solution**: How should this feature work?
+    - **Alternative Solutions**: Other approaches you've considered
+    - **Use Cases**: Real-world scenarios where this would be helpful
+    - **Implementation Ideas**: Technical approach (if you have ideas)
+</Step>
+
+<Step title="Discuss Before Implementation">
+    Large features should be discussed in an issue before starting development to ensure alignment with project goals.
+</Step>
+</Steps>
+
+### 🔧 Code Contributions
+
+Ready to dive into the code? Here's our development workflow.
+
+<Steps>
+<Step title="Create a Feature Branch">
+    ```bash
+    # Update your fork
+    git fetch upstream
+    git checkout main
+    git merge upstream/main
+    
+    # Create a new branch
+    git checkout -b feature/amazing-new-feature
+    # or
+    git checkout -b fix/bug-description
+    ```
+    
+    <Info>
+    Use descriptive branch names: `feature/custom-aliases`, `fix/redis-connection`, `docs/api-examples`
+    </Info>
+</Step>
+
+<Step title="Make Your Changes">
+    Follow these guidelines while coding:
+    
+    - **Write Clean Code**: Follow Python PEP 8 conventions
+    - **Add Comments**: Explain complex logic and business rules
+    - **Update Documentation**: Keep docstrings and comments current
+    - **Handle Errors**: Add proper error handling and validation
+    - **Test Your Changes**: Verify functionality works as expected
+    
+    ```python
+    # Example of well-documented code
+    def validate_url(url: str) -> bool:
+        """
+        Validate if a URL is properly formatted and accessible.
+        
+        Args:
+            url (str): The URL to validate
+            
+        Returns:
+            bool: True if URL is valid, False otherwise
+            
+        Raises:
+            ValueError: If URL format is invalid
+        """
+        # Implementation here
+        pass
+    ```
+
+    Don't worry, even we don't follow this guideline completely 😅, but we highly recommend you to do so. This way we can maintain a consistent codebase and make it easier for others to understand and contribute to the project.
+</Step>
+
+<Step title="Test Your Changes">
+    ```bash
+    # Run the application locally
+    uv run main.py
+    
+    # Test in browser
+    # - Create short URLs
+    # - Test redirects
+    # - Check analytics
+    # - Verify API endpoints
+    
+    # Test edge cases
+    # - Invalid URLs
+    # - Special characters
+    # - Long URLs
+    # - Rate limiting
+    ```
+</Step>
+
+<Step title="Run Code Quality Checks">
+    Before committing, ensure your code meets our standards:
+    
+    ```bash
+    # Format code
+    uvx ruff format
+    
+    # Check formatting
+    uvx ruff format --check
+    
+    # Run linter
+    uvx ruff check
+    
+    # Fix auto-fixable issues
+    uvx ruff check --fix
+    ```
+    
+    <Warning>
+    All code must pass these checks. The CI pipeline will fail if linting issues are present.
+    </Warning>
+</Step>
+
+<Step title="Commit Your Changes">
+    Follow our commit message conventions:
+    
+    ```bash
+    # Stage changes
+    git add .
+    
+    # Commit with descriptive message
+    git commit -m "feat: add custom URL alias functionality
+    
+    - Allow users to specify custom aliases for URLs
+    - Add validation for alias availability
+    - Update API documentation with new endpoint
+    - Add tests for alias functionality"
+    ```
+    
+    <Info>
+    See the Style Guidelines section below for detailed commit message format.
+    </Info>
+</Step>
+
+<Step title="Push and Create Pull Request">
+    ```bash
+    # Push to your fork
+    git push origin feature/amazing-new-feature
+    
+    # Create pull request through GitHub UI
+    # or use GitHub CLI
+    gh pr create --title "Add custom URL alias functionality" --body "Description of changes"
+    ```
+</Step>
+</Steps>
+
+## Pull Request Guidelines
+
+Follow these guidelines to ensure your pull request is reviewed and merged quickly.
+
+### Pull Request Checklist
+
+<Steps>
+<Step title="Before Submitting">
+    - [ ] Code follows style guidelines and passes linting
+    - [ ] Changes are tested locally
+    - [ ] Documentation is updated if needed
+    - [ ] Commit messages follow our format
+    - [ ] Branch is up to date with main
+    - [ ] No merge conflicts exist
+</Step>
+
+<Step title="Pull Request Description">
+    Include:
+    
+    - **Summary**: Brief description of what you've changed
+    - **Changes Made**: Detailed list of modifications
+    - **Testing**: How you tested the changes
+    - **Screenshots**: Visual changes (if applicable)
+    - **Breaking Changes**: Any breaking changes (if applicable)
+    
+    ```markdown
+    ## Summary
+    Add custom URL alias functionality to allow users to create memorable short URLs.
+    
+    ## Changes Made
+    - Added alias validation endpoint
+    - Updated URL creation logic to support custom aliases
+    - Added database schema for alias storage
+    - Updated API documentation
+    
+    ## Testing
+    - Tested alias creation and validation
+    - Verified existing functionality still works
+    - Tested edge cases (duplicate aliases, invalid characters)
+    
+    ## Screenshots
+    [Screenshot of new alias input field]
+    ```
+</Step>
+
+<Step title="Respond to Reviews">
+    - Address all review comments promptly
+    - Ask questions if feedback is unclear
+    - Update code based on suggestions
+    - Re-request review after making changes
+    
+    <Tip>
+    Be open to feedback! Code reviews help maintain quality and are a learning opportunity.
+    </Tip>
+</Step>
+</Steps>
+
+### Review Process
+
+1. **Automated Checks**: GitHub Actions will run linting and tests
+2. **Maintainer Review**: A project maintainer will review your code
+3. **Community Feedback**: Other contributors may provide feedback
+4. **Approval**: Once approved, your PR will be merged
+5. **Deployment**: Changes are automatically deployed to production
+
+## Project Structure
+
+Understanding the codebase structure will help you navigate and contribute effectively.
+
+```
+url-shortener/
+├── main.py                    # Application entry point
+├── blueprints/               # Flask route handlers
+│   ├── api.py               # API endpoints
+│   ├── contact.py           # Contact form handling
+│   ├── docs.py              # Documentation routes
+│   ├── limiter.py           # Rate limiting logic
+│   ├── redirector.py        # URL redirection logic
+│   ├── seo.py               # SEO and meta tags
+│   ├── stats.py             # Analytics and statistics
+│   └── url_shortener.py     # Core URL shortening logic
+├── cache/                    # Caching system
+│   ├── base_cache.py        # Base cache interface
+│   ├── cache_updates.py     # Cache update utilities
+│   ├── cache_url.py         # URL-specific caching
+│   ├── dual_cache.py        # Dual cache implementation
+│   └── redis_client.py      # Redis client configuration
+├── utils/                    # Utility functions
+│   ├── analytics_utils.py   # Analytics processing
+│   ├── contact_utils.py     # Contact form utilities
+│   ├── export_utils.py      # Data export functionality
+│   ├── general.py           # General utility functions
+│   ├── mongo_utils.py       # MongoDB operations
+│   ├── pipeline_utils.py    # Data pipeline utilities
+│   └── url_utils.py         # URL processing utilities
+├── templates/                # Jinja2 HTML templates
+│   ├── index.html           # Homepage
+│   ├── stats.html           # Analytics page
+│   └── api.html             # API documentation
+├── static/                   # Static assets
+│   ├── css/                 # Stylesheets
+│   ├── js/                  # JavaScript files
+│   └── images/              # Image assets
+├── misc/                     # Miscellaneous files
+│   └── GeoLite2-Country.mmdb # GeoIP database
+└── .github/                  # GitHub configuration
+    ├── workflows/           # CI/CD pipelines
+    └── ISSUE_TEMPLATE/      # Issue templates
+```
+
+### Key Components
+
+<Tabs>
+<Tab title="Blueprints">
+**Route Handlers**: Each blueprint handles specific functionality:
+- `api.py`: REST API endpoints
+- `url_shortener.py`: Core shortening logic
+- `redirector.py`: URL redirection
+- `stats.py`: Analytics and statistics
+- `contact.py`: Contact form processing
+</Tab>
+
+<Tab title="Utils">
+**Utility Functions**: Reusable functions organized by purpose:
+- `mongo_utils.py`: Database operations
+- `url_utils.py`: URL validation and processing
+- `analytics_utils.py`: Analytics calculations
+- `general.py`: Common utility functions
+</Tab>
+
+<Tab title="Cache">
+**Caching System**: Performance optimization:
+- `redis_client.py`: Redis connection management
+- `cache_url.py`: URL-specific caching logic
+- `dual_cache.py`: Memory + Redis caching
+</Tab>
+
+<Tab title="Templates">
+**Frontend Templates**: Jinja2 templates for HTML pages:
+- `index.html`: Main interface
+- `stats.html`: Analytics dashboard
+- `api.html`: API documentation
+</Tab>
+</Tabs>
+
+## Style Guidelines
+
+Consistent code style makes the project maintainable and professional.
+
+### Git Commit Messages
+
+Follow the conventional commit format:
+
+```
+type(scope): brief description
+
+Optional longer description explaining the change in more detail.
+
+- Additional context or breaking changes
+- References to issues: Fixes #123
+```
+
+**Types:**
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Code style changes (formatting, no logic changes)
+- `refactor`: Code restructuring without changing functionality
+- `perf`: Performance improvements
+- `test`: Adding or updating tests
+- `chore`: Maintenance tasks, dependency updates
+
+**Examples:**
+```bash
+git commit -m "feat(api): add custom URL alias endpoint
+
+- Add validation for alias availability
+- Support alphanumeric aliases with hyphens
+- Update API documentation
+- Add rate limiting for alias creation
+
+Fixes #45"
+
+git commit -m "fix(cache): resolve Redis connection timeout
+
+- Increase connection timeout to 30 seconds
+- Add connection retry logic
+- Improve error handling for cache failures
+
+Fixes #67"
+```
+
+### Python Code Style
+
+<Steps>
+<Step title="Use Ruff for Linting">
+    We use Ruff for fast Python linting and formatting:
+    
+    ```bash
+    # Format code automatically
+    uvx ruff format
+    
+    # Check formatting without changes
+    uvx ruff format --check
+    
+    # Run linter checks
+    uvx ruff check
+    
+    # Fix auto-fixable issues
+    uvx ruff check --fix
+    ```
+    
+    <Warning>
+    All code must pass `uvx ruff format --check` and `uvx ruff check` before merging.
+    </Warning>
+</Step>
+</Steps>
+
+### Frontend Guidelines
+
+<Info>
+HTML, CSS, and JavaScript files are automatically minified in production, so focus on readability and maintainability over optimization.
+</Info>
+
+**HTML/Jinja2 Templates:**
+- Use semantic HTML elements
+- Maintain consistent indentation (2 spaces)
+- Add comments for complex template logic
+- Use descriptive variable names in templates
+
+```html
+<!-- Good: Semantic and well-structured -->
+<article class="url-stats-card">
+    <header class="stats-header">
+        <h2>{{ url.short_code }}</h2>
+        <time datetime="{{ url.created_at }}">{{ url.created_at | datetime }}</time>
+    </header>
+    
+    <div class="stats-content">
+        {% if url.click_count > 0 %}
+            <p>Total clicks: <strong>{{ url.click_count }}</strong></p>
+        {% else %}
+            <p>No clicks yet</p>
+        {% endif %}
+    </div>
+</article>
+```
+
+**CSS Guidelines:**
+- Use BEM methodology for class naming
+- Group related styles together
+- Add comments for complex styling
+- Use CSS custom properties for theming
+
+**JavaScript Guidelines:**
+- Use modern ES6+ syntax
+- Add JSDoc comments for functions
+- Handle errors gracefully
+- Use meaningful variable names
+
+### Jinja2 Templating System
+
+Understanding Jinja2 basics will help you work with the frontend templates.
+
+<Steps>
+<Step title="Introduction to Jinja2">
+    **Jinja2** is a modern and designer-friendly templating language for Python, modelled after Django's templates. It is fast, widely used and secure with the optional sandboxed template execution environment.
+
+    **File Organization:**
+    - **Templates Directory**: Contains HTML files (`templates/`)
+    - **Static Directory**: Contains CSS, JavaScript, and images (`static/`)
+    
+    ```
+    url-shortener/
+    ├── templates/           # HTML template files
+    │   ├── index.html
+    │   ├── stats.html
+    │   └── api.html
+    └── static/             # Static assets
+        ├── css/            # Stylesheets
+        ├── js/             # JavaScript files
+        └── images/         # Image assets
+    ```
+    
+    **Basic Syntax:**
+    - **Variables**: `{{ variable_name }}` - Renders variables sent by the server
+    - **Control Statements**: `{% statement %}` - Controls template flow and logic
+    
+    **Simple Template Example:**
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{{ title }}</title>
+      </head>
+      <body>
+        <h1>{{ title }}</h1>
+      </body>
+    </html>
+    ```
+    
+    <Info>
+    The HTML files are rendered using the Jinja2 templating engine, which processes the template syntax and replaces it with actual data from the server.
+    </Info>
+</Step>
+
+<Step title="Static File Integration">
+    Separating static files from HTML templates makes the project more organized and easier to maintain. Static files are included using the `url_for` function.
+    
+    **Including CSS:**
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+      </head>
+      <body>
+        <h1>{{ title }}</h1>
+      </body>
+    </html>
+    ```
+    
+    **Including Images:**
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      </head>
+      <body>
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo"/>
+      </body>
+    </html>
+    ```
+    
+    <Warning>
+    The `url_for` function is the **only recommended way** to include static files. While you can add inline CSS and JavaScript, it's not recommended for maintainability.
+    </Warning>
+</Step>
+
+<Step title="Static File Versioning (Critical for Production)">
+    When you make changes to static files, you **must** update the version parameter to ensure changes are reflected in production.
+    
+    **Why This Matters:**
+    Vercel and other hosting platforms cache static files. Without version updates, your changes won't appear on the live site.
+    
+    **Version Update Examples:**
+    ```html
+    <!-- Initial version -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=1"/>
+    
+    <!-- After making changes to style.css -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=2"/>
+    
+    <!-- For JavaScript files -->
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=3"></script>
+    
+    <!-- For images (if modified) -->
+    <img src="{{ url_for('static', filename='images/logo.png') }}?v=1" alt="Logo"/>
+    ```
+    
+    <Check>
+    **CRITICAL**: Always increment the version number (`?v=X`) when you modify any static file. This ensures users see your changes immediately.
+    </Check>
+</Step>
+
+<Step title="Important Guidelines">
+    **Scope and Limitations:**
+    
+    ✅ **Can be used in HTML templates:**
+    - `{{ }}` syntax for variables
+    - `{% %}` syntax for control statements  
+    - `url_for()` function for URLs
+    - Template inheritance and includes
+    
+    ❌ **Cannot be used in static files:**
+    - CSS files cannot access Jinja2 variables
+    - JavaScript files cannot use Jinja2 syntax
+    - Image files are static assets only
+    
+    **For Frontend Contributors:**
+    - Focus on static files (CSS, JS, images)
+    - Basic Jinja2 understanding helps when modifying HTML structure
+    - Consult [Jinja2 documentation](https://jinja.palletsprojects.com/) for advanced features
+    
+    **File Management:**
+    - New static files go in `static/<file_type>/` directory
+    - Include new files using `url_for()` in templates
+    - Always use version parameters for cache busting
+    
+    <Tip>
+    If you're contributing to frontend styling, you'll mainly work with static files, but understanding template structure helps when HTML changes are needed.
+    </Tip>
+</Step>
+
+<Step title="Template Syntax">
+    **Variables**: `{{ variable_name }}`
+    **Control Structures**: `{% if condition %}...{% endif %}`
+    **Comments**: `{# This is a comment #}`
+    
+    ```html
+    <!-- Variable rendering -->
+    <h1>Welcome to {{ site_name }}!</h1>
+    
+    <!-- Conditional rendering -->
+    {% if user.is_authenticated %}
+        <p>Hello, {{ user.name }}!</p>
+    {% else %}
+        <p>Please log in.</p>
+    {% endif %}
+    
+    <!-- Loop rendering -->
+    {% for url in recent_urls %}
+        <div class="url-item">
+            <a href="{{ url.short_url }}">{{ url.short_code }}</a>
+            <span>{{ url.click_count }} clicks</span>
+        </div>
+    {% endfor %}
+    ```
+</Step>
+
+<Step title="Template Inheritance">
+    Use base templates for consistent layout:
+    
+    ```html
+    <!-- base.html -->
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>{% block title %}Spoo.me{% endblock %}</title>
+    </head>
+    <body>
+        <nav><!-- Navigation --></nav>
+        
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+        
+        <footer><!-- Footer --></footer>
+    </body>
+    </html>
+    
+    <!-- index.html -->
+    {% extends "base.html" %}
+    
+    {% block title %}URL Shortener - Spoo.me{% endblock %}
+    
+    {% block content %}
+        <h1>Shorten Your URLs</h1>
+        <!-- Page content -->
+    {% endblock %}
+    ```
+</Step>
+
+<Step title="Filters and Functions">
+    Use Jinja2 filters for data formatting:
+    
+    ```html
+    <!-- Date formatting -->
+    <time>{{ url.created_at | strftime('%Y-%m-%d') }}</time>
+    
+    <!-- Number formatting -->
+    <span>{{ click_count | comma_format }} clicks</span>
+    
+    <!-- URL formatting -->
+    <a href="{{ long_url | url_for_display }}">{{ long_url | truncate(50) }}</a>
+    
+    <!-- Conditional classes -->
+    <div class="status {{ 'active' if url.is_active else 'inactive' }}">
+        Status: {{ url.status | title }}
+    </div>
+    ```
+</Step>
+
+<Step title="URL Generation with url_for">
+    Use Flask's `url_for` function to generate URLs for routes and static files:
+    
+    ```html
+    <!-- Linking to routes -->
+    <a href="{{ url_for('main.index') }}">Home</a>
+    <a href="{{ url_for('api.shorten_url') }}">API</a>
+    <a href="{{ url_for('stats.url_stats', short_code='abc123') }}">View Stats</a>
+    
+    <!-- Static file URLs -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo">
+    
+    <!-- External URLs (when you need to build full URLs) -->
+    <meta property="og:url" content="{{ url_for('main.index', _external=True) }}">
+    <link rel="canonical" href="{{ url_for('redirector.redirect_url', short_code=url.short_code, _external=True) }}">
+    
+    <!-- URLs with query parameters -->
+    <a href="{{ url_for('stats.url_stats', short_code='abc123', period='week') }}">Weekly Stats</a>
+    
+    <!-- Form actions -->
+    <form action="{{ url_for('contact.submit_form') }}" method="POST">
+        <!-- Form fields -->
+    </form>
+    ```
+    
+    <Info>
+    Using `url_for` ensures your links work correctly even if you change route patterns later. It's more maintainable than hardcoding URLs.
+    </Info>
+    
+    **Common Flask routes in Spoo.me:**
+    - `main.index`: Homepage (`/`)
+    - `api.shorten_url`: API endpoint (`/api/shorten`)
+    - `stats.url_stats`: Statistics page (`/stats/<short_code>`)
+    - `redirector.redirect_url`: URL redirection (`/<short_code>`)
+    - `static`: Static files (`/static/<filename>`)
+</Step>
+</Steps>
+
+## Additional Guidelines
+
+### Documentation
+
+- **Update Documentation**: When adding features, update relevant documentation
+- **API Documentation**: Update OpenAPI spec for API changes
+- **Code Comments**: Explain complex business logic and algorithms
+- **README Updates**: Keep setup instructions current
+
+### Security Considerations
+
+- **Input Validation**: Always validate and sanitize user input
+- **Rate Limiting**: Respect existing rate limits and add new ones as needed
+- **Environment Variables**: Never hardcode sensitive information
+- **SQL Injection**: Use parameterized queries (applies to MongoDB aggregations)
+- **XSS Prevention**: Escape user content in templates
+
+### Performance Best Practices
+
+- **Database Queries**: Optimize MongoDB queries and use indexes
+- **Caching**: Leverage Redis caching for frequently accessed data
+- **API Responses**: Keep API responses minimal and paginated
+- **Static Assets**: Optimize images and minimize asset sizes
+
+### Testing Guidelines
+
+While we don't have formal tests yet, ensure your changes:
+
+- Work with various URL formats
+- Handle edge cases gracefully
+- Don't break existing functionality
+- Perform well under load
+- Work across different browsers (for frontend changes)
+
+<Tip>
+Consider adding unit tests for complex functions you create. We're working on expanding our test coverage!
+</Tip>
+
+## Getting Help
+
+Need assistance while contributing? Here are the best ways to get help:
+
+<CardGroup cols={2}>
+<Card title="Discord Community" icon="discord" href="https://spoo.me/discord">
+    Join our Discord server for real-time help, discussions, and collaboration with other contributors.
+</Card>
+
+<Card title="GitHub Discussions" icon="github" href="https://github.com/spoo-me/url-shortener/discussions">
+    Start discussions about features, ask questions, and share ideas with the community.
+</Card>
+
+<Card title="Documentation" icon="book" href="/introduction">
+    Read through our comprehensive documentation for API details and setup guides.
+</Card>
+
+<Card title="Issue Tracker" icon="bug" href="https://github.com/spoo-me/url-shortener/issues">
+    Report bugs, request features, and track the status of ongoing development.
+</Card>
+</CardGroup>
+
+## Recognition
+
+We value all contributions to Spoo.me! Contributors are recognized through:
+
+- **Contributors Page**: Listed on our website and README
+- **Release Notes**: Mentioned in release notes for significant contributions
+- **Discord Roles**: Special contributor roles in our Discord server
+
+<Check>
+Thank you for contributing to Spoo.me! Your efforts help make URL shortening better for everyone.
+</Check>
+
+---
+
+Ready to start contributing? [Fork the repository](https://github.com/spoo-me/url-shortener/fork) and make your first contribution today! 
+
+<Frame>
+    ![spoo.me contributions](https://repobeats.axiom.co/api/embed/48a40934896cbcaff2812e80478ebb701ee49dd4.svg)
+</Frame>
