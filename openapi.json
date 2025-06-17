@@ -310,13 +310,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UrlStatistics'
+                $ref: '#/components/schemas/JsonData'
             application/zip:
               schema:
-                $ref: '#/components/schemas/BinaryData'
+                $ref: '#/components/schemas/CsvZipData'
             application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
               schema:
-                $ref: '#/components/schemas/BinaryData'
+                $ref: '#/components/schemas/XlsxData'
             application/xml:
               schema:
                 $ref: '#/components/schemas/XmlData'
@@ -482,13 +482,22 @@ components:
           description: Data about the bots that accessed the short link
           additionalProperties:
             type: integer
-    BinaryData:
+    JsonData:
       type: string
       format: binary
-      description: Binary file data
+      description: Downloadable JSON file containing the exported data
     XmlData:
       type: string
-      description: XML formatted data
+      format: binary
+      description: Downloadable XML file containing the exported data
+    CsvZipData:
+      type: string
+      format: binary
+      description: ZIP archive containing CSV file(s) of the exported data
+    XlsxData:
+      type: string
+      format: binary
+      description: XLSX file containing the exported data
 tags:
   - name: URL Shortening
     description: Operations for creating shortened URLs
