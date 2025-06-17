@@ -50,9 +50,10 @@ Rate limits apply to the following endpoints:
 When you make requests to rate-limited endpoints, the response will include headers indicating your current usage:
 
 ```http
-X-RateLimit-Limit: 5
+X-RateLimit-Limit: 10
 X-RateLimit-Remaining: 4
 X-RateLimit-Reset: 1640995200
+Retry-After: 30
 ```
 
 ## Handling Rate Limits
@@ -63,7 +64,6 @@ When you exceed the rate limit, you'll receive a `429 Too Many Requests` respons
 {
   "error": "Rate limit exceeded",
   "message": "You have exceeded the rate limit. Please try again later.",
-  "retry_after": 60
 }
 ```
 
