@@ -48,9 +48,9 @@ paths:
                   example: https://example.com
                 alias:
                   type: string
-                  maxLength: 15
+                  maxLength: 16
                   pattern: ^[a-zA-Z0-9]+$
-                  description: Custom alias for the shortened URL. Must be alphanumeric and under 15 characters. Anything beyond 15 characters will be **stripped by the API**.
+                  description: Custom alias for the shortened URL. Must be alphanumeric and maximum 16 characters. Anything beyond 16 characters will be **stripped by the API**.
                   example: example
                 password:
                   type: string
@@ -79,6 +79,16 @@ paths:
                     format: uri
                     description: The shortened URL
                     example: https://spoo.me/example
+                  domain:
+                    type: string
+                    format: host
+                    description: The domain of the shortened URL
+                    example: spoo.me
+                  original_url:
+                    type: string
+                    format: uri
+                    description: The original URL
+                    example: https://example.com
         '400':
           description: Bad Request - Various validation errors
           content:
@@ -179,6 +189,16 @@ paths:
                     format: uri
                     description: The shortened URL with emojis
                     example: https://spoo.me/🐍🐍
+                  domain:
+                    type: string
+                    format: host
+                    description: The domain of the shortened URL
+                    example: spoo.me
+                  original_url:
+                    type: string
+                    format: uri
+                    description: The original URL
+                    example: https://example.com
         '400':
           description: Bad Request - Various validation errors
           content:
