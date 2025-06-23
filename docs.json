@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "maple",
-  "name": "Spoo.me API",
+  "name": "Spoo.me Docs",
   "colors": {
     "primary": "#A855F7",
     "light": "#C084FC",
@@ -44,7 +44,7 @@
       },
       {
         "group": "Tools & Libraries",
-        "pages": ["tools/python-library", "tools/spoobot"]
+        "pages": ["tools/python-library", "tools/github-action", "tools/spoobot"]
       },
       {
         "group": "Self Hosting",

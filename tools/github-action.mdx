@@ -1,0 +1,379 @@
+---
+title: "GitHub Action"
+description: ""
+icon: "workflow"
+---
+
+The **Spoo.me Setup Action** is a reusable GitHub Action that automatically configures the complete spoo.me URL shortener service within any GitHub Actions workflow. This action eliminates the complexity of manually setting up MongoDB, Redis, Python dependencies, and the spoo.me service itself.
+
+<Card title="GitHub Marketplace" icon="github" href="https://github.com/marketplace/actions/setup-spoo-me">
+View the action on GitHub Marketplace
+</Card>
+
+## Features
+
+<CardGroup cols={2}>
+<Card title="Complete Environment" icon="server">
+    Automatically installs and configures Python, MongoDB, and Redis
+</Card>
+
+<Card title="Service Management" icon="play">
+    Clones spoo.me repository and starts service in background
+</Card>
+
+<Card title="Health Monitoring" icon="heart-pulse">
+    Verifies all services are running before proceeding
+</Card>
+
+<Card title="Highly Configurable" icon="settings-2">
+    Custom versions for Python, MongoDB, and Redis
+</Card>
+</CardGroup>
+
+## Quick Start
+
+### Basic Usage
+
+<CodeGroup>
+```yaml Basic Setup highlight={9,10} icon="workflow"
+name: Test with Spoo.me Service
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Spoo.me Service
+        uses: spoo-me/setup-action@v1
+        id: spoo-setup
+        
+      - name: Run tests against Spoo.me
+        run: |
+          echo "Service running at: ${{ steps.spoo-setup.outputs.service-url }}"
+          curl -s ${{ steps.spoo-setup.outputs.service-url }}
+```
+
+```yaml Advanced Configuration highlight={15-20}
+name: Integration Tests
+
+on: [push]
+
+jobs:
+  integration-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Spoo.me Service
+        uses: spoo-me/setup-action@v1
+        id: spoo-setup
+        with:
+          python-version: '3.12'
+          mongodb-version: '7.0'
+          redis-version: '7.2'
+          spoo-directory: 'my-spoo-instance'
+          wait-timeout: '180'
+          
+      - name: Test URL shortening API
+        run: |
+          echo "Testing against: ${{ steps.spoo-setup.outputs.service-url }}"
+          echo "MongoDB: ${{ steps.spoo-setup.outputs.mongodb-uri }}"
+          echo "Redis: ${{ steps.spoo-setup.outputs.redis-uri }}"
+```
+</CodeGroup>
+
+## Configuration
+
+### Inputs
+
+<ParamField body="python-version" type="string" default="3.11">
+Python version to install. Recommended: 3.11 or higher for best compatibility.
+</ParamField>
+
+<ParamField body="mongodb-version" type="string" default="7.0">
+MongoDB version to use. Supports versions 6.0 and higher.
+</ParamField>
+
+<ParamField body="redis-version" type="string" default="7.2">
+Redis version to use for caching and session management.
+</ParamField>
+
+<ParamField body="spoo-directory" type="string" default="spoo-me">
+Directory name where the spoo.me repository will be cloned.
+</ParamField>
+
+<ParamField body="wait-timeout" type="string" default="120">
+Timeout in seconds to wait for all services to be ready. Increase for slower environments.
+</ParamField>
+
+### Outputs
+
+<ResponseField name="service-url" type="string">
+URL where the spoo.me service is running (typically `http://127.0.0.1:8000`)
+</ResponseField>
+
+<ResponseField name="mongodb-uri" type="string">
+MongoDB connection URI for direct database access
+</ResponseField>
+
+<ResponseField name="redis-uri" type="string">
+Redis connection URI for cache operations
+</ResponseField>
+
+Accessible via: `steps.<spoo-setup-step-id>.outputs.<output-id>`
+
+## Usage Examples
+
+### Integration Testing
+
+<Steps>
+<Step title="Set up the workflow">
+Create a workflow file that sets up spoo.me and runs your integration tests.
+
+```yaml .github/workflows/integration.yml icon="workflow"
+name: Integration Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Spoo.me
+        uses: spoo-me/setup-action@v1
+        id: spoo
+        
+      - name: Test URL shortening API
+        run: |
+          # Test the shortening endpoint
+          response=$(curl -s -X POST \
+            -H "Content-Type: application/json" \
+            -d '{"url": "https://example.com"}' \
+            ${{ steps.spoo.outputs.service-url }}/api/shorten)
+          echo "API Response: $response"
+```
+
+<Check>
+The service will be available at the URL provided in the `service-url` output.
+</Check>
+</Step>
+
+<Step title="Add comprehensive tests">
+Use the running service to test all your integration scenarios.
+
+```yaml
+      - name: Test analytics endpoint
+        run: |
+          # Test analytics after creating a short URL
+          curl -s ${{ steps.spoo.outputs.service-url }}/api/analytics
+          
+      - name: Test error handling
+        run: |
+          # Test invalid URL handling
+          curl -s -X POST \
+            -H "Content-Type: application/json" \
+            -d '{"url": "invalid-url"}' \
+            ${{ steps.spoo.outputs.service-url }}/api/shorten
+```
+</Step>
+</Steps>
+
+### Multi-Version Testing
+
+Test your application against multiple versions of dependencies:
+
+<CodeGroup>
+```yaml Matrix Strategy highlight={9-11, 18-20} icon="workflow"
+name: Multi-Version Test
+
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.12']
+        mongodb-version: ['6.0', '7.0']
+        
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Spoo.me
+        uses: spoo-me/setup-action@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+          mongodb-version: ${{ matrix.mongodb-version }}
+          
+      - name: Run compatibility tests
+        run: |
+          echo "Testing Python ${{ matrix.python-version }} with MongoDB ${{ matrix.mongodb-version }}"
+          # Your tests here
+```
+
+```yaml Load Testing
+name: Load Testing
+
+on: workflow_dispatch
+
+jobs:
+  load-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Spoo.me
+        uses: spoo-me/setup-action@v1
+        with:
+          wait-timeout: '300'  # Longer timeout for load testing
+        id: spoo
+        
+      - name: Install Apache Bench
+        run: sudo apt-get update && sudo apt-get install -y apache2-utils
+        
+      - name: Run load test
+        run: |
+          echo "Running load test against ${{ steps.spoo.outputs.service-url }}"
+          ab -n 1000 -c 10 ${{ steps.spoo.outputs.service-url }}/
+```
+</CodeGroup>
+
+## Environment Configuration
+
+The action automatically configures these environment variables:
+
+<AccordionGroup>
+<Accordion title="Database Configuration">
+```bash
+# MongoDB connection (optimized single instance)
+MONGODB_URI=mongodb://localhost:27017/url-shortener
+MONGODB_URI_DEV=mongodb://localhost:27017/url-shortener
+MONGO_DB_NAME=url-shortener
+
+# Redis connection
+REDIS_URI=redis://localhost:6379
+REDIS_URI_DEV=redis://localhost:6379
+REDIS_TTL_SECONDS=3600
+```
+</Accordion>
+
+<Accordion title="Application Configuration">
+```bash
+# Flask application settings
+SECRET_KEY=github-action-secret-key-for-testing
+HOST_URI=127.0.0.1:8000
+SHORTEN_API_RATE_LIMIT_PER_HOUR=100
+
+# Webhook settings (empty for local testing)
+CONTACT_WEBHOOK=
+URL_REPORT_WEBHOOK=
+HCAPTCHA_SECRET=
+```
+</Accordion>
+</AccordionGroup>
+
+## How It Works
+
+The action performs these steps automatically:
+
+<Steps>
+<Step title="Environment Setup">
+    Installs Python, MongoDB, and Redis with specified versions
+</Step>
+
+<Step title="Service Verification">
+    Verifies all databases are accessible and responsive
+</Step>
+
+<Step title="Repository Setup">
+    Clones the spoo.me repository and installs dependencies using UV
+</Step>
+
+<Step title="Database Initialization">
+    Creates necessary collections and indexes for optimal performance
+</Step>
+
+<Step title="Service Launch">
+    Starts the spoo.me service in the background with health checks
+</Step>
+
+<Step title="Ready State">
+    Outputs service URLs and confirms all systems are operational
+</Step>
+</Steps>
+
+## Troubleshooting
+
+<AccordionGroup>
+<Accordion title="Service startup issues">
+If the service fails to start, check the logs:
+
+```yaml
+- name: Check service logs
+  if: failure()
+  run: |
+    cd spoo-me  # or your custom directory
+    cat spoo-service.log
+```
+
+<Tip>
+Increase the `wait-timeout` value to 180 seconds or higher for slower environments.
+</Tip>
+</Accordion>
+
+<Accordion title="Database connection problems">
+The action includes built-in retry logic, but if issues persist:
+
+- Increase the `wait-timeout` value to 180 or higher
+- Check for port conflicts (MongoDB: 27017, Redis: 6379, Service: 8000)  
+- Verify the GitHub Actions runner has sufficient resources
+
+<Warning>
+MongoDB startup can be slow on some runners. We've optimized this with single-instance setup.
+</Warning>
+</Accordion>
+
+<Accordion title="Common port conflicts">
+The action uses standard ports:
+- **MongoDB**: 27017
+- **Redis**: 6379  
+- **Spoo.me Service**: 8000
+
+If you have conflicts, ensure no other services are using these ports in your workflow.
+</Accordion>
+</AccordionGroup>
+
+## Versioning
+
+<Tabs>
+<Tab title="Recommended">
+```yaml
+uses: spoo-me/setup-action@v1
+```
+Latest stable v1.x release (recommended for production)
+</Tab>
+
+<Tab title="Specific Version">
+```yaml
+uses: spoo-me/setup-action@v1.0.0
+```
+Pin to a specific version for reproducible builds
+</Tab>
+
+<Tab title="Development">
+```yaml
+uses: spoo-me/setup-action@main
+```
+<Warning>
+Latest development version - not recommended for production use
+</Warning>
+</Tab>
+</Tabs>
+
+<Info>
+The action follows semantic versioning. Use `@v1` for automatic updates within the major version, or pin to specific versions for maximum stability.
+</Info> 
