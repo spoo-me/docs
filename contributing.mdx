@@ -1068,6 +1068,52 @@ While we don't have formal tests yet, ensure your changes:
 Consider adding unit tests for complex functions you create. We're working on expanding our test coverage!
 </Tip>
 
+### Automated Testing with GitHub Actions
+
+For testing integrations and validating your changes in CI/CD workflows, we provide a GitHub Action that automatically sets up the complete spoo.me environment.
+
+<Card title="GitHub Action Setup Guide" icon="workflow" href="/tools/github-action">
+Learn how to use our GitHub Action for automated testing workflows and integration testing
+</Card>
+
+The [Spoo.me Setup Action](https://github.com/marketplace/actions/setup-spoo-me) enables you to:
+
+- **Integration Testing**: Test your changes against a live spoo.me instance
+- **Multi-Version Testing**: Validate compatibility across different Python/MongoDB versions  
+- **Load Testing**: Verify performance under various conditions
+- **API Testing**: Automate API endpoint validation
+- **Running pytest**: Automate pytests on github actions with local spoo.me instance
+
+**Quick example for testing your contributions:**
+
+```yaml
+name: Test My Changes
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Spoo.me Service
+        uses: spoo-me/setup-action@v1
+        id: spoo
+        
+      - name: Test my feature
+        run: |
+          # Test your changes against the running service
+          curl -X POST \
+            -H "Content-Type: application/json" \
+            -d '{"url": "https://example.com"}' \
+            ${{ steps.spoo.outputs.service-url }}/api/shorten
+```
+
+<Info>
+This is particularly useful for testing API changes, database integrations, and performance improvements before submitting pull requests.
+</Info>
+
 ## Getting Help
 
 Need assistance while contributing? Here are the best ways to get help:
