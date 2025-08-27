@@ -98,5 +98,10 @@
   },
   "topbar": {
     "style": "gradient"
+  },
+  "integrations": {
+    "posthog": {
+        "apiKey": "phc_IraurlSbiqQv3deEzuCSEuF6GDMElt6PGJmtw1Kv4B6"
+    }
   }
 }
