@@ -4,42 +4,46 @@ description: "Get started with the Spoo.me API in minutes"
 icon: "rocket"
 ---
 
-Get up and running with the Spoo.me API in just a few minutes. This guide will show you how to make your first API call and shorten your first URL.
+Get up and running with the Spoo.me v1 API in just a few minutes. This guide will show you how to make your first API call and shorten your first URL.
+
+<Info>
+This guide uses the **v1 API without authentication** (anonymous mode). For higher rate limits and advanced features, check out [API Keys](/api-keys).
+</Info>
 
 ## Step 1: Make Your First API Call
 
-No registration or API keys required! You can start using the Spoo.me API immediately.
+No registration or API keys required! You can start using the v1 API immediately with anonymous access.
 
 <CodeGroup>
 
 ```bash cURL
-curl -X POST https://spoo.me \
-  -H "Accept: application/json" \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "url=https://example.com"
+curl -X POST https://spoo.me/api/v1/shorten \
+  -H "Content-Type: application/json" \
+  -d '{
+    "long_url": "https://example.com"
+  }'
 ```
 
 ```python Python
 import requests
 
 response = requests.post(
-    "https://spoo.me",
-    headers={"Accept": "application/json"},
-    data={"url": "https://example.com"}
+    "https://spoo.me/api/v1/shorten",
+    headers={"Content-Type": "application/json"},
+    json={"long_url": "https://example.com"}
 )
 
 print(response.json())
 ```
 
 ```javascript JavaScript
-fetch('https://spoo.me', {
+fetch('https://spoo.me/api/v1/shorten', {
     method: 'POST',
     headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/x-www-form-urlencoded'
+        'Content-Type': 'application/json'
     },
-    body: new URLSearchParams({
-        'url': 'https://example.com'
+    body: JSON.stringify({
+        long_url: 'https://example.com'
     })
 })
 .then(response => response.json())
@@ -51,7 +55,13 @@ fetch('https://spoo.me', {
 **Expected Response:**
 ```json
 {
-  "short_url": "https://spoo.me/abc123"
+  "alias": "abc123",
+  "short_url": "https://spoo.me/abc123",
+  "long_url": "https://example.com",
+  "owner_id": null,
+  "created_at": 1704067200,
+  "status": "ACTIVE",
+  "private_stats": false
 }
 ```
 
@@ -64,21 +74,22 @@ Try features like password protection, custom aliases, and emoji URLs.
 <CodeGroup>
 
 ```bash cURL
-curl -X POST https://spoo.me \
-  -H "Accept: application/json" \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "url=https://github.com/spoo-me" \
-  -d "alias=github"
+curl -X POST https://spoo.me/api/v1/shorten \
+  -H "Content-Type: application/json" \
+  -d '{
+    "long_url": "https://github.com/spoo-me",
+    "alias": "github"
+  }'
 ```
 
 ```python Python
 import requests
 
 response = requests.post(
-    "https://spoo.me",
-    headers={"Accept": "application/json"},
-    data={
-        "url": "https://github.com/spoo-me",
+    "https://spoo.me/api/v1/shorten",
+    headers={"Content-Type": "application/json"},
+    json={
+        "long_url": "https://github.com/spoo-me",
         "alias": "github"
     }
 )
@@ -93,22 +104,23 @@ print(response.json())
 <CodeGroup>
 
 ```bash cURL
-curl -X POST https://spoo.me \
-  -H "Accept: application/json" \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "url=https://example.com" \
-  -d "password=SecurePass123@"
+curl -X POST https://spoo.me/api/v1/shorten \
+  -H "Content-Type: application/json" \
+  -d '{
+    "long_url": "https://example.com",
+    "password": "secure123"
+  }'
 ```
 
 ```python Python
 import requests
 
 response = requests.post(
-    "https://spoo.me",
-    headers={"Accept": "application/json"},
-    data={
-        "url": "https://example.com",
-        "password": "SecurePass123@"
+    "https://spoo.me/api/v1/shorten",
+    headers={"Content-Type": "application/json"},
+    json={
+        "long_url": "https://example.com",
+        "password": "secure123"
     }
 )
 
@@ -119,56 +131,74 @@ print(response.json())
 
 ## Step 3: Get URL Statistics
 
-Retrieve analytics for your shortened URL:
+Retrieve analytics for your shortened URL (public URLs only):
 
 <CodeGroup>
 
 ```bash cURL
-curl -X POST https://spoo.me/stats/abc123 \
-  -H "Content-Type: application/x-www-form-urlencoded"
+curl -X GET "https://spoo.me/api/v1/stats?scope=anon&short_code=abc123"
 ```
 
 ```python Python
 import requests
 
-response = requests.post("https://spoo.me/stats/abc123")
-stats = response.json()
-print(f"Total clicks: {stats['total-clicks']}")
-print(f"Countries: {list(stats['country'].keys())}")
-```
-
-</CodeGroup>
-
-## Step 4: Try Emoji URLs
-
-Create fun URLs using emojis:
-
-<CodeGroup>
-
-```bash cURL
-curl -X POST https://spoo.me/emoji \
-  -H "Accept: application/json" \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "url=https://example.com" \
-  -d "emojies=🚀🌟"
-```
-
-```python Python
-import requests
-
-response = requests.post(
-    "https://spoo.me/emoji/",
-    headers={"Accept": "application/json"},
-    data={
-        "url": "https://example.com",
-        "emojies": "🚀🌟"
+response = requests.get(
+    "https://spoo.me/api/v1/stats",
+    params={
+        "scope": "anon",
+        "short_code": "abc123"
     }
 )
 
-print(response.json())  # {"short_url": "https://spoo.me/🚀🌟"}
+stats = response.json()
+print(f"Total clicks: {stats['summary']['total_clicks']}")
+print(f"Unique clicks: {stats['summary']['unique_clicks']}")
 ```
 
 </CodeGroup>
+
+<Note>
+**Anonymous stats** can only view statistics for public (non-private) URLs. For full analytics and private URL stats, use [API key authentication](/api-keys).
+</Note>
+
+## Step 4: Additional Options
+
+The v1 API supports several additional options:
+
+<CodeGroup>
+
+```bash cURL - Max Clicks
+curl -X POST https://spoo.me/api/v1/shorten \
+  -H "Content-Type: application/json" \
+  -d '{
+    "long_url": "https://example.com",
+    "max_clicks": 100
+  }'
+```
+
+```bash cURL - Expiration
+curl -X POST https://spoo.me/api/v1/shorten \
+  -H "Content-Type: application/json" \
+  -d '{
+    "long_url": "https://example.com",
+    "expire_after": 1735689600
+  }'
+```
+
+```bash cURL - Block Bots
+curl -X POST https://spoo.me/api/v1/shorten \
+  -H "Content-Type: application/json" \
+  -d '{
+    "long_url": "https://example.com",
+    "block_bots": true
+  }'
+```
+
+</CodeGroup>
+
+<Tip>
+**Emoji URLs** are available in the legacy v0 API. See our [legacy documentation](/api-reference) for emoji URL creation.
+</Tip>
 
 ## Common Use Cases
 
@@ -221,7 +251,7 @@ qr_url = shorten_url(
 
 <Steps>
   <Step title="Explore API Endpoints">
-    Check out all available endpoints in our [API Reference](/api-reference/url-shortening/shorten-long-urls)
+    Check out all available endpoints in our [API Reference](/api-reference/url-shortening/create-shortened-url)
   </Step>
   <Step title="Install Python Library">
     Use our [Python library](/tools/python-library) for easier integration
@@ -243,15 +273,15 @@ Always handle potential errors in your applications:
 ```python Python
 import requests
 
-def safe_shorten_url(url, **kwargs):
+def safe_shorten_url(long_url, **kwargs):
     try:
         response = requests.post(
-            "https://spoo.me",
-            headers={"Accept": "application/json"},
-            data={"url": url, **kwargs}
+            "https://spoo.me/api/v1/shorten",
+            headers={"Content-Type": "application/json"},
+            json={"long_url": long_url, **kwargs}
         )
         
-        if response.status_code == 200:
+        if response.status_code == 201:
             return response.json()["short_url"]
         elif response.status_code == 429:
             print("Rate limit exceeded. Please wait.")
@@ -272,18 +302,17 @@ if short_url:
 ```
 
 ```javascript JavaScript
-async function safeShortenerUrl(url, options = {}) {
+async function safeShortenerUrl(long_url, options = {}) {
     try {
-        const response = await fetch('https://spoo.me', {
+        const response = await fetch('https://spoo.me/api/v1/shorten', {
             method: 'POST',
             headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/x-www-form-urlencoded'
+                'Content-Type': 'application/json'
             },
-            body: new URLSearchParams({ url, ...options })
+            body: JSON.stringify({ long_url, ...options })
         });
         
-        if (response.ok) {
+        if (response.status === 201) {
             const data = await response.json();
             return data.short_url;
         } else if (response.status === 429) {
@@ -326,7 +355,7 @@ Use these test URLs to verify your integration:
   <Card
     title="Join Discord"
     icon="discord"
-    href="https://discord.gg/spoo-me"
+    href="https://spoo.me/discord"
   >
     Get real-time help from our community
   </Card>

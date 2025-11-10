@@ -4,54 +4,182 @@ description: "Understanding Spoo.me API rate limits and best practices"
 icon: "clock"
 ---
 
-Spoo.me API implements rate limiting to ensure fair usage and maintain service quality for all users.
+Spoo.me API implements rate limiting to ensure fair usage and maintain service quality for all users. Rate limits vary based on authentication method and API version.
 
-## Current Rate Limits
+## API v1 Rate Limits (Recommended)
 
-The following rate limits apply to the URL shortening endpoints:
+The new v1 API offers **significantly higher rate limits** with authentication:
+
+### With Authentication (JWT or API Key)
 
 <CardGroup cols={3}>
   <Card
     title="Per Minute"
     icon="clock"
-    color="#A855F7"
+    color="#10B981"
   >
-    maximum **10 short URLs** per IP
-  </Card>
-  <Card
-    title="Per Hour"
-    icon="hourglass"
-    color="#A855F7"
-  >
-    maximum **100 short URLs** per IP
+    **60 requests**
   </Card>
   <Card
     title="Per Day"
     icon="calendar-days"
-    color="#A855F7"
+    color="#10B981"
   >
-    maximum **500 short URLs** per IP
+    **5,000 requests**
+  </Card>
+  <Card
+    title="Endpoints"
+    icon="code"
+    color="#10B981"
+  >
+    All v1 endpoints
   </Card>
 </CardGroup>
 
-## Affected Endpoints
+### Without Authentication (Anonymous)
 
-Rate limits apply to the following endpoints:
+<CardGroup cols={3}>
+  <Card
+    title="Per Minute"
+    icon="clock"
+    color="#F59E0B"
+  >
+    **20 requests**
+  </Card>
+  <Card
+    title="Per Day"
+    icon="calendar-days"
+    color="#F59E0B"
+  >
+    **1,000 requests**
+  </Card>
+  <Card
+    title="Endpoints"
+    icon="code"
+    color="#F59E0B"
+  >
+    Limited endpoints
+  </Card>
+</CardGroup>
 
-- `POST /` - Shorten URLs
-- `POST /emoji` - Create emoji URLs
+<Tip>
+  **Get 3x more requests** by using [API keys](/api-keys) or JWT authentication! Anonymous users are limited to 20 requests/minute vs 60 requests/minute for authenticated users.
+</Tip>
 
-<Note>
-  Statistics and export endpoints (`/stats` and `/export`) are not subject to the same rate limits.
-</Note>
+## API v0 Rate Limits (Legacy)
+
+The legacy v0 API has lower rate limits:
+
+<CardGroup cols={3}>
+  <Card
+    title="Per Minute"
+    icon="clock"
+    color="#EF4444"
+  >
+    **10 short URLs** per IP
+  </Card>
+  <Card
+    title="Per Hour"
+    icon="hourglass"
+    color="#EF4444"
+  >
+    **100 short URLs** per IP
+  </Card>
+  <Card
+    title="Per Day"
+    icon="calendar-days"
+    color="#EF4444"
+  >
+    **500 short URLs** per IP
+  </Card>
+</CardGroup>
+
+<Warning>
+  The v0 API is **legacy** and does not support authentication. We recommend migrating to the v1 API for better rate limits and features.
+</Warning>
+
+## Rate Limits by Endpoint
+
+### URL Shortening
+
+| Endpoint | Authenticated | Anonymous | Notes |
+|----------|--------------|-----------|-------|
+| `POST /api/v1/shorten` | 60/min, 5000/day | 20/min, 1000/day | v1 API |
+| `POST /` | - | 10/min, 100/hr, 500/day | v0 API (legacy) |
+| `POST /emoji` | - | 10/min, 100/hr, 500/day | v0 API (legacy) |
+
+### URL Management
+
+| Endpoint | Authenticated | Anonymous | Notes |
+|----------|--------------|-----------|-------|
+| `GET /api/v1/urls` | 60/min, 5000/day | Not allowed | Requires auth |
+| `PATCH /api/v1/urls/{id}` | 60/min, 5000/day | Not allowed | Requires auth |
+| `PATCH /api/v1/urls/{id}/status` | 60/min, 5000/day | Not allowed | Requires auth |
+| `DELETE /api/v1/urls/{id}` | 60/min, 5000/day | Not allowed | Requires auth |
+
+### Analytics
+
+| Endpoint | Authenticated | Anonymous | Notes |
+|----------|--------------|-----------|-------|
+| `GET /api/v1/stats` | 60/min, 5000/day | 20/min, 1000/day | Public URLs only for anon |
+| `POST /stats/{code}` | - | Not limited | v0 API (legacy) |
+| `POST /export/{code}/{format}` | - | Not limited | v0 API (legacy) |
+
+## Authentication & Rate Limits
+
+How you authenticate directly affects your rate limits:
+
+<AccordionGroup>
+  <Accordion title="API Key Authentication (Recommended)" icon="key">
+    **Rate Limits**: 60/min, 5000/day
+    
+    **Benefits**:
+    - 3x higher rate limits vs anonymous
+    - Access to URL management endpoints
+    - Private stats support
+    - Long-lived tokens for automation
+    
+    **How to use**: [Create an API key](/api-keys) and include it in the `Authorization` header:
+    ```bash
+    Authorization: Bearer spoo_YOUR_API_KEY
+    ```
+  </Accordion>
+  
+  <Accordion title="JWT Token Authentication" icon="shield-check">
+    **Rate Limits**: 60/min, 5000/day
+    
+    **Benefits**:
+    - Same rate limits as API keys
+    - Full dashboard access
+    - Can create/manage API keys
+    - Manage URLs via web UI
+    
+    **How to use**: Obtain JWT via OAuth/login and include in header:
+    ```bash
+    Authorization: Bearer YOUR_JWT_TOKEN
+    ```
+  </Accordion>
+  
+  <Accordion title="Anonymous (No Authentication)" icon="user">
+    **Rate Limits**: 20/min, 1000/day
+    
+    **Limitations**:
+    - 3x lower rate limits
+    - Cannot manage URLs later
+    - No access to private stats
+    - Cannot use URL management endpoints
+    
+    **How to use**: Simply make requests without authentication header.
+  </Accordion>
+</AccordionGroup>
 
 ## Rate Limit Headers
 
 When you make requests to rate-limited endpoints, the response will include headers indicating your current usage:
 
 ```http
-X-RateLimit-Limit: 10
-X-RateLimit-Remaining: 4
+X-RateLimit-Limit: 60
+X-RateLimit-Remaining: 45
 X-RateLimit-Reset: 1640995200
 Retry-After: 30
 ```
@@ -62,25 +190,52 @@ When you exceed the rate limit, you'll receive a `429 Too Many Requests` respons
 
 ```json
 {
-  "error": "Rate limit exceeded",
-  "message": "You have exceeded the rate limit. Please try again later.",
+  "error": "Rate limit exceeded"
 }
 ```
 
-## Best Practices
+## Need Higher Limits?
+
+If you need higher rate limits for your application:
 
 <Steps>
-  <Step title="Implement Retry Logic">
-    Build retry logic into your application to handle rate limit responses gracefully.
-  </Step>
-  <Step title="Monitor Usage">
-    Keep track of your API usage to stay within limits.
-  </Step>
-  <Step title="Call API Client Side">
-    If possible move the API call to the client side, instead of the server to use the client's IP instead of the same server IP for every request
+  <Step title="Contact Support">
+    If you still need higher limits, contact our support team at [support@spoo.me](mailto:support@spoo.me) with:
+    - Details about your use case
+    - Expected request volume
+    - Description of your application
   </Step>
 </Steps>
 
-## Need Higher Limits?
+## Next Steps
 
-If you need higher rate limits for your application, please contact our support team at [support@spoo.me](mailto:support@spoo.me) with details about your use case. 
+<CardGroup cols={2}>
+  <Card
+    title="Create API Keys"
+    icon="key"
+    href="/api-keys"
+  >
+    Get started with API key authentication
+  </Card>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api-reference"
+  >
+    Explore all available endpoints
+  </Card>
+  <Card
+    title="Quick Start"
+    icon="rocket"
+    href="/quickstart"
+  >
+    Build your first integration
+  </Card>
+  <Card
+    title="Python Library"
+    icon="python"
+    href="/tools/python-library"
+  >
+    Use our official SDK
+  </Card>
+</CardGroup> 
