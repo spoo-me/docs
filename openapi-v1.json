@@ -1,0 +1,1276 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "Spoo.me API v1",
+        "description": "Spoo.me is a free and open-source URL shortening service that provides powerful features for creating and managing shortened URLs with comprehensive analytics. The v1 API offers enhanced functionality including authentication, API keys, URL management, and advanced analytics.",
+        "version": "1.0.0",
+        "contact": {
+            "name": "Spoo.me Support",
+            "url": "https://spoo.me/contact",
+            "email": "support@spoo.me"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://github.com/spoo-me/url-shortener/blob/main/LICENSE"
+        }
+    },
+    "servers": [
+        {
+            "url": "https://spoo.me/api/v1",
+            "description": "Production server (v1 API)"
+        }
+    ],
+    "security": [
+        {
+            "apiKey": []
+        },
+        {
+            "bearerAuth": []
+        }
+    ],
+    "tags": [
+        {
+            "name": "URL Shortening",
+            "description": "Create shortened URLs with advanced customization options"
+        },
+        {
+            "name": "URL Management",
+            "description": "List, update, and delete your shortened URLs"
+        },
+        {
+            "name": "Analytics",
+            "description": "Retrieve comprehensive URL analytics and statistics"
+        }
+    ],
+    "paths": {
+        "/shorten": {
+            "post": {
+                "summary": "Create Shortened URL",
+                "description": "Create a new shortened URL with optional customization including password protection, expiration, click limits, and bot blocking.\n\n**Authentication**: Optional (higher rate limits when authenticated)\n\n**API Key**: Optional (if used, requires `shorten:create` or `admin:all` scope)\n\n**Rate Limits**: \n- Authenticated: 60/min, 5000/day\n- Anonymous: 20/min, 1000/day\n\n**Consequences of Anonymous Usage**:\n- Lower rate limits (20/min vs 60/min)\n- Cannot view or manage URLs later\n- No access to URL management endpoints\n- Cannot use private stats feature\n- URLs not linked to your account",
+                "operationId": "shortenUrlV1",
+                "tags": [
+                    "URL Shortening"
+                ],
+                "security": [
+                    {},
+                    {
+                        "apiKey": []
+                    },
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "long_url"
+                                ],
+                                "properties": {
+                                    "long_url": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "maxLength": 2048,
+                                        "description": "The original URL to shorten. Must start with http:// or https://",
+                                        "example": "https://example.com/very/long/url"
+                                    },
+                                    "alias": {
+                                        "type": "string",
+                                        "minLength": 3,
+                                        "maxLength": 50,
+                                        "pattern": "^[a-zA-Z0-9_-]+$",
+                                        "description": "Custom short code/alias for the URL. Alphanumeric, hyphens, and underscores only. Auto-generated if not provided.",
+                                        "example": "mylink"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "minLength": 4,
+                                        "description": "Password to protect the shortened URL. Minimum 4 characters.",
+                                        "example": "secure123"
+                                    },
+                                    "max_clicks": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "description": "Maximum number of clicks allowed. URL becomes inactive after limit reached.",
+                                        "example": 100
+                                    },
+                                    "expire_after": {
+                                        "type": "integer",
+                                        "description": "Expiration timestamp (Unix epoch seconds). Must be in the future.",
+                                        "example": 1735689600
+                                    },
+                                    "block_bots": {
+                                        "type": "boolean",
+                                        "description": "Block known bot user agents from accessing the URL.",
+                                        "example": true
+                                    },
+                                    "private_stats": {
+                                        "type": "boolean",
+                                        "description": "Make statistics private (only owner can view). Requires authentication.",
+                                        "example": false
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "URL successfully shortened",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ShortenedUrlResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - Invalid parameters",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid authentication token",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict - Alias already taken",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too Many Requests - Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/stats": {
+            "get": {
+                "summary": "URL Statistics",
+                "description": "Get comprehensive URL click statistics with flexible filtering, grouping, and aggregation.\n\n**Authentication**: Optional for public URLs, required for authenticated URLs and aggregate stats\n\n**API Key**: Optional (if used, requires `stats:read`, `urls:read`, or `admin:all` scope)\n\n**Rate Limits**:\n- Authenticated: 60/min, 5000/day\n- Anonymous: 20/min, 1000/day\n\n**Anonymous Usage**:\n- Can only view stats for public (non-private) URLs using `scope=anon`\n- Must provide `short_code` parameter\n- Cannot access aggregate stats across multiple URLs\n- Lower rate limits\n\n**Authenticated Usage**:\n- Full access to all owned URLs\n- Can use `scope=all` for aggregate statistics\n- Can access private URL statistics\n- Higher rate limits",
+                "operationId": "getAdvancedStatisticsV1",
+                "tags": [
+                    "Analytics"
+                ],
+                "security": [
+                    {},
+                    {
+                        "apiKey": []
+                    },
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "scope",
+                        "in": "query",
+                        "required": true,
+                        "description": "Statistics scope: 'all' (authenticated only) or 'anon' (public access)",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "all",
+                                "anon"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "short_code",
+                        "in": "query",
+                        "required": false,
+                        "description": "URL alias (required when scope=anon)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "required": false,
+                        "description": "ISO 8601 datetime or Unix timestamp (default: 7 days ago)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "required": false,
+                        "description": "ISO 8601 datetime or Unix timestamp (default: now)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "timezone",
+                        "in": "query",
+                        "required": false,
+                        "description": "IANA timezone for output formatting (default: UTC)",
+                        "schema": {
+                            "type": "string",
+                            "default": "UTC"
+                        }
+                    },
+                    {
+                        "name": "group_by",
+                        "in": "query",
+                        "required": false,
+                        "description": "Comma-separated dimensions: time, browser, os, country, city, referrer, short_code",
+                        "schema": {
+                            "type": "string",
+                            "default": "time"
+                        }
+                    },
+                    {
+                        "name": "metrics",
+                        "in": "query",
+                        "required": false,
+                        "description": "Comma-separated metrics: clicks, unique_clicks",
+                        "schema": {
+                            "type": "string",
+                            "default": "clicks,unique_clicks"
+                        }
+                    },
+                    {
+                        "name": "filters",
+                        "in": "query",
+                        "required": false,
+                        "description": "**Method 1: JSON Filters Object**\n\nJSON string containing dimension filters. Format: `{\"dimension\": [\"value1\", \"value2\"]}`\n\n**Available filter dimensions:**\n- `browser` - Filter by browser name (e.g., Chrome, Firefox, Safari, Edge)\n- `os` - Filter by operating system (e.g., Windows, macOS, Linux, iOS, Android)\n- `country` - Filter by country code (e.g., US, CA, GB, IN)\n- `city` - Filter by city name (e.g., New York, London, Mumbai)\n- `referrer` - Filter by referrer URL (e.g., https://google.com, https://twitter.com)\n- `short_code` - Filter by URL alias (e.g., mylink, promo2024) - **Not allowed with scope=anon**\n\n**Value format:** Array of strings for each dimension\n\n**Important:** Filter values are **case-sensitive**. Use exact capitalization as stored in the database.\n\n**Examples:**\n- `{\"browser\": [\"Chrome\", \"Firefox\"]}` - Filter for Chrome OR Firefox clicks\n- `{\"country\": [\"US\", \"CA\"], \"browser\": [\"Chrome\"]}` - US/CA clicks from Chrome\n- `{\"short_code\": [\"link1\", \"link2\"]}` - Stats for specific URLs (scope=all only)\n\n**Alternative:** You can also pass filters as individual query parameters (see browser, os, country, city, referrer, short_code parameters below)",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "examples": {
+                            "browser_filter": {
+                                "summary": "Filter by browsers",
+                                "value": "{\"browser\": [\"Chrome\", \"Firefox\"]}"
+                            },
+                            "country_filter": {
+                                "summary": "Filter by countries",
+                                "value": "{\"country\": [\"US\", \"CA\", \"GB\"]}"
+                            },
+                            "multi_filter": {
+                                "summary": "Multiple dimensions",
+                                "value": "{\"browser\": [\"Chrome\"], \"country\": [\"US\"], \"os\": [\"Windows\", \"macOS\"]}"
+                            },
+                            "url_filter": {
+                                "summary": "Specific URLs (scope=all)",
+                                "value": "{\"short_code\": [\"mylink\", \"promo2024\"]}"
+                            }
+                        }
+                    },
+                    {
+                        "name": "browser",
+                        "in": "query",
+                        "required": false,
+                        "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated browser names. Alternative to using the `filters` JSON parameter.\n\n**Format:** Comma-separated string (e.g., `Chrome,Firefox,Safari`)\n\n**Important:** Values are **case-sensitive**. Common values include:\n- Chrome\n- Firefox\n- Safari\n- Edge\n- Opera\n- Samsung Internet\n\n**Note:** Both `filters` JSON and individual parameters can be combined.",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "Chrome,Firefox"
+                    },
+                    {
+                        "name": "os",
+                        "in": "query",
+                        "required": false,
+                        "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated operating system names. Alternative to using the `filters` JSON parameter.\n\n**Format:** Comma-separated string (e.g., `Windows,macOS,Linux`)\n\n**Important:** Values are **case-sensitive**. Common values include:\n- Windows\n- macOS\n- Linux\n- iOS\n- Android\n- Chrome OS\n\n**Note:** Both `filters` JSON and individual parameters can be combined.",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "Windows,macOS"
+                    },
+                    {
+                        "name": "country",
+                        "in": "query",
+                        "required": false,
+                        "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated ISO 3166-1 alpha-2 country codes. Alternative to using the `filters` JSON parameter.\n\n**Format:** Comma-separated string (e.g., `US,CA,GB`)\n\n**Important:** Values are **case-sensitive**. Use uppercase two-letter codes:\n- US (United States)\n- CA (Canada)\n- GB (United Kingdom)\n- IN (India)\n- AU (Australia)\n- DE (Germany)\n- FR (France)\n- JP (Japan)\n\n**Note:** Both `filters` JSON and individual parameters can be combined.",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "US,CA,GB"
+                    },
+                    {
+                        "name": "city",
+                        "in": "query",
+                        "required": false,
+                        "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated city names. Alternative to using the `filters` JSON parameter.\n\n**Format:** Comma-separated string (e.g., `New York,London,Mumbai`)\n\n**Important:** Values are **case-sensitive**. Use exact capitalization as stored in the database.\n\n**Note:** Both `filters` JSON and individual parameters can be combined.",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "New York,London,Mumbai"
+                    },
+                    {
+                        "name": "referrer",
+                        "in": "query",
+                        "required": false,
+                        "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated referrer URLs. Alternative to using the `filters` JSON parameter.\n\n**Format:** Comma-separated string of full URLs (e.g., `https://google.com,https://twitter.com`)\n\n**Important:** Values are **case-sensitive**. Include the full URL including protocol.\n\n**Note:** Both `filters` JSON and individual parameters can be combined.",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "https://google.com,https://twitter.com"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Statistics retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UrlStatisticsV1Response"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - Invalid parameters",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Authentication required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - Private statistics or insufficient permissions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found - URL does not exist",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too Many Requests - Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/urls": {
+            "get": {
+                "summary": "List Your URLs",
+                "description": "Retrieve a paginated list of all shortened URLs owned by your account with powerful filtering, sorting, and search capabilities.\n\n**Authentication**: Required (JWT token or session cookie)\n\n**API Key**: Required (must have `urls:manage`, `urls:read`, or `admin:all` scope)\n\n**Rate Limits**: 60/min, 5000/day\n\n**Key Features**:\n- Pagination with configurable page size (1-100 items)\n- Sort by creation date, last click, or total clicks\n- Filter by status, date range, password/click limit presence\n- Full-text search in aliases and destination URLs\n- Returns metadata including click counts and URL settings",
+                "operationId": "listUrlsV1",
+                "tags": [
+                    "URL Management"
+                ],
+                "security": [
+                    {
+                        "apiKey": []
+                    },
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "description": "Page number (default: 1)",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "pageSize",
+                        "in": "query",
+                        "required": false,
+                        "description": "Items per page (default: 20, max: 100)",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100,
+                            "default": 20
+                        }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "required": false,
+                        "description": "Field to sort by",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "created_at",
+                                "last_click",
+                                "total_clicks"
+                            ],
+                            "default": "created_at"
+                        }
+                    },
+                    {
+                        "name": "sortOrder",
+                        "in": "query",
+                        "required": false,
+                        "description": "Sort direction",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "ascending",
+                                "asc",
+                                "1",
+                                "descending",
+                                "desc",
+                                "-1"
+                            ],
+                            "default": "descending"
+                        }
+                    },
+                    {
+                        "name": "filter",
+                        "in": "query",
+                        "required": false,
+                        "description": "JSON string containing filter criteria for URLs. Format: `{\"field\": value}`\n\n**Available filter fields:**\n- `status` - Filter by URL status (\"ACTIVE\" or \"INACTIVE\")\n- `createdAfter` - Filter URLs created after this date (ISO 8601 datetime or Unix timestamp)\n- `createdBefore` - Filter URLs created before this date (ISO 8601 datetime or Unix timestamp)\n- `passwordSet` - Filter by password protection (boolean: true/false)\n- `maxClicksSet` - Filter by click limit presence (boolean: true/false)\n- `search` - Search in alias or long_url (case-insensitive string)\n\n**Value formats:**\n- `status`: String - \"ACTIVE\" or \"INACTIVE\" (case-sensitive)\n- `createdAfter`/`createdBefore`: ISO 8601 datetime string (e.g., \"2024-01-01T00:00:00Z\") or Unix timestamp (e.g., 1704067200)\n- `passwordSet`/`maxClicksSet`: Boolean - true or false\n- `search`: String - case-insensitive search term\n\n**Examples:**\n- `{\"status\": \"ACTIVE\"}` - Only active URLs\n- `{\"passwordSet\": true}` - Only password-protected URLs\n- `{\"createdAfter\": \"2024-01-01T00:00:00Z\"}` - URLs created after Jan 1, 2024\n- `{\"status\": \"ACTIVE\", \"maxClicksSet\": true}` - Active URLs with click limits\n- `{\"search\": \"example\"}` - URLs containing \"example\" in alias or long_url\n- `{\"createdAfter\": \"2024-01-01\", \"createdBefore\": \"2024-12-31\", \"status\": \"ACTIVE\"}` - Active URLs from 2024",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "examples": {
+                            "status_filter": {
+                                "summary": "Filter by status",
+                                "value": "{\"status\": \"ACTIVE\"}"
+                            },
+                            "password_filter": {
+                                "summary": "Password-protected URLs",
+                                "value": "{\"passwordSet\": true}"
+                            },
+                            "date_range": {
+                                "summary": "Date range filter",
+                                "value": "{\"createdAfter\": \"2024-01-01T00:00:00Z\", \"createdBefore\": \"2024-12-31T23:59:59Z\"}"
+                            },
+                            "search_filter": {
+                                "summary": "Search filter",
+                                "value": "{\"search\": \"example\"}"
+                            },
+                            "multi_filter": {
+                                "summary": "Multiple filters",
+                                "value": "{\"status\": \"ACTIVE\", \"passwordSet\": true, \"createdAfter\": \"2024-01-01\"}"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "URLs retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UrlListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - Invalid parameters",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Authentication required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too Many Requests - Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/urls/{url_id}": {
+            "patch": {
+                "summary": "Update URL",
+                "description": "Modify properties of an existing shortened URL including destination, alias, security settings, and status.\n\n**Authentication**: Required (JWT token or session cookie)\n\n**API Key**: Required (must have `urls:manage` or `admin:all` scope)\n\n**Rate Limits**: 60/min, 5000/day\n\n**Ownership**: Can only update URLs owned by your account\n\n**Updatable Properties**:\n- Destination URL (`long_url`)\n- Custom alias/short code\n- Password protection (set or remove)\n- Click limits (set or remove)\n- Expiration timestamp (set or remove)\n- Bot blocking settings\n- Statistics privacy\n- URL status (ACTIVE/INACTIVE)\n\n**Note**: Pass `null` values to remove optional settings like password, max_clicks, or expire_after.",
+                "operationId": "updateUrlV1",
+                "tags": [
+                    "URL Management"
+                ],
+                "security": [
+                    {
+                        "apiKey": []
+                    },
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "url_id",
+                        "in": "path",
+                        "required": true,
+                        "description": "MongoDB ObjectId of the URL",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "long_url": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "description": "New destination URL"
+                                    },
+                                    "alias": {
+                                        "type": "string",
+                                        "description": "New custom short code"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "nullable": true,
+                                        "description": "Update or remove password (null to remove)"
+                                    },
+                                    "max_clicks": {
+                                        "type": "integer",
+                                        "nullable": true,
+                                        "description": "Update or remove click limit (null to remove)"
+                                    },
+                                    "expire_after": {
+                                        "type": "integer",
+                                        "nullable": true,
+                                        "description": "Update or remove expiration (null to remove)"
+                                    },
+                                    "block_bots": {
+                                        "type": "boolean",
+                                        "nullable": true,
+                                        "description": "Update or remove bot blocking (null to remove)"
+                                    },
+                                    "private_stats": {
+                                        "type": "boolean",
+                                        "nullable": true,
+                                        "description": "Update or remove stats privacy (null to remove)"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "ACTIVE",
+                                            "INACTIVE"
+                                        ],
+                                        "description": "Change URL status"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "URL updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UpdatedUrlResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - Invalid parameters",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Authentication required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - Not the owner or insufficient permissions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found - URL does not exist",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict - New alias already taken",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too Many Requests - Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete URL",
+                "description": "Permanently remove a shortened URL from the database. This action is **irreversible** and will delete all associated analytics data.\n\n**Authentication**: Required (JWT token or session cookie)\n\n**API Key**: Required (must have `urls:manage` or `admin:all` scope)\n\n**Rate Limits**: 60/min, 5000/day\n\n**Ownership**: Can only delete URLs owned by your account\n\n**Important Consequences**:\n- The short URL will become immediately unavailable\n- All click statistics and analytics data will be permanently deleted\n- The alias/short code will become available for reuse\n- This operation cannot be undone\n\n**Alternative**: Consider setting `status` to `INACTIVE` instead if you want to preserve the URL and its analytics for future reference.",
+                "operationId": "deleteUrlV1",
+                "tags": [
+                    "URL Management"
+                ],
+                "security": [
+                    {
+                        "apiKey": []
+                    },
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "url_id",
+                        "in": "path",
+                        "required": true,
+                        "description": "MongoDB ObjectId of the URL",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "URL deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "URL deleted"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - Invalid URL ID",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Authentication required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - Not the owner or insufficient permissions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found - URL does not exist",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too Many Requests - Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/urls/{url_id}/status": {
+            "patch": {
+                "summary": "Update URL Status",
+                "description": "Quickly toggle a shortened URL's status between ACTIVE and INACTIVE without modifying other properties.\n\n**Authentication**: Required (JWT token or session cookie)\n\n**API Key**: Required (must have `urls:manage` or `admin:all` scope)\n\n**Rate Limits**: 60/min, 5000/day\n\n**Ownership**: Can only update URLs owned by your account\n\n**Status Values**:\n- `ACTIVE` - URL is accessible and redirects normally\n- `INACTIVE` - URL is disabled and returns an error page\n\n**Use Cases**:\n- Temporarily disable a URL without deleting it\n- Quickly pause/resume campaigns or promotions\n- Preserve analytics data while preventing access\n- Bulk status management for multiple URLs\n\n**Note**: This is a convenience endpoint. You can also update status using the main PATCH /urls/{url_id} endpoint.",
+                "operationId": "updateUrlStatusV1",
+                "tags": [
+                    "URL Management"
+                ],
+                "security": [
+                    {
+                        "apiKey": []
+                    },
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "url_id",
+                        "in": "path",
+                        "required": true,
+                        "description": "MongoDB ObjectId of the URL",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "ACTIVE",
+                                            "INACTIVE"
+                                        ],
+                                        "description": "New status for the URL"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "URL status updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UpdatedUrlResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - Invalid status value",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Authentication required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - Not the owner or insufficient permissions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found - URL does not exist",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too Many Requests - Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+                "description": "JWT token obtained from authentication"
+            },
+            "apiKey": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "spoo_*",
+                "description": "API key in format: spoo_<key>. Use in Authorization header as 'Bearer spoo_<key>'"
+            }
+        },
+        "schemas": {
+            "ErrorResponse": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string",
+                        "description": "Error message"
+                    }
+                }
+            },
+            "ShortenedUrlResponse": {
+                "type": "object",
+                "properties": {
+                    "alias": {
+                        "type": "string",
+                        "example": "mylink"
+                    },
+                    "short_url": {
+                        "type": "string",
+                        "format": "uri",
+                        "example": "https://spoo.me/mylink"
+                    },
+                    "long_url": {
+                        "type": "string",
+                        "format": "uri",
+                        "example": "https://example.com/very/long/url"
+                    },
+                    "owner_id": {
+                        "type": "string",
+                        "description": "User ID if authenticated, null otherwise",
+                        "example": "507f1f77bcf86cd799439011"
+                    },
+                    "created_at": {
+                        "type": "integer",
+                        "description": "Unix timestamp",
+                        "example": 1704067200
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "ACTIVE",
+                            "INACTIVE"
+                        ],
+                        "example": "ACTIVE"
+                    },
+                    "private_stats": {
+                        "type": "boolean",
+                        "example": false
+                    }
+                }
+            },
+            "UrlStatisticsV1Response": {
+                "type": "object",
+                "properties": {
+                    "scope": {
+                        "type": "string",
+                        "enum": [
+                            "all",
+                            "anon"
+                        ]
+                    },
+                    "timezone": {
+                        "type": "string",
+                        "example": "America/New_York"
+                    },
+                    "group_by": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "filters": {
+                        "type": "object"
+                    },
+                    "time_range": {
+                        "type": "object",
+                        "properties": {
+                            "start_date": {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            "end_date": {
+                                "type": "string",
+                                "format": "date-time"
+                            }
+                        }
+                    },
+                    "summary": {
+                        "type": "object",
+                        "properties": {
+                            "total_clicks": {
+                                "type": "integer"
+                            },
+                            "unique_clicks": {
+                                "type": "integer"
+                            },
+                            "first_click": {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            "last_click": {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            "avg_redirection_time": {
+                                "type": "number",
+                                "format": "float"
+                            }
+                        }
+                    },
+                    "metrics": {
+                        "type": "object",
+                        "description": "Grouped statistics based on group_by parameter"
+                    }
+                }
+            },
+            "UrlListResponse": {
+                "type": "object",
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/UrlItem"
+                        }
+                    },
+                    "page": {
+                        "type": "integer"
+                    },
+                    "pageSize": {
+                        "type": "integer"
+                    },
+                    "total": {
+                        "type": "integer"
+                    },
+                    "hasNext": {
+                        "type": "boolean"
+                    },
+                    "sortBy": {
+                        "type": "string"
+                    },
+                    "sortOrder": {
+                        "type": "string"
+                    }
+                }
+            },
+            "UrlItem": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "alias": {
+                        "type": "string"
+                    },
+                    "long_url": {
+                        "type": "string",
+                        "format": "uri"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "ACTIVE",
+                            "INACTIVE"
+                        ]
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "expire_after": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "max_clicks": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "private_stats": {
+                        "type": "boolean"
+                    },
+                    "block_bots": {
+                        "type": "boolean"
+                    },
+                    "password_set": {
+                        "type": "boolean"
+                    },
+                    "total_clicks": {
+                        "type": "integer"
+                    },
+                    "last_click": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                }
+            },
+            "UpdatedUrlResponse": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "alias": {
+                        "type": "string"
+                    },
+                    "long_url": {
+                        "type": "string",
+                        "format": "uri"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "ACTIVE",
+                            "INACTIVE"
+                        ]
+                    },
+                    "password_set": {
+                        "type": "boolean"
+                    },
+                    "max_clicks": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "expire_after": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "block_bots": {
+                        "type": "boolean"
+                    },
+                    "private_stats": {
+                        "type": "boolean"
+                    },
+                    "updated_at": {
+                        "type": "integer",
+                        "description": "Unix timestamp"
+                    }
+                }
+            },
+            "ApiKeyResponse": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "scopes": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "created_at": {
+                        "type": "integer",
+                        "description": "Unix timestamp"
+                    },
+                    "expires_at": {
+                        "type": "integer",
+                        "nullable": true,
+                        "description": "Unix timestamp"
+                    },
+                    "revoked": {
+                        "type": "boolean"
+                    },
+                    "token_prefix": {
+                        "type": "string",
+                        "description": "First 8 characters of the key"
+                    },
+                    "token": {
+                        "type": "string",
+                        "description": "Full API key (shown only once at creation)",
+                        "example": "spoo_AbCdEfGhIjKlMnOpQrStUvWxYzAbCdEfGhIjKlMn"
+                    }
+                }
+            },
+            "ApiKeyInfo": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "scopes": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "created_at": {
+                        "type": "integer",
+                        "description": "Unix timestamp"
+                    },
+                    "expires_at": {
+                        "type": "integer",
+                        "nullable": true,
+                        "description": "Unix timestamp"
+                    },
+                    "revoked": {
+                        "type": "boolean"
+                    },
+                    "token_prefix": {
+                        "type": "string",
+                        "description": "First 8 characters of the key"
+                    }
+                }
+            }
+        }
+    }
+}

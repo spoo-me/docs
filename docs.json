@@ -12,32 +12,62 @@
     "groups": [
       {
         "group": "Getting Started",
-        "pages": ["introduction", "quickstart", "rate-limits"]
+        "pages": ["introduction", "quickstart", "api-keys", "rate-limits"]
       },
       {
-        "group": "API Reference",
-        "openApi": "openapi.json",
+        "group": "API v1 Reference",
+        "openapi": "openapi-v1.json",
         "pages": [
           {
-            "group": "Shorten URL",
+            "group": "URL Shortening",
+            "icon": "link",
+            "pages": [
+              "POST /shorten"
+            ]
+          },
+          {
+            "group": "URL Management",
+            "icon": "list-check",
+            "pages": [
+              "GET /urls",
+              "PATCH /urls/{url_id}",
+              "PATCH /urls/{url_id}/status",
+              "DELETE /urls/{url_id}"
+            ]
+          },
+          {
+            "group": "Analytics",
+            "icon": "chart-line",
+            "pages": [
+              "GET /stats"
+            ]
+          }
+        ]
+      },
+      {
+        "group": "API v0 Reference (Legacy)",
+        "openapi": "openapi-v0.json",
+        "pages": [
+          {
+            "group": "URL Shortening",
             "icon": "unlink",
             "pages": [
-              "api-reference/url-shortening/shorten-long-urls",
-              "api-reference/url-shortening/create-emoji-urls"
+              "api-reference/shorten-url",
+              "POST /emoji"
             ]
           },
           {
-            "group": "URL Statistics",
+            "group": "Analytics",
             "icon": "chart-spline",
             "pages": [
-              "api-reference/analytics/get-url-statistics"
+              "POST /stats/{shortCode}"
             ]
           },
           {
-            "group": "Export Data",
+            "group": "Data Export",
             "icon": "file-down",
             "pages": [
-              "api-reference/data-export/export-url-data"
+              "POST /export/{shortCode}/{exportFormat}"
             ]
           }
         ]
@@ -52,6 +82,7 @@
           "self-hosting/introduction",
           "self-hosting/setting-up-mongo",
           "self-hosting/setting-up-redis",
+          "self-hosting/setting-up-authentication",
           "self-hosting/creating-discord-webhooks",
           {
             "group": "Deployment",
