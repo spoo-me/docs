@@ -30,7 +30,9 @@ Before starting, ensure you have:
 - **Git** for version control
 - Basic knowledge of Python development and virtual environments
 - Basic knowledge of uv package manager
-- Completed [MongoDB setup](/self-hosting/setting-up-mongo) and [webhook creation](/self-hosting/creating-contact-webhooks)
+- Completed [MongoDB setup](/self-hosting/setting-up-mongo)
+- Completed [authentication setup](/self-hosting/setting-up-authentication) (for v1 API)
+- Completed [webhook creation](/self-hosting/creating-discord-webhooks)
 
 <Tabs>
 <Tab title="Windows">
@@ -155,18 +157,51 @@ git --version
     ```bash
     # MongoDB Configuration
     MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/spoo-me?retryWrites=true&w=majority
+    MONGODB_URI_DEV=mongodb://localhost:27017/
+    MONGO_DB_NAME=url-shortener
     
     # Discord Webhooks
     CONTACT_WEBHOOK=https://discord.com/api/webhooks/your-contact-webhook-id/your-webhook-token
     URL_REPORT_WEBHOOK=https://discord.com/api/webhooks/your-report-webhook-id/your-webhook-token
 
-    # Redis Configuration
+    # Redis Configuration (Optional)
     REDIS_URI=redis://localhost:6379
-
-    # Optional: Redis Configuration
+    REDIS_URI_DEV=redis://localhost:6379
     REDIS_TTL_SECONDS=3600
 
-    # Optional: Development Settings
+    # Flask Configuration
+    FLASK_SECRET_KEY=your-random-secret-key-here
+    HOST_URI=127.0.0.1:8000
+    SHORTEN_API_RATE_LIMIT_PER_HOUR=100
+
+    # JWT Configuration (Required for v1 API)
+    JWT_ISSUER=spoo.me
+    JWT_AUDIENCE=spoo.me
+    ACCESS_TOKEN_TTL_SECONDS=3600
+    REFRESH_TOKEN_TTL_SECONDS=2592000
+    COOKIE_SECURE=false
+    JWT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYour-Private-Key-Here\n-----END PRIVATE KEY-----"
+    JWT_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\nYour-Public-Key-Here\n-----END PUBLIC KEY-----"
+
+    # Google OAuth (Optional)
+    GOOGLE_OAUTH_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+    GOOGLE_OAUTH_CLIENT_SECRET=your-google-client-secret
+    GOOGLE_OAUTH_REDIRECT_URI=http://127.0.0.1:8000/oauth/google/callback
+
+    # GitHub OAuth (Optional)
+    GITHUB_OAUTH_CLIENT_ID=your-github-client-id
+    GITHUB_OAUTH_CLIENT_SECRET=your-github-client-secret
+    GITHUB_OAUTH_REDIRECT_URI=http://127.0.0.1:8000/oauth/github/callback
+
+    # Discord OAuth (Optional)
+    DISCORD_OAUTH_CLIENT_ID=your-discord-client-id
+    DISCORD_OAUTH_CLIENT_SECRET=your-discord-client-secret
+    DISCORD_OAUTH_REDIRECT_URI=http://127.0.0.1:8000/oauth/discord/callback
+
+    # HCaptcha (Optional)
+    HCAPTCHA_SECRET=your-hcaptcha-secret
+
+    # Development Settings
     DEBUG=True
     PORT=8000
     HOST=0.0.0.0
@@ -175,6 +210,13 @@ git --version
     <Warning>
     Never commit your `.env` file to version control. Add it to `.gitignore` to prevent accidental commits.
     </Warning>
+    
+    <Tip>
+    Copy from `.env.example` and fill in your values:
+    ```bash
+    cp .env.example .env
+    ```
+    </Tip>
 </Step>
 </Steps>
 
@@ -217,10 +259,18 @@ git --version
 <Step title="Test Core Features">
     Verify all functionality is working:
     
-    1. **URL Shortening**: Create a test short URL
-    2. **Analytics**: Click the short URL and check analytics
+    **Public Features (No Auth Required):**
+    1. **URL Shortening**: Create a test short URL via v1 API (anonymous)
+    2. **Analytics**: Click the short URL and check public analytics
     3. **Contact Form**: Submit the contact form to test webhooks
     4. **URL Reporting**: Test the URL reporting feature
+    
+    **Authenticated Features (Requires Login):**
+    5. **User Login**: Test OAuth login at http://localhost:8000/login
+    6. **Dashboard Access**: Verify dashboard loads at http://localhost:8000/dashboard
+    7. **API Key Creation**: Create a test API key in dashboard settings
+    8. **URL Management**: Test listing, updating, and deleting URLs via v1 API
+    9. **Advanced Analytics**: Test filtered analytics queries
     
     <Tip>
     Check your Discord channels to verify webhook notifications are being received.
