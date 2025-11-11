@@ -12,7 +12,12 @@
     "groups": [
       {
         "group": "Getting Started",
-        "pages": ["introduction", "quickstart", "api-keys", "rate-limits"]
+        "pages": [
+          "introduction",
+          "quickstart",
+          "api-keys",
+          "rate-limits"
+        ]
       },
       {
         "group": "API v1 Reference",
@@ -39,7 +44,8 @@
             "group": "Analytics",
             "icon": "chart-line",
             "pages": [
-              "GET /stats"
+              "GET /stats",
+              "GET /export"
             ]
           }
         ]
@@ -74,7 +80,11 @@
       },
       {
         "group": "Tools & Libraries",
-        "pages": ["tools/python-library", "tools/github-action", "tools/spoobot"]
+        "pages": [
+          "tools/python-library",
+          "tools/github-action",
+          "tools/spoobot"
+        ]
       },
       {
         "group": "Self Hosting",

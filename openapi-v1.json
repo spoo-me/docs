@@ -411,6 +411,257 @@
                 }
             }
         },
+        "/export": {
+            "get": {
+                "summary": "Export Statistics",
+                "description": "Export URL click statistics in various formats (CSV, XLSX, JSON, XML) with the same filtering and grouping capabilities as the stats API.\n\n**Authentication**: Optional for public URLs, required for authenticated URLs and aggregate exports\n\n**API Key**: Optional (if used, requires `stats:read`, `urls:read`, or `admin:all` scope)\n\n**Rate Limits**:\n- Authenticated: 30/min, 1000/day\n- Anonymous: 10/min, 200/day\n\n**Note**: Lower rate limits than stats API due to resource-intensive export generation.\n\n**Export Formats**:\n- **CSV**: Zipped archive containing multiple CSV files (one per data category)\n- **XLSX**: Excel workbook with multiple sheets for different metrics\n- **JSON**: Complete statistics data in JSON format\n- **XML**: Complete statistics data in XML format\n\n**Anonymous Usage**:\n- Can only export stats for public (non-private) URLs using `scope=anon`\n- Must provide `short_code` parameter\n- Cannot access aggregate exports across multiple URLs\n- Lower rate limits\n\n**Authenticated Usage**:\n- Full access to all owned URLs\n- Can use `scope=all` for aggregate statistics\n- Can export private URL statistics\n- Higher rate limits",
+                "operationId": "exportStatisticsV1",
+                "tags": [
+                    "Analytics"
+                ],
+                "security": [
+                    {},
+                    {
+                        "apiKey": []
+                    },
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "format",
+                        "in": "query",
+                        "required": true,
+                        "description": "Export file format",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "csv",
+                                "xlsx",
+                                "json",
+                                "xml"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "scope",
+                        "in": "query",
+                        "required": true,
+                        "description": "Statistics scope: 'all' (authenticated only) or 'anon' (public access)",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "all",
+                                "anon"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "short_code",
+                        "in": "query",
+                        "required": false,
+                        "description": "URL alias (required when scope=anon)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "required": false,
+                        "description": "ISO 8601 datetime or Unix timestamp (default: 7 days ago)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "required": false,
+                        "description": "ISO 8601 datetime or Unix timestamp (default: now)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "timezone",
+                        "in": "query",
+                        "required": false,
+                        "description": "IANA timezone for output formatting (default: UTC)",
+                        "schema": {
+                            "type": "string",
+                            "default": "UTC"
+                        }
+                    },
+                    {
+                        "name": "group_by",
+                        "in": "query",
+                        "required": false,
+                        "description": "Comma-separated dimensions: time, browser, os, country, city, referrer, short_code",
+                        "schema": {
+                            "type": "string",
+                            "default": "time"
+                        }
+                    },
+                    {
+                        "name": "metrics",
+                        "in": "query",
+                        "required": false,
+                        "description": "Comma-separated metrics: clicks, unique_clicks",
+                        "schema": {
+                            "type": "string",
+                            "default": "clicks,unique_clicks"
+                        }
+                    },
+                    {
+                        "name": "filters",
+                        "in": "query",
+                        "required": false,
+                        "description": "JSON string containing dimension filters. Format: `{\"dimension\": [\"value1\", \"value2\"]}`\n\n**Available filter dimensions:**\n- `browser` - Filter by browser name\n- `os` - Filter by operating system\n- `country` - Filter by country code\n- `city` - Filter by city name\n- `referrer` - Filter by referrer URL\n- `short_code` - Filter by URL alias (not allowed with scope=anon)\n\n**Examples:**\n- `{\"browser\": [\"Chrome\", \"Firefox\"]}`\n- `{\"country\": [\"US\", \"CA\"], \"browser\": [\"Chrome\"]}`\n- `{\"short_code\": [\"link1\", \"link2\"]}` (scope=all only)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "browser",
+                        "in": "query",
+                        "required": false,
+                        "description": "Comma-separated browser names (alternative to filters parameter)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "os",
+                        "in": "query",
+                        "required": false,
+                        "description": "Comma-separated OS names (alternative to filters parameter)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "country",
+                        "in": "query",
+                        "required": false,
+                        "description": "Comma-separated country codes (alternative to filters parameter)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "city",
+                        "in": "query",
+                        "required": false,
+                        "description": "Comma-separated city names (alternative to filters parameter)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "referrer",
+                        "in": "query",
+                        "required": false,
+                        "description": "Comma-separated referrer URLs (alternative to filters parameter)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Export file generated successfully",
+                        "content": {
+                            "application/zip": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            },
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            },
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - Invalid parameters or missing required format parameter",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Authentication required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - Private statistics or insufficient permissions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found - URL does not exist",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too Many Requests - Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error - Export generation failed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/urls": {
             "get": {
                 "summary": "List Your URLs",
