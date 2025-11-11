@@ -87,8 +87,8 @@
                                     },
                                     "password": {
                                         "type": "string",
-                                        "minLength": 4,
-                                        "description": "Password to protect the shortened URL. Minimum 4 characters.",
+                                        "minLength": 8,
+                                        "description": "Password to protect the shortened URL. Minimum 8 characters long, must contain a letter and a number and a special character either '@' or '.' and cannot be consecutive",
                                         "example": "secure123"
                                     },
                                     "max_clicks": {
