@@ -19,31 +19,43 @@ Understanding how Spoo.me works will help you choose the right deployment method
 ```mermaid
 graph TD
     A[User Request] --> B[Spoo.me Application]
-    B --> C{Request Type}
+    B --> C{API Version}
     
-    C -->|URL Redirect| D[URL Lookup]
-    C -->|Shorten URL| E[URL Creation]
-    C -->|Analytics| F[Statistics Query]
-    C -->|Contact Form| G[Contact Handler]
-    C -->|Report URL| H[Report Handler]
+    C -->|v1 API| D{Authentication}
+    C -->|v0 API| E[Legacy Endpoints]
+    C -->|Web UI| F[Dashboard/SEO]
     
-    D --> I{Check Redis Cache}
-    I -->|Cache Hit| J[Return Cached URL]
-    I -->|Cache Miss| K[(MongoDB Database)]
-    K --> L[Update Redis Cache]
-    L --> M[Return Shortened URL]
+    D -->|JWT/API Key| G[Authenticated Requests]
+    D -->|Anonymous| H[Anonymous Requests]
     
-    E --> K
-    F --> K
-    K --> N[Return Analytics]
+    G -->|Create URL| I[(MongoDB Database)]
+    G -->|Manage URLs| J[List/Update/Delete]
+    G -->|Advanced Stats| K[Analytics Engine]
     
-    G --> O[Discord Webhook<br/>Contact Form]
-    H --> P[Discord Webhook<br/>URL Reports]
+    H -->|Shorten URL| I
+    H -->|Public Stats| K
     
-    J --> Q[Redirect User]
-    N --> R[Analytics Response]
-    Q --> S[User]
-    R --> S
+    E -->|Legacy Shorten| I
+    E -->|Legacy Stats| K
+    
+    F -->|URL Redirect| L{Check Redis Cache}
+    L -->|Cache Hit| M[Return Cached URL]
+    L -->|Cache Miss| I
+    I --> N[Update Redis Cache]
+    N --> M
+    
+    J --> I
+    K --> I
+    I --> O[Analytics Data]
+    O --> K
+    
+    F -->|Contact Form| P[Discord Webhook<br/>Contact]
+    F -->|Report URL| Q[Discord Webhook<br/>Reports]
+    
+    M --> R[Redirect User]
+    K --> S[Stats Response]
+    R --> T[User]
+    S --> T
 ```
 </Frame>
 
@@ -122,9 +134,25 @@ Choose the deployment method that best fits your technical expertise and require
 
 After successful deployment, your self-hosted Spoo.me instance will include:
 
-- 🔗 **URL Shortening**: Core functionality to create short URLs
-- 📊 **Analytics Dashboard**: Track clicks, referrers, and geographic data  
+### API v1 Features
+- 🔐 **API Key Authentication**: Create and manage API keys with scoped permissions
+- 🔗 **URL Management**: List, update, and delete shortened URLs programmatically
+- 📊 **Advanced Analytics**: Flexible filtering, grouping, and time-series analysis
+- 🔒 **Private Statistics**: Option to make URL stats private to owner only
+- 🚀 **Higher Rate Limits**: 60 requests/min for authenticated users vs 20/min for anonymous
+- ⏱️ **URL Expiration**: Set expiration dates and click limits
+- 🤖 **Bot Blocking**: Block known bots from accessing URLs
+- 🔑 **Password Protection**: Secure URLs with passwords
+
+### Legacy v0 Features
+- 🔗 **URL Shortening**: Classic URL shortening with form-based API
+- 😄 **Emoji URLs**: Create memorable emoji-based short URLs
+- 📈 **Basic Analytics**: Simple statistics and click tracking
+- 📥 **Data Export**: Export URL data in JSON, CSV, XLSX, XML formats
+
+### Web Dashboard & UI
 - 📱 **Responsive Design**: Works perfectly on all devices
+- 🎨 **Modern Interface**: Clean, intuitive dashboard for URL management
 - 🛡️ **Security Features**: Built-in protection against abuse
 - 📧 **Contact Forms**: Direct communication with webhook integration
 - 🚨 **URL Reporting**: Allow users to report problematic URLs

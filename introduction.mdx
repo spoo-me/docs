@@ -14,6 +14,13 @@ Spoo.me is a powerful URL shortening service that provides a comprehensive API f
 ![Spoo.me Banner](/images/banner-rounded.png)
 
 ## Base URL
+
+**API v1 (Recommended)**
+```
+https://spoo.me/api/v1
+```
+
+**API v0 (Legacy)**
 ```
 https://spoo.me
 ```
@@ -36,46 +43,46 @@ https://spoo.me
     Full REST API with comprehensive endpoints for all operations
   </Card>
   <Card
-    title="Advanced Analytics Dashboard"
+    title="Advanced Analytics"
     icon="chart-line"
     color="#A855F7"
   >
-    Detailed analytics and statistics for your shortened URLs
+    Flexible filtering, grouping, and aggregation for comprehensive insights
   </Card>
 </CardGroup>
 
 ## Quick Start
 
-Get started with the Spoo.me API in minutes:
+Get started with the Spoo.me API v1 in minutes:
 
 <CardGroup cols={2}>
   <Card
+    title="Create API Key"
+    icon="key"
+    href="/api-keys"
+  >
+    Generate an API key for authenticated access with higher rate limits
+  </Card>
+  <Card
     title="Shorten URLs"
     icon="link"
-    href="/api-reference/url-shortening/shorten-long-urls"
+    href="/api-reference/url-shortening/create-shortened-url"
   >
-    Learn how to shorten URLs with custom aliases and settings
+    Learn how to shorten URLs with the v1 API
   </Card>
   <Card
-    title="Emoji URLs"
-    icon="smile"
-    href="/api-reference/url-shortening/create-emoji-urls"
+    title="Manage URLs"
+    icon="list-check"
+    href="/api-reference/url-management/list-your-urls"
   >
-    Create fun shortened URLs using emoji sequences
+    List, update, and delete your shortened URLs
   </Card>
   <Card
-    title="URL Statistics"
-    icon="chart-bar"
-    href="/api-reference/analytics/get-url-statistics"
+    title="Advanced Analytics"
+    icon="chart-line"
+    href="/api-reference/analytics/url-statistics"
   >
-    Retrieve detailed analytics for your shortened URLs
-  </Card>
-  <Card
-    title="Export Data"
-    icon="download"
-    href="/api-reference/data-export/export-url-data"
-  >
-    Export your URL data in various formats (JSON, CSV, XLSX, XML)
+    Get comprehensive statistics with flexible filtering and grouping
   </Card>
 </CardGroup>
 
@@ -104,7 +111,7 @@ Get started with the Spoo.me API in minutes:
   <Card
     title="Join our Discord"
     icon="discord"
-    href="https://discord.gg/spoo-me"
+    href="https://spoo.me/discord"
   >
     Get help from our community and developers
   </Card>

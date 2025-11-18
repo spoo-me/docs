@@ -1,0 +1,312 @@
+---
+title: "Setting Up Authentication"
+description: "Configure JWT tokens and OAuth providers for user authentication"
+icon: "shield-check"
+---
+
+Spoo.me uses JWT (JSON Web Tokens) for authentication and supports multiple OAuth providers for user login. This guide will walk you through setting up authentication for your self-hosted instance.
+
+<Info>
+Authentication is **required** for users to access v1 API features like URL management, API key creation, and private statistics.
+</Info>
+
+## JWT Configuration
+
+JWT tokens are used to authenticate users after they log in via OAuth or other methods.
+
+### Generate RSA Key Pair
+
+You'll need to generate an RSA key pair for signing and verifying JWT tokens.
+
+<Steps>
+<Step title="Generate Private Key">
+Generate a 2048-bit RSA private key:
+
+```bash
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out jwt_private_key.pem
+```
+</Step>
+
+<Step title="Generate Public Key">
+Extract the public key from the private key:
+
+```bash
+openssl rsa -pubout -in jwt_private_key.pem -out jwt_public_key.pem
+```
+</Step>
+
+<Step title="View Keys">
+Display the keys in a format suitable for environment variables:
+
+```bash
+# View private key
+cat jwt_private_key.pem
+
+# View public key
+cat jwt_public_key.pem
+```
+</Step>
+</Steps>
+
+### Configure JWT Environment Variables
+
+Add the following to your `.env` file:
+
+```bash
+# JWT Configuration
+JWT_ISSUER=spoo.me                    # Your domain or app name
+JWT_AUDIENCE=spoo.me                  # Your domain or app name
+ACCESS_TOKEN_TTL_SECONDS=3600         # 1 hour
+REFRESH_TOKEN_TTL_SECONDS=2592000     # 30 days
+COOKIE_SECURE=false                   # false for local dev, true for production
+
+# Paste your generated keys here (include the newlines as \n)
+JWT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhki...\n-----END PRIVATE KEY-----"
+JWT_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhki...\n-----END PUBLIC KEY-----"
+```
+
+<Warning>
+**Security Notes:**
+- Keep your `JWT_PRIVATE_KEY` secret and never commit it to version control
+- Set `COOKIE_SECURE=true` in production to ensure cookies are only sent over HTTPS
+- Store keys securely using environment variables or secret management services
+</Warning>
+
+## OAuth Configuration
+
+Spoo.me supports three OAuth providers: Google, GitHub, and Discord. You can enable one or all of them.
+
+### Google OAuth
+
+<Steps>
+<Step title="Create Google Cloud Project">
+1. Go to [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+2. Create a new project (or select an existing one)
+3. Click **Create Project** and give it a name (e.g., "Spoo.me OAuth")
+</Step>
+
+<Step title="Enable Google+ API">
+1. In the left sidebar, go to **APIs & Services** → **Library**
+2. Search for "Google+ API"
+3. Click **Enable**
+</Step>
+
+<Step title="Configure OAuth Consent Screen">
+1. Go to **OAuth consent screen** in the left sidebar
+2. Select **External** (or Internal if using Google Workspace)
+3. Fill in the required information:
+   - **App name**: Your app name (e.g., "Spoo.me")
+   - **User support email**: Your email
+   - **Developer contact**: Your email
+4. Add authorized domains:
+   - For local dev: `localhost` and `127.0.0.1`
+   - For production: Your domain (e.g., `yourdomain.com`)
+5. Click **Save and Continue**
+</Step>
+
+<Step title="Create OAuth Credentials">
+1. Go to **Credentials** in the left sidebar
+2. Click **Create Credentials** → **OAuth 2.0 Client ID**
+3. Select **Web application**
+4. Add **Authorized redirect URIs**:
+   ```
+   http://localhost:8000/oauth/google/callback
+   http://127.0.0.1:8000/oauth/google/callback
+   https://yourdomain.com/oauth/google/callback
+   ```
+5. Click **Create**
+6. Copy the **Client ID** and **Client Secret**
+</Step>
+
+<Step title="Add to Environment Variables">
+```bash
+GOOGLE_OAUTH_CLIENT_ID="your-client-id.apps.googleusercontent.com"
+GOOGLE_OAUTH_CLIENT_SECRET="your-client-secret"
+GOOGLE_OAUTH_REDIRECT_URI="http://127.0.0.1:8000/oauth/google/callback"
+```
+
+For production, change the redirect URI to your domain:
+```bash
+GOOGLE_OAUTH_REDIRECT_URI="https://yourdomain.com/oauth/google/callback"
+```
+</Step>
+</Steps>
+
+### GitHub OAuth
+
+<Steps>
+<Step title="Create GitHub OAuth App">
+1. Go to [GitHub Developer Settings](https://github.com/settings/developers)
+2. Click **New OAuth App**
+3. Fill in the application details:
+   - **Application name**: Your app name (e.g., "Spoo.me")
+   - **Homepage URL**: 
+     - Local: `http://127.0.0.1:8000` or `http://localhost:8000`
+     - Production: `https://yourdomain.com`
+   - **Authorization callback URL**:
+     - Local: `http://127.0.0.1:8000/oauth/github/callback`
+     - Production: `https://yourdomain.com/oauth/github/callback`
+4. Click **Register application**
+</Step>
+
+<Step title="Get Credentials">
+1. Copy the **Client ID**
+2. Click **Generate a new client secret**
+3. Copy the **Client Secret** (you won't be able to see it again)
+</Step>
+
+<Step title="Add to Environment Variables">
+```bash
+GITHUB_OAUTH_CLIENT_ID="your-github-client-id"
+GITHUB_OAUTH_CLIENT_SECRET="your-github-client-secret"
+GITHUB_OAUTH_REDIRECT_URI="http://127.0.0.1:8000/oauth/github/callback"
+```
+
+For production:
+```bash
+GITHUB_OAUTH_REDIRECT_URI="https://yourdomain.com/oauth/github/callback"
+```
+</Step>
+</Steps>
+
+### Discord OAuth
+
+<Steps>
+<Step title="Create Discord Application">
+1. Go to [Discord Developer Portal](https://discord.com/developers/applications)
+2. Click **New Application**
+3. Give it a name (e.g., "Spoo.me")
+4. Click **Create**
+</Step>
+
+<Step title="Configure OAuth2">
+1. Go to the **OAuth2** section in the left sidebar
+2. Click **Add Redirect** under **Redirects**
+3. Add your redirect URIs:
+   ```
+   http://localhost:8000/oauth/discord/callback
+   http://127.0.0.1:8000/oauth/discord/callback
+   https://yourdomain.com/oauth/discord/callback
+   ```
+4. Click **Save Changes**
+</Step>
+
+<Step title="Get Credentials">
+1. In the **OAuth2** section, copy the **Client ID**
+2. Click **Reset Secret** to generate a new client secret
+3. Copy the **Client Secret**
+</Step>
+
+<Step title="Add to Environment Variables">
+```bash
+DISCORD_OAUTH_CLIENT_ID="your-discord-client-id"
+DISCORD_OAUTH_CLIENT_SECRET="your-discord-client-secret"
+DISCORD_OAUTH_REDIRECT_URI="http://127.0.0.1:8000/oauth/discord/callback"
+```
+
+For production:
+```bash
+DISCORD_OAUTH_REDIRECT_URI="https://yourdomain.com/oauth/discord/callback"
+```
+</Step>
+</Steps>
+
+## Complete Environment Configuration
+
+Here's a complete example `.env` configuration with all authentication settings:
+
+```bash
+# Flask Configuration
+FLASK_SECRET_KEY="your-random-secret-key-here"
+HOST_URI="127.0.0.1:8000"  # Change to your domain in production
+
+# JWT Configuration
+JWT_ISSUER=spoo.me
+JWT_AUDIENCE=spoo.me
+ACCESS_TOKEN_TTL_SECONDS=3600
+REFRESH_TOKEN_TTL_SECONDS=2592000
+COOKIE_SECURE=false  # Set to true in production
+
+JWT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"
+JWT_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\n...\n-----END PUBLIC KEY-----"
+
+# Google OAuth
+GOOGLE_OAUTH_CLIENT_ID="your-client-id.apps.googleusercontent.com"
+GOOGLE_OAUTH_CLIENT_SECRET="your-client-secret"
+GOOGLE_OAUTH_REDIRECT_URI="http://127.0.0.1:8000/oauth/google/callback"
+
+# GitHub OAuth
+GITHUB_OAUTH_CLIENT_ID="your-github-client-id"
+GITHUB_OAUTH_CLIENT_SECRET="your-github-client-secret"
+GITHUB_OAUTH_REDIRECT_URI="http://127.0.0.1:8000/oauth/github/callback"
+
+# Discord OAuth
+DISCORD_OAUTH_CLIENT_ID="your-discord-client-id"
+DISCORD_OAUTH_CLIENT_SECRET="your-discord-client-secret"
+DISCORD_OAUTH_REDIRECT_URI="http://127.0.0.1:8000/oauth/discord/callback"
+```
+
+## Testing Authentication
+
+After configuration, test the authentication flow:
+
+<Steps>
+<Step title="Start Your Application">
+```bash
+python main.py
+```
+</Step>
+
+<Step title="Access Login Page">
+Navigate to `http://127.0.0.1:8000/login` in your browser
+</Step>
+
+<Step title="Test OAuth Login">
+Click on any OAuth provider button (Google, GitHub, or Discord) and complete the authentication flow
+</Step>
+
+<Step title="Verify Dashboard Access">
+After successful login, you should be redirected to the dashboard at `http://127.0.0.1:8000/dashboard`
+</Step>
+</Steps>
+
+## Troubleshooting
+
+<AccordionGroup>
+<Accordion title="OAuth redirect URI mismatch" icon="link-slash">
+**Error**: `redirect_uri_mismatch` or `invalid_redirect_uri`
+
+**Solution**: 
+- Ensure the redirect URI in your OAuth provider settings **exactly** matches the one in your `.env` file
+- Check for trailing slashes (some providers are strict about this)
+- Use `http://` for local development and `https://` for production
+</Accordion>
+
+<Accordion title="JWT verification failed" icon="key">
+**Error**: `Invalid token` or `Token verification failed`
+
+**Solution**:
+- Ensure your `JWT_PRIVATE_KEY` and `JWT_PUBLIC_KEY` are correctly formatted with `\n` for newlines
+- Verify that both keys are from the same RSA key pair
+- Check that `JWT_ISSUER` and `JWT_AUDIENCE` match in your configuration
+</Accordion>
+
+<Accordion title="Cookie not being set" icon="cookie">
+**Error**: User appears logged out immediately after authentication
+
+**Solution**:
+- For local development, set `COOKIE_SECURE=false`
+- For production with HTTPS, set `COOKIE_SECURE=true`
+- Check that `HOST_URI` matches your actual domain
+- Ensure your browser allows cookies from localhost/your domain
+</Accordion>
+
+<Accordion title="OAuth provider not appearing" icon="circle-xmark">
+**Error**: OAuth buttons not showing on login page
+
+**Solution**:
+- Verify that all three environment variables for the provider are set (CLIENT_ID, CLIENT_SECRET, REDIRECT_URI)
+- Check application logs for any configuration errors
+- Restart the application after updating `.env` file
+</Accordion>
+</AccordionGroup>

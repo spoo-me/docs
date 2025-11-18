@@ -1,0 +1,246 @@
+---
+title: "API Keys"
+description: "Learn how to create and manage API keys for programmatic access to Spoo.me"
+icon: "key"
+---
+
+## Overview
+
+API keys provide programmatic access to the Spoo.me API without requiring interactive authentication. They allow you to automate URL shortening, retrieve analytics, and manage your URLs from scripts, applications, and integrations.
+
+<Note>
+  API keys are only available in **API v1**. The legacy v0 API does not support API key authentication.
+</Note>
+
+## Authentication Methods
+
+Spoo.me v1 API supports three authentication methods:
+
+<CardGroup cols={3}>
+  <Card title="Anonymous" icon="user" color="#A855F7">
+    No authentication required
+    - Lower rate limits
+    - Cannot manage URLs later
+    - Limited features
+  </Card>
+  <Card title="JWT Token" icon="shield-check" color="#A855F7">
+    Interactive user sessions
+    - Full dashboard access
+    - Manage URLs via web UI
+    - Highest privileges
+  </Card>
+  <Card title="API Key" icon="key" color="#A855F7">
+    Programmatic access
+    - Scoped permissions
+    - Long-lived tokens
+    - Perfect for automation
+  </Card>
+</CardGroup>
+
+## API Key Scopes
+
+API keys can be granted specific permissions (scopes) to limit their access:
+
+| Scope | Description | Endpoints |
+|-------|-------------|-----------|
+| `shorten:create` | Create new shortened URLs | `POST /api/v1/shorten` |
+| `urls:read` | View URL details and list | `GET /api/v1/urls` |
+| `urls:manage` | Update and delete URLs | `PATCH/DELETE /api/v1/urls/*` |
+| `stats:read` | Access analytics data | `GET /api/v1/stats` |
+| `admin:all` | Full administrative access | All endpoints |
+
+<Tip>
+  **Principle of Least Privilege**: Only grant the minimum scopes needed for your use case. For example, if you only need to shorten URLs, use `shorten:create` instead of `admin:all`.
+</Tip>
+
+## Creating API Keys
+
+### Via Web Dashboard
+
+1. Log in to your [Spoo.me Dashboard](https://spoo.me/dashboard)
+2. Navigate to **Settings** → **API Keys**
+3. Click **Create New API Key**
+4. Configure your key:
+   - **Name**: Human-readable identifier (e.g., "Production Server")
+   - **Description**: Optional details about key's purpose
+   - **Scopes**: Select required permissions
+   - **Expiration**: Optional expiration date
+5. Click **Create**
+6. **Copy the key immediately** - it won't be shown again!
+
+<Warning>
+  **One-Time Display**: The full API key is shown **only once** at creation. Store it securely immediately. If you lose it, you'll need to create a new key.
+</Warning>
+
+## Using API Keys
+
+API keys must be sent in the `Authorization` header with the `Bearer` scheme:
+
+```bash
+Authorization: Bearer YOUR_API_KEY_HERE
+```
+
+### Example: Shorten a URL
+
+```bash
+curl -X POST https://spoo.me/api/v1/shorten \
+  -H "Authorization: Bearer spoo_AbCdEfGhIjKlMnOpQrStUvWxYz" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "long_url": "https://example.com/very/long/url",
+    "alias": "mylink"
+  }'
+```
+
+### Example: Get Statistics
+
+```bash
+curl -X GET "https://spoo.me/api/v1/stats?scope=all" \
+  -H "Authorization: Bearer spoo_AbCdEfGhIjKlMnOpQrStUvWxYz"
+```
+
+### Example: List Your URLs
+
+```bash
+curl -X GET "https://spoo.me/api/v1/urls?page=1&pageSize=20" \
+  -H "Authorization: Bearer spoo_AbCdEfGhIjKlMnOpQrStUvWxYz"
+```
+
+## Rate Limits with API Keys
+
+API keys grant **authenticated rate limits**, which are significantly higher than anonymous limits:
+
+<CardGroup cols={2}>
+  <Card title="With API Key" icon="bolt" color="#10B981">
+    - **60 requests/minute**
+    - **5000 requests/day**
+    - Access to management endpoints
+    - Private stats support
+  </Card>
+  <Card title="Without API Key" icon="turtle" color="#EF4444">
+    - **20 requests/minute**
+    - **1000 requests/day**
+    - Cannot manage URLs
+    - Public URLs only
+  </Card>
+</CardGroup>
+
+## Security Best Practices
+
+<Steps>
+  <Step title="Store Keys Securely">
+    - Use environment variables, not hardcoded values
+    - Never commit keys to version control
+    - Use `.gitignore` to exclude files containing keys
+  </Step>
+  
+  <Step title="Use Minimal Scopes">
+    - Grant only the permissions needed
+    - Create separate keys for different purposes
+    - Use `shorten:create` for simple automation, not `admin:all`
+  </Step>
+  
+  <Step title="Rotate Keys Regularly">
+    - Set expiration dates on keys
+    - Rotate keys every 90-180 days
+    - Revoke old keys after rotation
+  </Step>
+</Steps>
+
+## Key Limits
+
+<CardGroup cols={2}>
+  <Card title="Maximum Active Keys" icon="layer-group">
+    **20 keys per user**
+    
+    Only non-revoked keys count toward this limit.
+  </Card>
+  <Card title="Creation Rate Limit" icon="clock">
+    **5 keys per hour**
+    
+    Prevents abuse and key spam.
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="401 Unauthorized - Invalid token" icon="circle-xmark">
+    **Possible causes**:
+    - API key was revoked or deleted
+    - API key has expired
+    - Incorrect key format (must start with `spoo_`)
+    - Missing `Authorization` header
+    
+    **Solution**: Verify the key is active and correctly formatted.
+  </Accordion>
+  
+  <Accordion title="403 Forbidden - Insufficient permissions" icon="ban">
+    **Possible causes**:
+    - API key missing required scope
+    - Trying to access someone else's resources
+    
+    **Solution**: Check that your key has the required scopes for the endpoint.
+  </Accordion>
+  
+  <Accordion title="429 Too Many Requests - Rate limit exceeded" icon="gauge-high">
+    **Possible causes**:
+    - Exceeded 60 requests per minute
+    - Exceeded 5000 requests per day
+    - Key creation limit (5 per hour)
+    
+    **Solution**: Implement exponential backoff, cache results, or upgrade your rate limits.
+  </Accordion>
+  
+  <Accordion title="Key not showing full token" icon="eye-slash">
+    **Cause**: Security feature - tokens are only shown once at creation.
+    
+    **Solution**: Create a new API key if you lost the original.
+  </Accordion>
+</AccordionGroup>
+
+## API Key Lifecycle
+
+```mermaid
+graph LR
+    A[Create Key] --> B[Active Key]
+    B --> C[Use in Requests]
+    C --> D{Key Valid?}
+    D -->|Yes| E[Request Succeeds]
+    D -->|No| F[401 Unauthorized]
+    B --> G[Revoke/Delete]
+    G --> H[Key Inactive]
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api-reference"
+  >
+    Explore all available API endpoints
+  </Card>
+  <Card
+    title="Rate Limits"
+    icon="gauge"
+    href="/rate-limits"
+  >
+    Learn about rate limiting details
+  </Card>
+  <Card
+    title="Quick Start"
+    icon="rocket"
+    href="/quickstart"
+  >
+    Get started with the API
+  </Card>
+  <Card
+    title="Python Library"
+    icon="python"
+    href="/tools/python-library"
+  >
+    Use our official Python SDK
+  </Card>
+</CardGroup>

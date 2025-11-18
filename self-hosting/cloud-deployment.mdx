@@ -9,7 +9,8 @@ Cloud deployment is the easiest and fastest way to get your Spoo.me instance run
 <Warning>
 Before proceeding, ensure you have completed the prerequisite steps:
 - [Set up MongoDB database](/self-hosting/setting-up-mongo)
-- [Create Discord webhooks](/self-hosting/creating-contact-webhooks)
+- [Set up authentication](/self-hosting/setting-up-authentication) (for v1 API features)
+- [Create Discord webhooks](/self-hosting/creating-discord-webhooks)
 </Warning>
 
 ## Platform Comparison
@@ -57,6 +58,8 @@ Vercel offers the most generous free plan and excellent performance for Spoo.me 
 <Step title="Configure Environment Variables">
     In the deployment configuration, enter your environment variables:
     
+    ### Required Variables
+    
     <ParamField path="MONGODB_URI" type="string" required>
     Your MongoDB connection string from the [MongoDB setup guide](/self-hosting/setting-up-mongo)
     </ParamField>
@@ -69,13 +72,57 @@ Vercel offers the most generous free plan and excellent performance for Spoo.me 
     Discord webhook URL for URL report notifications
     </ParamField>
 
+    ### Authentication Variables (Required for v1 API)
+    
+    <ParamField path="JWT_PRIVATE_KEY" type="string" required>
+    RSA private key for JWT signing. See [authentication setup](/self-hosting/setting-up-authentication)
+    </ParamField>
+    
+    <ParamField path="JWT_PUBLIC_KEY" type="string" required>
+    RSA public key for JWT verification
+    </ParamField>
+    
+    <ParamField path="GOOGLE_OAUTH_CLIENT_ID" type="string" optional>
+    Google OAuth client ID (required if enabling Google login)
+    </ParamField>
+    
+    <ParamField path="GOOGLE_OAUTH_CLIENT_SECRET" type="string" optional>
+    Google OAuth client secret
+    </ParamField>
+    
+    <ParamField path="GITHUB_OAUTH_CLIENT_ID" type="string" optional>
+    GitHub OAuth client ID (required if enabling GitHub login)
+    </ParamField>
+    
+    <ParamField path="GITHUB_OAUTH_CLIENT_SECRET" type="string" optional>
+    GitHub OAuth client secret
+    </ParamField>
+    
+    <ParamField path="DISCORD_OAUTH_CLIENT_ID" type="string" optional>
+    Discord OAuth client ID (required if enabling Discord login)
+    </ParamField>
+    
+    <ParamField path="DISCORD_OAUTH_CLIENT_SECRET" type="string" optional>
+    Discord OAuth client secret
+    </ParamField>
+
+    ### Optional Variables
+    
     <ParamField path="REDIS_URI" type="string" optional>
     Redis connection string for caching. Optional, but recommended for production.
+    </ParamField>
+    
+    <ParamField path="FLASK_SECRET_KEY" type="string" optional>
+    Flask secret key for session management. Auto-generated if not provided.
     </ParamField>
     
     <Warning>
     Double-check your environment variables before deploying. Incorrect values will cause deployment failures.
     </Warning>
+    
+    <Tip>
+    You can deploy with minimal variables and add OAuth providers later through your platform's environment variable settings.
+    </Tip>
 </Step>
 
 <Step title="Complete Deployment">

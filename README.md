@@ -6,22 +6,28 @@ This repository contains the official API documentation for **spoo.me** - a ligh
 
 Spoo.me provides a comprehensive API for:
 - 🔗 URL shortening with custom aliases
-- 😉 Emoji-based shortened URLs  
-- 📊 Detailed analytics and statistics
-- 📤 Data export in multiple formats
-- 🔒 Password protection and click limits
+- 📊 Advanced analytics with filtering and grouping
+- 🔑 API key authentication for higher rate limits
+- 🔐 Password protection and click limits
 - 🤖 Bot blocking capabilities
+- ⚙️ Full URL management (list, update, delete)
+- 😉 Emoji-based shortened URLs (v0 legacy)
+- 📤 Data export in multiple formats (v0 legacy)
 
-**Base URL:** `https://spoo.me`
+**Base URLs:**
+- **API v1 (Recommended):** `https://spoo.me/api/v1`
+- **API v0 (Legacy):** `https://spoo.me`
 
 ## Documentation Features
 
-- **Complete API Reference** - All endpoints with code examples in 7+ languages
-- **Interactive Examples** - Copy-paste ready code snippets
-- **Rate Limiting Guide** - Best practices and implementation
-- **Python Library** - Official py_spoo_url documentation
-- **Discord Bot** - SpooBot integration guide
-- **Error Handling** - Comprehensive error reference
+- **Complete API Reference** - v1 and v0 (legacy) endpoints with code examples
+- **API Keys Guide** - Authentication and scoped permissions
+- **Rate Limiting Guide** - 3x higher limits with authentication
+- **URL Management** - List, update, and delete endpoints
+- **Advanced Analytics** - Flexible filtering, grouping, and aggregation
+- **Python Library** - Official py_spoo_url SDK documentation
+- **GitHub Action** - CI/CD integration for testing
+- **Self-Hosting Guide** - Complete deployment documentation
 
 ## Development
 
@@ -78,7 +84,7 @@ Changes are automatically deployed to production when pushed to the main branch 
 
 - **Documentation Issues**: Open an issue in this repository
 - **API Support**: Contact [support@spoo.me](mailto:support@spoo.me)
-- **Discord Community**: Join our [Discord server](https://discord.gg/spoo-me)
+- **Discord Community**: Join our [Discord server](https://spoo.me/discord)
 
 ## Troubleshooting
 
