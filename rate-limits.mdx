@@ -102,9 +102,21 @@ The legacy v0 API has lower rate limits:
 
 ### URL Shortening
 
+### URL Shortening
+
+#### v1 API Endpoints
 | Endpoint | Authenticated | Anonymous | Notes |
 |----------|--------------|-----------|-------|
 | `POST /api/v1/shorten` | 60/min, 5000/day | 20/min, 1000/day | v1 API |
+
+#### v0 API Endpoints (Legacy)
+
+<Note>
+The following endpoints are part of the legacy v0 API. They do not support authentication and have lower rate limits.
+</Note>
+
+| Endpoint | Authenticated | Anonymous | Notes |
+|----------|--------------|-----------|-------|
 | `POST /` | - | 10/min, 100/hr, 500/day | v0 API (legacy) |
 | `POST /emoji` | - | 10/min, 100/hr, 500/day | v0 API (legacy) |
 
@@ -122,8 +134,8 @@ The legacy v0 API has lower rate limits:
 | Endpoint | Authenticated | Anonymous | Notes |
 |----------|--------------|-----------|-------|
 | `GET /api/v1/stats` | 60/min, 5000/day | 20/min, 1000/day | Public URLs only for anon |
-| `POST /stats/{code}` | - | Not limited | v0 API (legacy) |
-| `POST /export/{code}/{format}` | - | Not limited | v0 API (legacy) |
+| `POST /stats/{code}` | - | - | v0 API (legacy) |
+| `POST /export/{code}/{format}` | - | - | v0 API (legacy) |
 
 ## Authentication & Rate Limits
 

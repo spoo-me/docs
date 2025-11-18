@@ -80,9 +80,9 @@
                                     "alias": {
                                         "type": "string",
                                         "minLength": 3,
-                                        "maxLength": 50,
+                                        "maxLength": 16,
                                         "pattern": "^[a-zA-Z0-9_-]+$",
-                                        "description": "Custom short code/alias for the URL. Alphanumeric, hyphens, and underscores only. Auto-generated if not provided.",
+                                        "description": "Custom short code/alias for the URL. Alphanumeric, hyphens, and underscores only. Auto-generated if not provided. Auto truncated to 16 characters if longer.",
                                         "example": "mylink"
                                     },
                                     "password": {
