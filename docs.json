@@ -27,25 +27,25 @@
             "group": "URL Shortening",
             "icon": "link",
             "pages": [
-              "POST /shorten"
+              "POST /api/v1/shorten"
             ]
           },
           {
-            "group": "URL Management",
+            "group": "Link Management",
             "icon": "list-check",
             "pages": [
-              "GET /urls",
-              "PATCH /urls/{url_id}",
-              "PATCH /urls/{url_id}/status",
-              "DELETE /urls/{url_id}"
+              "GET /api/v1/urls",
+              "PATCH /api/v1/urls/{url_id}",
+              "PATCH /api/v1/urls/{url_id}/status",
+              "DELETE /api/v1/urls/{url_id}"
             ]
           },
           {
-            "group": "Analytics",
+            "group": "Statistics",
             "icon": "chart-line",
             "pages": [
-              "GET /stats",
-              "GET /export"
+              "GET /api/v1/stats",
+              "GET /api/v1/export"
             ]
           }
         ]
