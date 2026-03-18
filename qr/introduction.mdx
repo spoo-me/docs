@@ -1,0 +1,39 @@
+---
+title: "spoo-qr"
+description: "Generate styled QR codes with the spoo-qr API"
+---
+
+**qr.spoo.me** is the QR code generation sub-service of spoo.me. It provides a fast, free API for generating styled QR codes.
+
+## Features
+
+<CardGroup cols={2}>
+  <Card title="Classic QR Codes" icon="scan">
+    Solid fill and background colors with 6 module styles
+  </Card>
+  <Card title="Gradient QR Codes" icon="palette">
+    Vertical, horizontal, radial, and square gradients
+  </Card>
+  <Card title="SVG & PNG" icon="file-image">
+    Vector and raster output formats
+  </Card>
+  <Card title="Logo Embedding" icon="image">
+    Embed a logo in the center of any QR code
+  </Card>
+  <Card title="Batch Generation" icon="layers">
+    Generate up to 20 QR codes in a single request
+  </Card>
+</CardGroup>
+
+## Base URL
+
+```
+https://qr.spoo.me
+```
+
+## Quick Example
+
+```bash
+curl "https://qr.spoo.me/api/v1/classic?content=https://spoo.me&color=%23000000" \
+  --output qr.png
+```

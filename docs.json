@@ -9,98 +9,143 @@
   },
   "favicon": "/images/logo/logo.png",
   "navigation": {
-    "groups": [
+    "tabs": [
       {
-        "group": "Getting Started",
-        "pages": [
-          "introduction",
-          "quickstart",
-          "api-keys",
-          "rate-limits"
-        ]
-      },
-      {
-        "group": "API v1 Reference",
-        "openapi": "openapi-v1.json",
-        "pages": [
+        "tab": "spoo.me",
+        "groups": [
           {
-            "group": "URL Shortening",
-            "icon": "link",
+            "group": "Getting Started",
             "pages": [
-              "POST /api/v1/shorten"
+              "introduction",
+              "quickstart",
+              "api-keys",
+              "rate-limits"
             ]
           },
           {
-            "group": "Link Management",
-            "icon": "list-check",
+            "group": "API v1 Reference",
+            "openapi": "openapi-v1.json",
             "pages": [
-              "GET /api/v1/urls",
-              "PATCH /api/v1/urls/{url_id}",
-              "PATCH /api/v1/urls/{url_id}/status",
-              "DELETE /api/v1/urls/{url_id}"
+              {
+                "group": "URL Shortening",
+                "icon": "link",
+                "pages": [
+                  "POST /api/v1/shorten"
+                ]
+              },
+              {
+                "group": "Link Management",
+                "icon": "list-check",
+                "pages": [
+                  "GET /api/v1/urls",
+                  "PATCH /api/v1/urls/{url_id}",
+                  "PATCH /api/v1/urls/{url_id}/status",
+                  "DELETE /api/v1/urls/{url_id}"
+                ]
+              },
+              {
+                "group": "Statistics",
+                "icon": "chart-line",
+                "pages": [
+                  "GET /api/v1/stats",
+                  "GET /api/v1/export"
+                ]
+              }
             ]
           },
           {
-            "group": "Statistics",
-            "icon": "chart-line",
+            "group": "API v0 Reference (Legacy)",
+            "openapi": "openapi-v0.json",
             "pages": [
-              "GET /api/v1/stats",
-              "GET /api/v1/export"
+              {
+                "group": "URL Shortening",
+                "icon": "unlink",
+                "pages": [
+                  "api-reference/shorten-url",
+                  "POST /emoji"
+                ]
+              },
+              {
+                "group": "Analytics",
+                "icon": "chart-spline",
+                "pages": [
+                  "POST /stats/{shortCode}"
+                ]
+              },
+              {
+                "group": "Data Export",
+                "icon": "file-down",
+                "pages": [
+                  "POST /export/{shortCode}/{exportFormat}"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Tools & Libraries",
+            "pages": [
+              "tools/python-library",
+              "tools/github-action",
+              "tools/spoobot"
+            ]
+          },
+          {
+            "group": "Self Hosting",
+            "pages": [
+              "self-hosting/introduction",
+              "self-hosting/setting-up-mongo",
+              "self-hosting/setting-up-redis",
+              "self-hosting/setting-up-authentication",
+              "self-hosting/creating-discord-webhooks",
+              {
+                "group": "Deployment",
+                "icon": "server",
+                "pages": [
+                  "self-hosting/cloud-deployment",
+                  "self-hosting/docker-deployment",
+                  "self-hosting/local-development"
+                ]
+              }
             ]
           }
         ]
       },
       {
-        "group": "API v0 Reference (Legacy)",
-        "openapi": "openapi-v0.json",
-        "pages": [
+        "tab": "spoo-qr",
+        "groups": [
           {
-            "group": "URL Shortening",
-            "icon": "unlink",
+            "group": "Getting Started",
             "pages": [
-              "api-reference/shorten-url",
-              "POST /emoji"
+              "qr/introduction"
             ]
           },
           {
-            "group": "Analytics",
-            "icon": "chart-spline",
+            "group": "API Reference",
+            "openapi": "openapi-qr.json",
             "pages": [
-              "POST /stats/{shortCode}"
-            ]
-          },
-          {
-            "group": "Data Export",
-            "icon": "file-down",
-            "pages": [
-              "POST /export/{shortCode}/{exportFormat}"
-            ]
-          }
-        ]
-      },
-      {
-        "group": "Tools & Libraries",
-        "pages": [
-          "tools/python-library",
-          "tools/github-action",
-          "tools/spoobot"
-        ]
-      },
-      {
-        "group": "Self Hosting",
-        "pages": [
-          "self-hosting/introduction",
-          "self-hosting/setting-up-mongo",
-          "self-hosting/setting-up-redis",
-          "self-hosting/setting-up-authentication",
-          "self-hosting/creating-discord-webhooks",
-          {
-            "group": "Deployment",
-            "icon": "server",
-            "pages": [
-              "self-hosting/cloud-deployment",
-              "self-hosting/docker-deployment",
-              "self-hosting/local-development"
+              {
+                "group": "Classic",
+                "icon": "scan",
+                "pages": [
+                  "GET /api/v1/classic",
+                  "POST /api/v1/classic"
+                ]
+              },
+              {
+                "group": "Gradient",
+                "icon": "palette",
+                "pages": [
+                  "GET /api/v1/gradient",
+                  "POST /api/v1/gradient"
+                ]
+              },
+              {
+                "group": "Batch",
+                "icon": "layers",
+                "pages": [
+                  "POST /api/v1/batch"
+                ]
+              }
             ]
           }
         ]

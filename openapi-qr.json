@@ -1,0 +1,921 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "QR Code Generator API",
+    "description": "Open-source QR code generator API with support for classic solid-fill, gradient, and custom-styled QR codes.\n\n**Features:**\n- Classic QR codes with customizable fill and background colors\n- Gradient QR codes with vertical gradient coloring\n- Multiple module drawer styles (rounded, circle, bars, gapped)\n- Multiple gradient types (vertical, horizontal, radial, square)\n- SVG and PNG output formats\n- Logo/image embedding in QR codes\n- Batch QR code generation\n- Structured data formats (vCard, WiFi, Bitcoin, iCal, geo, etc.)\n\n**Base URL:** `https://qr.spoo.me`",
+    "contact": {
+      "name": "spoo.me",
+      "url": "https://spoo.me/contact",
+      "email": "support@spoo.me"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "https://github.com/spoo-me/qr/blob/main/LICENSE"
+    },
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/classic": {
+      "get": {
+        "tags": [
+          "QR Code Generation"
+        ],
+        "summary": "Classic QR",
+        "description": "Generate a QR code with solid fill and background colors.",
+        "operationId": "generate_classic_get_api_v1_classic_get",
+        "parameters": [
+          {
+            "name": "content",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Text or URL to encode",
+              "title": "Content"
+            },
+            "description": "Text or URL to encode"
+          },
+          {
+            "name": "color",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Fill color (hex, name, or RGB)",
+              "default": "black",
+              "title": "Color"
+            },
+            "description": "Fill color (hex, name, or RGB)"
+          },
+          {
+            "name": "background",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Background color",
+              "default": "white",
+              "title": "Background"
+            },
+            "description": "Background color"
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 1000,
+                  "minimum": 10
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Output size in pixels",
+              "title": "Size"
+            },
+            "description": "Output size in pixels"
+          },
+          {
+            "name": "style",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/ModuleStyle",
+              "description": "Module drawing style",
+              "default": "rounded"
+            },
+            "description": "Module drawing style"
+          },
+          {
+            "name": "output",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/OutputFormat",
+              "description": "Output format",
+              "default": "png"
+            },
+            "description": "Output format"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad Request \u2014 invalid parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "QR Code Generation"
+        ],
+        "summary": "Classic QR + Logo",
+        "description": "Same as GET, plus an optional logo image file to embed in the center.\n\nSend the logo as a **multipart file upload** in the `logo` field:\n\n```bash\ncurl -X POST \"https://qr.spoo.me/api/v1/classic?content=https://example.com\" \\\n  -F \"logo=@my-logo.png\"\n```",
+        "operationId": "generate_classic_post_api_v1_classic_post",
+        "parameters": [
+          {
+            "name": "content",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Text or URL to encode",
+              "title": "Content"
+            },
+            "description": "Text or URL to encode"
+          },
+          {
+            "name": "color",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Fill color (hex, name, or RGB)",
+              "default": "black",
+              "title": "Color"
+            },
+            "description": "Fill color (hex, name, or RGB)"
+          },
+          {
+            "name": "background",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Background color",
+              "default": "white",
+              "title": "Background"
+            },
+            "description": "Background color"
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 1000,
+                  "minimum": 10
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Output size in pixels",
+              "title": "Size"
+            },
+            "description": "Output size in pixels"
+          },
+          {
+            "name": "style",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/ModuleStyle",
+              "description": "Module drawing style",
+              "default": "rounded"
+            },
+            "description": "Module drawing style"
+          },
+          {
+            "name": "output",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/OutputFormat",
+              "description": "Output format",
+              "default": "png"
+            },
+            "description": "Output format"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_generate_classic_post_api_v1_classic_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad Request \u2014 invalid parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/gradient": {
+      "get": {
+        "tags": [
+          "QR Code Generation"
+        ],
+        "summary": "Gradient QR",
+        "description": "Generate a QR code with gradient coloring. PNG output only.",
+        "operationId": "generate_gradient_get_api_v1_gradient_get",
+        "parameters": [
+          {
+            "name": "content",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Text or URL to encode",
+              "title": "Content"
+            },
+            "description": "Text or URL to encode"
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Gradient start color (hex, name, or RGB)",
+              "default": "#6a1a4c",
+              "title": "Start"
+            },
+            "description": "Gradient start color (hex, name, or RGB)"
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Gradient end color (hex, name, or RGB)",
+              "default": "#40353c",
+              "title": "End"
+            },
+            "description": "Gradient end color (hex, name, or RGB)"
+          },
+          {
+            "name": "background",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Background color",
+              "default": "#ffffff",
+              "title": "Background"
+            },
+            "description": "Background color"
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 1000,
+                  "minimum": 10
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Output size in pixels",
+              "title": "Size"
+            },
+            "description": "Output size in pixels"
+          },
+          {
+            "name": "style",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/ModuleStyle",
+              "description": "Module drawing style",
+              "default": "square"
+            },
+            "description": "Module drawing style"
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/GradientDirection",
+              "description": "Gradient direction",
+              "default": "vertical"
+            },
+            "description": "Gradient direction"
+          },
+          {
+            "name": "output",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/OutputFormat",
+              "description": "Output format (PNG only for gradient)",
+              "default": "png"
+            },
+            "description": "Output format (PNG only for gradient)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad Request \u2014 invalid parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "QR Code Generation"
+        ],
+        "summary": "Gradient QR + Logo",
+        "description": "Same as GET, plus an optional logo image file to embed in the center.\n\nSend the logo as a **multipart file upload** in the `logo` field:\n\n```bash\ncurl -X POST \"https://qr.spoo.me/api/v1/gradient?content=https://example.com\" \\\n  -F \"logo=@my-logo.png\"\n```",
+        "operationId": "generate_gradient_post_api_v1_gradient_post",
+        "parameters": [
+          {
+            "name": "content",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Text or URL to encode",
+              "title": "Content"
+            },
+            "description": "Text or URL to encode"
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Gradient start color (hex, name, or RGB)",
+              "default": "#6a1a4c",
+              "title": "Start"
+            },
+            "description": "Gradient start color (hex, name, or RGB)"
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Gradient end color (hex, name, or RGB)",
+              "default": "#40353c",
+              "title": "End"
+            },
+            "description": "Gradient end color (hex, name, or RGB)"
+          },
+          {
+            "name": "background",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Background color",
+              "default": "#ffffff",
+              "title": "Background"
+            },
+            "description": "Background color"
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 1000,
+                  "minimum": 10
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Output size in pixels",
+              "title": "Size"
+            },
+            "description": "Output size in pixels"
+          },
+          {
+            "name": "style",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/ModuleStyle",
+              "description": "Module drawing style",
+              "default": "square"
+            },
+            "description": "Module drawing style"
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/GradientDirection",
+              "description": "Gradient direction",
+              "default": "vertical"
+            },
+            "description": "Gradient direction"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_generate_gradient_post_api_v1_gradient_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad Request \u2014 invalid parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/batch": {
+      "post": {
+        "tags": [
+          "Batch"
+        ],
+        "summary": "Batch QR",
+        "description": "Generate up to 20 QR codes in one request. Returns a ZIP archive.",
+        "operationId": "generate_batch_api_v1_batch_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad Request \u2014 invalid parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BatchItem": {
+        "properties": {
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "color": {
+            "type": "string",
+            "title": "Color",
+            "default": "black"
+          },
+          "background": {
+            "type": "string",
+            "title": "Background",
+            "default": "white"
+          },
+          "size": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Size"
+          },
+          "style": {
+            "$ref": "#/components/schemas/ModuleStyle",
+            "default": "rounded"
+          },
+          "output": {
+            "$ref": "#/components/schemas/OutputFormat",
+            "default": "png"
+          },
+          "filename": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filename"
+          }
+        },
+        "type": "object",
+        "required": [
+          "content"
+        ],
+        "title": "BatchItem"
+      },
+      "BatchRequest": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BatchItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "BatchRequest"
+      },
+      "Body_generate_classic_post_api_v1_classic_post": {
+        "properties": {
+          "logo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "contentMediaType": "application/octet-stream"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo",
+            "description": "Logo image to embed (optional)"
+          }
+        },
+        "type": "object",
+        "title": "Body_generate_classic_post_api_v1_classic_post"
+      },
+      "Body_generate_gradient_post_api_v1_gradient_post": {
+        "properties": {
+          "logo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "contentMediaType": "application/octet-stream"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo",
+            "description": "Logo image to embed (optional)"
+          }
+        },
+        "type": "object",
+        "title": "Body_generate_gradient_post_api_v1_gradient_post"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "error": {
+            "type": "string",
+            "title": "Error"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "field": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Field"
+          },
+          "details": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details"
+          }
+        },
+        "type": "object",
+        "required": [
+          "error",
+          "code"
+        ],
+        "title": "ErrorResponse",
+        "description": "Standard error JSON body produced by the AppError exception handler."
+      },
+      "GradientDirection": {
+        "type": "string",
+        "enum": [
+          "vertical",
+          "horizontal",
+          "radial",
+          "square"
+        ],
+        "title": "GradientDirection",
+        "description": "Gradient direction/shape for gradient QR codes."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ModuleStyle": {
+        "type": "string",
+        "enum": [
+          "rounded",
+          "square",
+          "circle",
+          "gapped",
+          "horizontal_bars",
+          "vertical_bars"
+        ],
+        "title": "ModuleStyle",
+        "description": "QR code module (pixel) drawing styles."
+      },
+      "OutputFormat": {
+        "type": "string",
+        "enum": [
+          "png",
+          "svg"
+        ],
+        "title": "OutputFormat",
+        "description": "Output image format."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "QR Code Generation",
+      "description": "Generate styled QR codes in PNG and SVG formats"
+    },
+    {
+      "name": "Batch",
+      "description": "Generate multiple QR codes in a single request"
+    }
+  ],
+  "servers": [
+    {
+      "url": "https://qr.spoo.me",
+      "description": "Production"
+    }
+  ]
+}
