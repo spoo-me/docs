@@ -45,7 +45,7 @@ Vercel offers the most generous free plan and excellent performance for Spoo.me 
 <Step title="Deploy with One Click">
     Click the deploy button to start the deployment process:
     
-    <a href="https://vercel.com/new/clone?repository-url=https://github.com/spoo-me/spoo&env=MONGODB_URI,CONTACT_WEBHOOK,URL_REPORT_WEBHOOK" target="_blank">
+    <a href="https://vercel.com/new/clone?repository-url=https://github.com/spoo-me/spoo&env=MONGODB_URI,SECRET_KEY,HOST_URI,CONTACT_WEBHOOK,URL_REPORT_WEBHOOK" target="_blank">
         <img noZoom src="https://vercel.com/button" alt="Deploy with Vercel" />
     </a>
     
@@ -256,7 +256,7 @@ Koyeb offers one free deployment, though custom domains require a paid plan.
 <Step title="Deploy from GitHub">
     1. Click the Koyeb deployment button:
     
-    <a href="https://app.koyeb.com/deploy?type=git&builder=buildpack&repository=github.com/spoo-me/spoo&branch=main&name=spoo&run_command=uvicorn%20main:app%20--host%200.0.0.0%20--port%208000&env[MONGODB_URI]=your-mongo-uri&env[CONTACT_WEBHOOK]=your-webhook-uri&env[URL_REPORT_WEBHOOK]=you-webhook-uri&ports=8000;http;/" target="_blank">
+    <a href="https://app.koyeb.com/deploy?type=git&builder=buildpack&repository=github.com/spoo-me/spoo&branch=main&name=spoo&run_command=uvicorn%20main:app%20--host%200.0.0.0%20--port%208000&env[MONGODB_URI]=your-mongo-uri&env[CONTACT_WEBHOOK]=your-webhook-uri&env[URL_REPORT_WEBHOOK]=your-webhook-uri&ports=8000;http;/" target="_blank">
         <img noZoom src="https://www.koyeb.com/static/images/deploy/button.svg" alt="Deploy to Koyeb" />
     </a>
     
