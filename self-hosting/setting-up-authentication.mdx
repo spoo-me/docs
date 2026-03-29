@@ -216,8 +216,8 @@ DISCORD_OAUTH_REDIRECT_URI="https://yourdomain.com/oauth/discord/callback"
 Here's a complete example `.env` configuration with all authentication settings:
 
 ```bash
-# Flask Configuration
-FLASK_SECRET_KEY="your-random-secret-key-here"
+# App Configuration
+SECRET_KEY="your-random-secret-key-here"
 HOST_URI="127.0.0.1:8000"  # Change to your domain in production
 
 # JWT Configuration
@@ -253,7 +253,7 @@ After configuration, test the authentication flow:
 <Steps>
 <Step title="Start Your Application">
 ```bash
-python main.py
+uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 </Step>
 
@@ -273,7 +273,7 @@ After successful login, you should be redirected to the dashboard at `http://127
 ## Troubleshooting
 
 <AccordionGroup>
-<Accordion title="OAuth redirect URI mismatch" icon="link-slash">
+<Accordion title="OAuth redirect URI mismatch">
 **Error**: `redirect_uri_mismatch` or `invalid_redirect_uri`
 
 **Solution**: 
@@ -282,7 +282,7 @@ After successful login, you should be redirected to the dashboard at `http://127
 - Use `http://` for local development and `https://` for production
 </Accordion>
 
-<Accordion title="JWT verification failed" icon="key">
+<Accordion title="JWT verification failed">
 **Error**: `Invalid token` or `Token verification failed`
 
 **Solution**:
@@ -291,7 +291,7 @@ After successful login, you should be redirected to the dashboard at `http://127
 - Check that `JWT_ISSUER` and `JWT_AUDIENCE` match in your configuration
 </Accordion>
 
-<Accordion title="Cookie not being set" icon="cookie">
+<Accordion title="Cookie not being set">
 **Error**: User appears logged out immediately after authentication
 
 **Solution**:
@@ -301,7 +301,7 @@ After successful login, you should be redirected to the dashboard at `http://127
 - Ensure your browser allows cookies from localhost/your domain
 </Accordion>
 
-<Accordion title="OAuth provider not appearing" icon="circle-xmark">
+<Accordion title="OAuth provider not appearing">
 **Error**: OAuth buttons not showing on login page
 
 **Solution**:

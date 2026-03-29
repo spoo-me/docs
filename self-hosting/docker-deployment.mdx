@@ -83,8 +83,8 @@ sudo systemctl enable docker
 <Steps>
 <Step title="Clone the Repository">
 ```bash
-git clone https://github.com/spoo-me/url-shortener.git
-cd url-shortener
+git clone https://github.com/spoo-me/spoo.git
+cd spoo
 ```
 </Step>
 
@@ -156,7 +156,7 @@ For production, use a managed database instead of local containers:
 MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/spoo-me
 
 # Optional: Use managed Redis (e.g., Redis Cloud, Upstash)
-REDIS_URL=redis://username:password@host:port
+REDIS_URI=redis://username:password@host:port
 ```
 
 <Tip>
@@ -177,10 +177,10 @@ services:
       - "8000:8000"
     environment:
       - MONGODB_URI=${MONGODB_URI}  # Uses cloud MongoDB
-      - REDIS_URL=${REDIS_URL}      # Optional: cloud Redis
+      - REDIS_URI=${REDIS_URI}      # Optional: cloud Redis
       - CONTACT_WEBHOOK=${CONTACT_WEBHOOK}
       - URL_REPORT_WEBHOOK=${URL_REPORT_WEBHOOK}
-      - FLASK_SECRET_KEY=${FLASK_SECRET_KEY}
+      - SECRET_KEY=${SECRET_KEY}
       # Add your OAuth variables if configured
       - JWT_PRIVATE_KEY=${JWT_PRIVATE_KEY}
       - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY}

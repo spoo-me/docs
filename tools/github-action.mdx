@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup Spoo.me Service
-        uses: spoo-me/setup-action@v1
+        uses: spoo-me/setup-action@v2
         id: spoo-setup
         
       - name: Run tests against Spoo.me
@@ -64,10 +64,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         
       - name: Setup Spoo.me Service
-        uses: spoo-me/setup-action@v1
+        uses: spoo-me/setup-action@v2
         id: spoo-setup
         with:
           python-version: '3.12'
@@ -141,10 +141,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       
       - name: Setup Spoo.me
-        uses: spoo-me/setup-action@v1
+        uses: spoo-me/setup-action@v2
         id: spoo
         
       - name: Test URL shortening API
@@ -153,7 +153,7 @@ jobs:
           response=$(curl -s -X POST \
             -H "Content-Type: application/json" \
             -d '{"url": "https://example.com"}' \
-            ${{ steps.spoo.outputs.service-url }}/api/shorten)
+            ${{ steps.spoo.outputs.service-url }}/api/v1/shorten)
           echo "API Response: $response"
 ```
 
@@ -177,7 +177,7 @@ Use the running service to test all your integration scenarios.
           curl -s -X POST \
             -H "Content-Type: application/json" \
             -d '{"url": "invalid-url"}' \
-            ${{ steps.spoo.outputs.service-url }}/api/shorten
+            ${{ steps.spoo.outputs.service-url }}/api/v1/shorten
 ```
 </Step>
 </Steps>
@@ -201,10 +201,10 @@ jobs:
         mongodb-version: ['6.0', '7.0']
         
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       
       - name: Setup Spoo.me
-        uses: spoo-me/setup-action@v1
+        uses: spoo-me/setup-action@v2
         with:
           python-version: ${{ matrix.python-version }}
           mongodb-version: ${{ matrix.mongodb-version }}
@@ -224,10 +224,10 @@ jobs:
   load-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       
       - name: Setup Spoo.me
-        uses: spoo-me/setup-action@v1
+        uses: spoo-me/setup-action@v2
         with:
           wait-timeout: '300'  # Longer timeout for load testing
         id: spoo
@@ -250,25 +250,22 @@ The action automatically configures these environment variables:
 <Accordion title="Database Configuration">
 ```bash
 # MongoDB connection (optimized single instance)
-MONGODB_URI=mongodb://localhost:27017/url-shortener
-MONGODB_URI_DEV=mongodb://localhost:27017/url-shortener
-MONGO_DB_NAME=url-shortener
+MONGODB_URI=mongodb://localhost:27017/
 
 # Redis connection
 REDIS_URI=redis://localhost:6379
-REDIS_URI_DEV=redis://localhost:6379
 REDIS_TTL_SECONDS=3600
 ```
 </Accordion>
 
 <Accordion title="Application Configuration">
 ```bash
-# Flask application settings
+# Application settings
 SECRET_KEY=github-action-secret-key-for-testing
 HOST_URI=127.0.0.1:8000
-SHORTEN_API_RATE_LIMIT_PER_HOUR=100
+ENV=development
 
-# Webhook settings (empty for local testing)
+# Webhook settings (empty for CI)
 CONTACT_WEBHOOK=
 URL_REPORT_WEBHOOK=
 HCAPTCHA_SECRET=
@@ -352,14 +349,14 @@ If you have conflicts, ensure no other services are using these ports in your wo
 <Tabs>
 <Tab title="Recommended">
 ```yaml
-uses: spoo-me/setup-action@v1
+uses: spoo-me/setup-action@v2
 ```
-Latest stable v1.x release (recommended for production)
+Latest stable v2.x release (recommended for production)
 </Tab>
 
 <Tab title="Specific Version">
 ```yaml
-uses: spoo-me/setup-action@v1.0.0
+uses: spoo-me/setup-action@v2.0.0
 ```
 Pin to a specific version for reproducible builds
 </Tab>
