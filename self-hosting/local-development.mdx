@@ -1,544 +1,147 @@
 ---
 title: "Local Development Setup"
-description: ""
+description: "Set up spoo.me for local development with Docker or manual installation"
 icon: "code"
 ---
 
-Local development provides the maximum flexibility and control over your Spoo.me deployment. This method is ideal for developers who want to customize the codebase, add new features, or thoroughly understand how the application works.
+## Docker Setup (Recommended)
 
-<Warning>
-**Advanced Users Only**: This method requires experience with Python development, uv package manager, and server management. It's recommended for developers comfortable with command-line tools and debugging.
-</Warning>
+One command sets up MongoDB, Redis, and the app with hot-reloading:
 
-## Benefits of Local Development
-
-✅ **Full Control**: Complete access to modify code, add features, and customize functionality
-
-✅ **Development Environment**: Perfect for testing changes before deployment
-
-✅ **Custom Integrations**: Add analytics, SEO optimizations, or third-party integrations
-
-✅ **Performance Tuning**: Optimize database queries and server configuration
-
-✅ **Learning Opportunity**: Understand the complete application architecture
-
-## Prerequisites
-
-Before starting, ensure you have:
-
-- **Python 3.10 or higher** installed on your system
-- **Git** for version control
-- Basic knowledge of Python development and virtual environments
-- Basic knowledge of uv package manager
-- Completed [MongoDB setup](/self-hosting/setting-up-mongo)
-- Completed [authentication setup](/self-hosting/setting-up-authentication) (for v1 API)
-- Completed [webhook creation](/self-hosting/creating-discord-webhooks)
-
-<Tabs>
-<Tab title="Windows">
-```powershell
-# Check Python version
-python --version
-
-# Check Git installation
-git --version
-
-# Install Python if needed
-# Download from https://python.org/downloads
-```
-</Tab>
-
-<Tab title="macOS">
 ```bash
-# Check Python version
-python3 --version
-
-# Install using Homebrew (recommended)
-brew install python3 git
-
-# Or download from https://python.org/downloads
+git clone https://github.com/spoo-me/url-shortener.git
+cd url-shortener
+cp .env.example .env
+docker compose up -d
 ```
-</Tab>
 
-<Tab title="Ubuntu/Debian">
+Visit http://localhost:8000. The app auto-reloads on file changes via the volume mount.
+
 ```bash
-# Update package index
-sudo apt update
-
-# Install Python and Git
-sudo apt install -y python3 python3-pip python3-venv git
-
-# Verify installation
-python3 --version
-git --version
+docker compose logs -f app   # View logs
+docker compose down           # Stop everything
 ```
-</Tab>
 
-<Tab title="CentOS/RHEL">
+<Info>
+The `.env.example` file comes pre-configured for local development — MongoDB and Redis connect to the Docker containers automatically. Auth features (OAuth, email) are disabled by default and work fine without configuration.
+</Info>
+
+### Running Tests and Linting
+
+You'll need `uv` for running tests and linting outside the container:
+
 ```bash
-# Install Python and Git
-sudo yum install -y python3 python3-pip git
-
-# Or for newer versions
-sudo dnf install -y python3 python3-pip git
-
-# Verify installation
-python3 --version
-git --version
-```
-</Tab>
-</Tabs>
-
-## Setting Up the Development Environment
-
-<Steps>
-<Step title="Clone the Repository">
-    Start by cloning the Spoo.me repository to your local machine:
-    
-    ```bash
-    # Clone the repository
-    git clone https://github.com/spoo-me/url-shortener.git
-    
-    # Navigate to the project directory
-    cd url-shortener
-    
-    # List files to verify successful clone
-    ls -la
-    ```
-    
-    <Info>
-    This downloads the complete source code, including all necessary configuration files and dependencies.
-    </Info>
-</Step>
-
-<Step title="Installing Dependencies">
-    We use uv to automatically setup the development environment and install the dependencies:
-    
-    <Tabs>
-    <Tab title="Windows">
-    ```cmd
-    # Install uv
-    pip install uv
-
-    # Sync and install dependencies
-    uv sync
-    ```
-    </Tab>
-    
-    <Tab title="macOS/Linux">
-    ```bash
-    # Install uv
-    pip3 install uv
-
-    # Sync and install dependencies
-    uv sync
-    ```
-    </Tab>
-    </Tabs>
-    
-    <Check>
-    Your command prompt should now show `(venv)` at the beginning, indicating the virtual environment is active.
-    </Check>
-</Step>
-
-<Step title="Configure Environment Variables">
-    Create and configure your environment file:
-    
-    ```bash
-    # Create environment file
-    touch .env  # On Windows: type nul > .env
-    
-    # Edit the file with your preferred editor
-    nano .env  # or code .env, vim .env, etc.
-    ```
-    
-    Add your configuration variables:
-    
-    ```bash
-    # MongoDB Configuration
-    MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/spoo-me?retryWrites=true&w=majority
-    MONGODB_URI_DEV=mongodb://localhost:27017/
-    MONGO_DB_NAME=url-shortener
-    
-    # Discord Webhooks
-    CONTACT_WEBHOOK=https://discord.com/api/webhooks/your-contact-webhook-id/your-webhook-token
-    URL_REPORT_WEBHOOK=https://discord.com/api/webhooks/your-report-webhook-id/your-webhook-token
-
-    # Redis Configuration (Optional)
-    REDIS_URI=redis://localhost:6379
-    REDIS_URI_DEV=redis://localhost:6379
-    REDIS_TTL_SECONDS=3600
-
-    # Flask Configuration
-    FLASK_SECRET_KEY=your-random-secret-key-here
-    HOST_URI=127.0.0.1:8000
-    SHORTEN_API_RATE_LIMIT_PER_HOUR=100
-
-    # JWT Configuration (Required for v1 API)
-    JWT_ISSUER=spoo.me
-    JWT_AUDIENCE=spoo.me
-    ACCESS_TOKEN_TTL_SECONDS=3600
-    REFRESH_TOKEN_TTL_SECONDS=2592000
-    COOKIE_SECURE=false
-    JWT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYour-Private-Key-Here\n-----END PRIVATE KEY-----"
-    JWT_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\nYour-Public-Key-Here\n-----END PUBLIC KEY-----"
-
-    # Google OAuth (Optional)
-    GOOGLE_OAUTH_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
-    GOOGLE_OAUTH_CLIENT_SECRET=your-google-client-secret
-    GOOGLE_OAUTH_REDIRECT_URI=http://127.0.0.1:8000/oauth/google/callback
-
-    # GitHub OAuth (Optional)
-    GITHUB_OAUTH_CLIENT_ID=your-github-client-id
-    GITHUB_OAUTH_CLIENT_SECRET=your-github-client-secret
-    GITHUB_OAUTH_REDIRECT_URI=http://127.0.0.1:8000/oauth/github/callback
-
-    # Discord OAuth (Optional)
-    DISCORD_OAUTH_CLIENT_ID=your-discord-client-id
-    DISCORD_OAUTH_CLIENT_SECRET=your-discord-client-secret
-    DISCORD_OAUTH_REDIRECT_URI=http://127.0.0.1:8000/oauth/discord/callback
-
-    # HCaptcha (Optional)
-    HCAPTCHA_SECRET=your-hcaptcha-secret
-
-    # Development Settings
-    DEBUG=True
-    PORT=8000
-    HOST=0.0.0.0
-    ```
-    
-    <Warning>
-    Never commit your `.env` file to version control. Add it to `.gitignore` to prevent accidental commits.
-    </Warning>
-    
-    <Tip>
-    Copy from `.env.example` and fill in your values:
-    ```bash
-    cp .env.example .env
-    ```
-    </Tip>
-</Step>
-</Steps>
-
-## Starting the Development Server
-
-<Steps>
-<Step title="Start the Application">
-    Launch the Spoo.me development server:
-    
-    ```bash
-    # Start the server
-    uv run main.py
-    ```
-    
-    You should see output similar to:
-    
-    ```
-    * Running on http://0.0.0.0:8000
-    * Debug mode: on
-    * Restarting with stat
-    * Debugger is active!
-    ```
-    
-    <Info>
-    The server runs in debug mode by default, which means it will automatically restart when you make code changes.
-    </Info>
-</Step>
-
-<Step title="Access Your Application">
-    Open your web browser and navigate to:
-    
-    - **Local access**: http://localhost:8000
-    - **Network access**: http://your-ip-address:8000
-    
-    <Check>
-    You should see the Spoo.me homepage. Test the URL shortening functionality to ensure everything is working correctly.
-    </Check>
-</Step>
-
-<Step title="Test Core Features">
-    Verify all functionality is working:
-    
-    **Public Features (No Auth Required):**
-    1. **URL Shortening**: Create a test short URL via v1 API (anonymous)
-    2. **Analytics**: Click the short URL and check public analytics
-    3. **Contact Form**: Submit the contact form to test webhooks
-    4. **URL Reporting**: Test the URL reporting feature
-    
-    **Authenticated Features (Requires Login):**
-    5. **User Login**: Test OAuth login at http://localhost:8000/login
-    6. **Dashboard Access**: Verify dashboard loads at http://localhost:8000/dashboard
-    7. **API Key Creation**: Create a test API key in dashboard settings
-    8. **URL Management**: Test listing, updating, and deleting URLs via v1 API
-    9. **Advanced Analytics**: Test filtered analytics queries
-    
-    <Tip>
-    Check your Discord channels to verify webhook notifications are being received.
-    </Tip>
-</Step>
-</Steps>
-
-## Development Workflow
-
-### Code Structure Overview
-
-Understanding the project structure will help you navigate and modify the code:
-
-```
-── url-shortener/
-    ├── main.py
-    ├── blueprints/
-    │   ├── api.py
-    │   ├── contact.py
-    │   ├── docs.py
-    │   ├── limiter.py
-    │   ├── redirector.py
-    │   ├── seo.py
-    │   ├── stats.py
-    │   └── url_shortener.py
-    ├── cache/
-    │   ├── __init__.py
-    │   ├── base_cache.py
-    │   ├── cache_updates.py
-    │   ├── cache_url.py
-    │   ├── dual_cache.py
-    │   └── redis_client.py
-    ├── misc/
-    │   ├── GeoLite2-Country.mmdb
-    ├── static/
-    │   ├── css/
-    │   ├── images/
-    │   └── js/
-    ├── templates/
-    │   ├── api.html
-    │   ├── index.html
-    │   ├── stats.html
-    ├── utils/
-    │   ├── __init__.py
-    │   ├── analytics_utils.py
-    │   ├── contact_utils.py
-    │   ├── export_utils.py
-    │   ├── general.py
-    │   ├── mongo_utils.py
-    │   ├── pipeline_utils.py
-    │   └── url_utils.py
-    └── .github/
-        ├── dependabot.yml
-        └── workflows/
-            ├── api_test.yaml
-            ├── github-ci.yaml
-            └── minify.yaml
+pip install uv
+uv sync
+uv run pre-commit install     # Auto-lint on every commit
+uv run pytest                  # Run test suite
 ```
 
-### Making Code Changes
+### Configuring Optional Features
 
-<Steps>
-<Step title="Create a Development Branch">
-    Always work on a separate branch for new features:
-    
-    ```bash
-    # Create and switch to a new branch
-    git checkout -b feature/my-new-feature
-    
-    # Or for bug fixes
-    git checkout -b fix/bug-description
-    ```
-</Step>
+The default `.env.example` gets you a working instance for URL shortening, redirects, and analytics. For additional features, configure these in your `.env`:
 
-<Step title="Make Your Changes">
-    Edit the relevant files using your preferred code editor:
-    
-    ```bash
-    # Open project in VS Code
-    code .
-    
-    # Or use any other editor
-    vim main.py
-    nano templates/index.html
-    ```
-    
-    <Tip>
-    The development server automatically reloads when you save changes, so you can see updates immediately.
-    </Tip>
-</Step>
+| Feature | Env Vars | Setup Guide |
+|---------|----------|-------------|
+| **JWT Auth (RSA)** | `JWT_PRIVATE_KEY`, `JWT_PUBLIC_KEY` | [Authentication Setup](/self-hosting/setting-up-authentication) |
+| **JWT Auth (HMAC)** | `JWT_SECRET` | Generate with `python -c "import os; print(os.urandom(32).hex())"` |
+| **Google OAuth** | `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` | [Authentication Setup](/self-hosting/setting-up-authentication#google-oauth) |
+| **GitHub OAuth** | `GITHUB_OAUTH_CLIENT_ID`, `GITHUB_OAUTH_CLIENT_SECRET` | [Authentication Setup](/self-hosting/setting-up-authentication#github-oauth) |
+| **Discord OAuth** | `DISCORD_OAUTH_CLIENT_ID`, `DISCORD_OAUTH_CLIENT_SECRET` | [Authentication Setup](/self-hosting/setting-up-authentication#discord-oauth) |
+| **Email (Zeptomail)** | `ZEPTO_API_TOKEN`, `ZEPTO_FROM_EMAIL` | See `.env.example` comments |
+| **Sentry** | `SENTRY_DSN` | Leave empty to disable |
+| **Discord Webhooks** | `CONTACT_WEBHOOK`, `URL_REPORT_WEBHOOK` | [Creating Webhooks](/self-hosting/creating-discord-webhooks) |
+| **hCaptcha** | `HCAPTCHA_SECRET` | [hcaptcha.com](https://www.hcaptcha.com/) |
 
-<Step title="Test Your Changes">
-    Always test your modifications thoroughly:
-    
-    1. Test in the browser
-    2. Check console output for errors
-    3. Verify database operations
-    4. Test edge cases and error handling
-    
-    ```bash
-    # Run any custom tests you've created
-    python -m pytest tests/
-    
-    # Or run manual tests
-    python test_custom_feature.py
-    ```
-</Step>
+<Tip>
+All optional features degrade gracefully — the app runs fine with empty values. Configure only what you need.
+</Tip>
 
-<Step title="Commit Your Changes">
-    Use descriptive commit messages:
-    
-    ```bash
-    # Stage your changes
-    git add .
-    
-    # Commit with descriptive message
-    git commit -m "Add custom analytics dashboard feature"
-    
-    # Push to your branch
-    git push origin feature/my-new-feature
-    ```
-</Step>
-</Steps>
+## Manual Setup (Without Docker)
 
-## Production Deployment
+If you prefer not to use Docker, you'll need to install MongoDB and Redis yourself.
 
-When you're ready to deploy your customized version:
+### Prerequisites
 
-<Steps>
-<Step title="Production Environment Setup">
-    Create a production environment file:
-    
-    ```bash
-    # .env.production
-    DEBUG=False
-    PORT=8000
-    HOST=0.0.0.0
-    MONGODB_URI=your-production-mongodb-uri
-    CONTACT_WEBHOOK=your-production-webhook
-    URL_REPORT_WEBHOOK=your-production-report-webhook
-    ```
-</Step>
+- Python 3.10+
+- [uv](https://docs.astral.sh/uv/) package manager
+- MongoDB 7.0+ ([setup guide](/self-hosting/setting-up-mongo))
+- Redis 7.0+ ([setup guide](/self-hosting/setting-up-redis))
 
-<Step title="Install Production Dependencies">
-    ```bash
-    # Install additional production packages
-    pip install gunicorn  # WSGI server
-    pip install nginx     # Reverse proxy (if needed)
-    
-    # Update requirements
-    pip freeze > requirements.txt
-    ```
-</Step>
+### Installation
 
-<Step title="Create Production Startup Script">
-    Create `start_production.sh`:
-    
-    ```bash
-    #!/bin/bash
-    source venv/bin/activate
-    export $(cat .env.production | xargs)
-    gunicorn -w 4 -b 0.0.0.0:8000 main:app
-    ```
-    
-    Make it executable:
-    ```bash
-    chmod +x start_production.sh
-    ```
-</Step>
+```bash
+git clone https://github.com/spoo-me/url-shortener.git
+cd url-shortener
 
-<Step title="Set Up Process Management">
-    Use a process manager like systemd or supervisord:
-    
-    ```ini
-    # /etc/systemd/system/spoo-me.service
-    [Unit]
-    Description=Spoo.me URL Shortener
-    After=network.target
-    
-    [Service]
-    Type=simple
-    User=your-username
-    WorkingDirectory=/path/to/url-shortener
-    ExecStart=/path/to/url-shortener/start_production.sh
-    Restart=always
-    
-    [Install]
-    WantedBy=multi-user.target
-    ```
-    
-    Enable and start the service:
-    ```bash
-    sudo systemctl enable spoo-me
-    sudo systemctl start spoo-me
-    ```
-</Step>
-</Steps>
+# Install dependencies
+pip install uv
+uv sync
+uv run pre-commit install
+
+# Configure environment
+cp .env.example .env
+```
+
+Edit `.env` to point to your local MongoDB and Redis:
+
+```bash
+MONGODB_URI=mongodb://localhost:27017/
+REDIS_URI=redis://localhost:6379
+```
+
+### Running the Server
+
+```bash
+uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+Visit http://localhost:8000. Check http://localhost:8000/health to verify MongoDB and Redis are connected.
+
+## Verifying Your Setup
+
+After starting the app (via Docker or manually):
+
+1. **Health check**: `curl http://localhost:8000/health` — should return `{"status": "healthy"}`
+2. **Shorten a URL**: Visit the homepage and create a test short link
+3. **Test redirect**: Click the short link to verify it redirects
+4. **Run tests**: `uv run pytest` — all tests should pass
 
 ## Troubleshooting
 
 <AccordionGroup>
-<Accordion title="Import Errors">
-**Symptoms**: `ModuleNotFoundError` or import-related errors
-
-**Solutions**:
-- Ensure your virtual environment is activated
-- Verify all dependencies are installed: `pip install -r requirements.txt`
-- Check Python path and working directory
-- Install missing packages manually: `pip install package-name`
-</Accordion>
-
-<Accordion title="Database Connection Issues">
-**Symptoms**: Cannot connect to MongoDB or database errors
-
-**Solutions**:
-- Verify your `MONGODB_URI` in the `.env` file
-- Test connection with the database test script
-- Check MongoDB Atlas IP whitelist settings
-- Ensure your MongoDB cluster is running
-</Accordion>
-
-<Accordion title="Port Already in Use">
-**Symptoms**: `Address already in use` error when starting server
-
-**Solutions**:
+<Accordion title="Docker: Port 8000 already in use">
 ```bash
-# Find process using port 8000
-netstat -tulpn | grep :8000  # Linux/macOS
+# Find what's using port 8000
+lsof -i :8000    # macOS/Linux
 netstat -ano | findstr :8000  # Windows
 
-# Kill the process
-kill -9 <PID>  # Linux/macOS
-taskkill /PID <PID> /F  # Windows
-
-# Or change port in .env file
-PORT=8001
+# Or change the port in docker-compose.yml
+ports:
+  - "8001:8000"
 ```
 </Accordion>
 
-<Accordion title="Template or Static File Issues">
-**Symptoms**: 404 errors for CSS/JS files or template rendering errors
+<Accordion title="Docker: App can't connect to MongoDB">
+Check that all containers are running:
+```bash
+docker compose ps
+```
+If the `db` container is unhealthy, check its logs:
+```bash
+docker compose logs db
+```
+</Accordion>
 
-**Solutions**:
-- Verify file paths in templates match actual file locations
-- Check Flask static and template folder configuration
-- Ensure static files are in the correct directory structure
-- Clear browser cache and hard refresh
+<Accordion title="Manual: ModuleNotFoundError">
+Make sure you're using `uv run` to execute commands — it activates the virtual environment automatically:
+```bash
+uv run uvicorn main:app --reload   # correct
+uvicorn main:app --reload           # may fail if venv not activated
+```
+</Accordion>
+
+<Accordion title="Health endpoint shows 'degraded'">
+This means MongoDB is connected but Redis isn't. The app still works — Redis is optional for caching. Check your `REDIS_URI` in `.env` or verify Redis is running.
 </Accordion>
 </AccordionGroup>
-
-## Contributing Back to the Project
-
-If you've made improvements that could benefit others:
-
-<Steps>
-<Step title="Fork the Original Repository">
-    Create your own fork on GitHub to contribute changes back.
-</Step>
-
-<Step title="Create Feature Branches">
-    Work on separate branches for each feature or fix.
-</Step>
-
-<Step title="Submit Pull Requests">
-    Share your improvements with the community through pull requests.
-</Step>
-</Steps>
-
-<Tip>
-Check the project's contribution guidelines and code standards before submitting changes.
-</Tip>

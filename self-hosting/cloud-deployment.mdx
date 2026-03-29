@@ -45,7 +45,7 @@ Vercel offers the most generous free plan and excellent performance for Spoo.me 
 <Step title="Deploy with One Click">
     Click the deploy button to start the deployment process:
     
-    <a href="https://vercel.com/new/clone?repository-url=https://github.com/spoo-me/url-shortener&env=MONGODB_URI,CONTACT_WEBHOOK,URL_REPORT_WEBHOOK" target="_blank">
+    <a href="https://vercel.com/new/clone?repository-url=https://github.com/spoo-me/spoo&env=MONGODB_URI,CONTACT_WEBHOOK,URL_REPORT_WEBHOOK" target="_blank">
         <img noZoom src="https://vercel.com/button" alt="Deploy with Vercel" />
     </a>
     
@@ -106,14 +106,32 @@ Vercel offers the most generous free plan and excellent performance for Spoo.me 
     Discord OAuth client secret
     </ParamField>
 
-    ### Optional Variables
-    
-    <ParamField path="REDIS_URI" type="string" optional>
-    Redis connection string for caching. Optional, but recommended for production.
+    ### App Configuration
+
+    <ParamField path="SECRET_KEY" type="string" required>
+    Application secret key. Generate with: `python -c "import os; print(os.urandom(32).hex())"`
     </ParamField>
-    
-    <ParamField path="FLASK_SECRET_KEY" type="string" optional>
-    Flask secret key for session management. Auto-generated if not provided.
+
+    <ParamField path="HOST_URI" type="string" required>
+    Your deployment domain (e.g., `your-project.vercel.app`). Used for generating short URLs.
+    </ParamField>
+
+    <ParamField path="ENV" type="string" default="production">
+    Set to `production` for cloud deployments.
+    </ParamField>
+
+    ### Optional Variables
+
+    <ParamField path="REDIS_URI" type="string" optional>
+    Redis connection string for caching. Recommended for production performance.
+    </ParamField>
+
+    <ParamField path="SENTRY_DSN" type="string" optional>
+    Sentry DSN for error tracking. Leave empty to disable.
+    </ParamField>
+
+    <ParamField path="HCAPTCHA_SECRET" type="string" optional>
+    hCaptcha secret key for form spam protection.
     </ParamField>
     
     <Warning>
@@ -204,7 +222,7 @@ Render provides 750 hours of free hosting per month, which is sufficient for mos
 <Step title="Deploy from Blueprint">
     Use the Render deployment button:
     
-    <a href="https://render.com/deploy?repo=https://github.com/spoo-me/url-shortener" target="_blank">
+    <a href="https://render.com/deploy?repo=https://github.com/spoo-me/spoo" target="_blank">
         <img noZoom src="https://render.com/images/deploy-to-render-button.svg" alt="Deploy to Render" />
     </a>
 </Step>
@@ -238,7 +256,7 @@ Koyeb offers one free deployment, though custom domains require a paid plan.
 <Step title="Deploy from GitHub">
     1. Click the Koyeb deployment button:
     
-    <a href="https://app.koyeb.com/deploy?type=git&builder=buildpack&repository=github.com/spoo-me/url-shortener&branch=main&name=url-shortener&run_command=gunicorn%20main:app&env[MONGODB_URI]=your-mongo-uri&env[CONTACT_WEBHOOK]=your-webhook-uri&env[URL_REPORT_WEBHOOK]=you-webhook-uri&ports=8000;http;/" target="_blank">
+    <a href="https://app.koyeb.com/deploy?type=git&builder=buildpack&repository=github.com/spoo-me/spoo&branch=main&name=spoo&run_command=uvicorn%20main:app%20--host%200.0.0.0%20--port%208000&env[MONGODB_URI]=your-mongo-uri&env[CONTACT_WEBHOOK]=your-webhook-uri&env[URL_REPORT_WEBHOOK]=you-webhook-uri&ports=8000;http;/" target="_blank">
         <img noZoom src="https://www.koyeb.com/static/images/deploy/button.svg" alt="Deploy to Koyeb" />
     </a>
     
@@ -314,7 +332,7 @@ While cloud deployment is convenient, there are some limitations to consider:
 - **Resource limits**: Free tiers have usage limits that may affect high-traffic deployments
 
 <Info>
-If you need more control or customization, consider [Docker deployment](/self-hosting/deployment/docker-deployment) or [local development](/self-hosting/deployment/local-development) instead.
+If you need more control or customization, consider [Docker deployment](/self-hosting/docker-deployment) or [local development](/self-hosting/local-development) instead.
 </Info>
 
 ## Troubleshooting Common Issues
@@ -377,11 +395,11 @@ For most personal or small business use cases, the free tiers are more than suff
 ## Next Steps
 
 <CardGroup cols={2}>
-<Card title="Docker Deployment" icon="docker" href="/self-hosting/deployment/docker-deployment">
+<Card title="Docker Deployment" icon="docker" href="/self-hosting/docker-deployment">
     Need more control? Try containerized deployment
 </Card>
 
-<Card title="Local Development" icon="code" href="/self-hosting/deployment/local-development">
+<Card title="Local Development" icon="code" href="/self-hosting/local-development">
     Set up a local development environment for customization
 </Card>
 </CardGroup>
