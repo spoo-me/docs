@@ -166,10 +166,10 @@ The service will be available at the URL provided in the `service-url` output.
 Use the running service to test all your integration scenarios.
 
 ```yaml
-      - name: Test analytics endpoint
+      - name: Test stats endpoint
         run: |
-          # Test analytics after creating a short URL
-          curl -s ${{ steps.spoo.outputs.service-url }}/api/analytics
+          # Test stats after creating a short URL
+          curl -s "${{ steps.spoo.outputs.service-url }}/api/v1/stats?scope=all"
           
       - name: Test error handling
         run: |
