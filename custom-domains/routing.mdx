@@ -1,0 +1,99 @@
+---
+title: "Routing Settings"
+description: "Root redirect, not-found redirect, and custom robots.txt"
+icon: "signpost"
+---
+
+Short links only cover paths that match an alias. Routing settings decide everything else on your domain: the bare domain itself, paths that match nothing, and what crawlers are told. All three live on the domain page and take effect only while the domain is **Active**.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/custom-domains/domain-active-light.png" alt="Active domain page with root redirect, not-found redirect, and robots.txt settings" />
+  <img className="hidden dark:block" src="/images/custom-domains/domain-active-dark.png" alt="Active domain page with root redirect, not-found redirect, and robots.txt settings" />
+</Frame>
+
+## The three settings
+
+| Setting                | Applies to                                | When blank                                        |
+| ---------------------- | ----------------------------------------- | ------------------------------------------------- |
+| **Root redirect**      | Visits to the bare domain (`https://ac.me/`) | Serves a 404                                    |
+| **Not-found redirect** | Paths that match no alias (`ac.me/tpyo`)  | Serves a 404                                      |
+| **Custom robots.txt**  | `ac.me/robots.txt`                        | Serves a default that blocks all crawlers         |
+
+### Root redirect
+
+Where visitors land when they open the bare domain. People will type `ac.me` into a browser out of curiosity; send them somewhere useful with a 302 redirect.
+
+Example: `https://acme.com`, so the domain behind your links leads straight to your website.
+
+### Not-found redirect
+
+The fallback for any path that is not a live short link: typos, expired campaigns, guessed aliases. Instead of a 404, visitors are redirected (302) to the URL you set.
+
+Example: `https://acme.com/links`, a page that lists your active campaigns, so a mistyped link still lands somewhere recoverable.
+
+### Custom robots.txt
+
+The body served at `ac.me/robots.txt`, capped at 4096 characters. By default your domain serves a robots.txt that blocks all crawlers:
+
+```text Default robots.txt
+User-agent: *
+Disallow: /
+```
+
+That default is right for most link domains. Override it if you have a reason, for example to allow specific crawlers.
+
+<Note>
+  Short links themselves always send `X-Robots-Tag: noindex, nofollow, noarchive` on their redirects, regardless of robots.txt. A short link is a pure redirect with no content worth indexing, so this is not configurable.
+</Note>
+
+## Editing the settings
+
+Change any of the three on the domain page; saving applies immediately. Clearing a field restores its default behavior.
+
+Over the API, `PATCH /api/v1/custom-domains/{id}` is a partial update: fields you omit stay unchanged, and an explicit `null` clears a value back to its default.
+
+<CodeGroup>
+
+```bash cURL
+# Set both redirects; robots.txt is untouched because it is omitted
+curl -X PATCH https://spoo.me/api/v1/custom-domains/DOMAIN_ID \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "root_redirect": "https://acme.com",
+    "not_found_redirect": "https://acme.com/links"
+  }'
+
+# Clear the not-found redirect (explicit null), back to serving 404s
+curl -X PATCH https://spoo.me/api/v1/custom-domains/DOMAIN_ID \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"not_found_redirect": null}'
+```
+
+```python Python
+import requests
+
+# Set both redirects; robots.txt is untouched because it is omitted
+requests.patch(
+    "https://spoo.me/api/v1/custom-domains/DOMAIN_ID",
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+    json={
+        "root_redirect": "https://acme.com",
+        "not_found_redirect": "https://acme.com/links",
+    },
+)
+
+# Clear the not-found redirect (explicit null), back to serving 404s
+requests.patch(
+    "https://spoo.me/api/v1/custom-domains/DOMAIN_ID",
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+    json={"not_found_redirect": None},
+)
+```
+
+</CodeGroup>
+
+<Warning>
+  Routing settings are for your own destinations. Pointing the redirects at phishing, malware, or other abusive content gets the domain revoked, which is terminal.
+</Warning>

@@ -1,0 +1,131 @@
+---
+title: "Managing deliveries"
+description: "Test sends, the delivery log, retries, and endpoint health"
+icon: "history"
+---
+
+Every delivery an endpoint receives is logged with its full attempt history and the exact body that was sent. This page covers the operational surface: proving an endpoint works, inspecting what happened, redelivering, and what the system does when an endpoint keeps failing.
+
+## Test sends
+
+Send a sample of any catalog event through the real pipeline:
+
+```bash
+curl -X POST https://spoo.me/api/v1/webhooks/{endpoint_id}/test \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"event_type": "link.clicked"}'
+```
+
+The sample is rendered in the endpoint's flavor, signed with the endpoint's real secret, and POSTed synchronously; the response tells you how it went:
+
+```json
+{
+  "id": "66a01b2f9d3e4c5a6b7c8d9e",
+  "webhook_id": "msg_7f3a9c1e5b2d4f6a8c0e2b4d6f8a0c2e",
+  "event_type": "link.clicked",
+  "is_test": true,
+  "status": "success",
+  "attempt_count": 1,
+  "attempts": [
+    {
+      "attempted_at": 1784908990,
+      "status_code": 200,
+      "duration_ms": 184,
+      "error": null,
+      "response_body": "{\"ok\":true}"
+    }
+  ],
+  "rendered_body": "{\"id\":\"evt_...\",\"type\":\"link.clicked\",...}",
+  "created_at": 1784908990
+}
+```
+
+Omit `event_type` (or pass `webhook.test`) for a plain test ping. Because the sample payloads are the documented ones from the [event catalog](/webhooks/event-types), a test send is also a real end-to-end check of your signature verification.
+
+Test sends are single-shot: a failing test is not retried and never counts against the endpoint's health, so you can test a broken receiver freely without pushing the endpoint toward auto-disable.
+
+## The delivery log
+
+```bash
+curl "https://spoo.me/api/v1/webhooks/{endpoint_id}/deliveries?page=1&page_size=25&status=failed" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+Each entry records the event type, current status (`pending`, `success`, `failed`), every attempt with its HTTP status code, duration, error, and the first 256 bytes of the response body, plus the exact rendered body that was sent. Filter by `status` to find what needs attention; `page_size` maxes out at 100.
+
+The same log is in the dashboard on the endpoint's page.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/webhooks/deliveries-log-light.png" alt="Endpoint delivery log listing recent deliveries with status, event type, and attempt outcomes" />
+  <img className="hidden dark:block" src="/images/webhooks/deliveries-log-dark.png" alt="Endpoint delivery log listing recent deliveries with status, event type, and attempt outcomes" />
+</Frame>
+
+## Retries
+
+A failed attempt is retried automatically on the Standard Webhooks schedule, measured from the previous attempt:
+
+| Attempt | Delay |
+|---|---|
+| 1 | Immediate |
+| 2 | 5 seconds |
+| 3 | 5 minutes |
+| 4 | 30 minutes |
+| 5 | 2 hours |
+| 6 | 5 hours |
+| 7 | 10 hours |
+
+A delivery that fails all 7 attempts (about 17.5 hours end to end) is marked `failed`. The body is frozen at the first attempt and every retry reuses the same `webhook-id`, so retries are byte-identical and safe to deduplicate. Only the timestamp and signature are fresh per attempt.
+
+**429 responses do not consume attempts.** A rate-limited delivery is held and reattempted after the receiver's `Retry-After` (capped at 15 minutes, defaulting to 60 seconds when absent), with no effect on the endpoint's failure count. This is what keeps Discord and Slack endpoints healthy under click bursts.
+
+**Paused endpoints hold deliveries.** Pause an endpoint (`PATCH` with `"status": "paused"`) and deliveries already in flight wait instead of failing; resume and they complete. New events that occur while paused are not queued, so pausing is for maintenance windows, not backlog building.
+
+### Retrying a delivery
+
+Any completed delivery can be redelivered manually within the retention window:
+
+```bash
+curl -X POST https://spoo.me/api/v1/webhooks/{endpoint_id}/deliveries/{delivery_id}/retry \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+The redelivery runs synchronously and returns the updated delivery, exactly like a test send. It reuses the original `webhook-id` and body, so consumers that dedup on `webhook-id` treat it as the same message. Manual retries are single-shot and do not affect endpoint health.
+
+## Auto-disable
+
+An endpoint that keeps failing gets disabled rather than hammered forever:
+
+- **10 consecutive exhausted deliveries** (each one a full run through the retry ladder) disable the endpoint. Any successful delivery resets the count.
+- **A 410 response** disables the endpoint immediately; that status says "gone", and spoo.me takes it at its word.
+
+A disabled endpoint receives nothing: events that occur while it is disabled are not queued for it, and deliveries still pending when it was disabled are marked failed. The endpoint's `status` becomes `disabled` with a `disabled_reason` (`consecutive_failures` or `gone`), visible in the API and the dashboard.
+
+### Re-enabling
+
+Fix the receiver, then set the endpoint back to active:
+
+```bash
+curl -X PATCH https://spoo.me/api/v1/webhooks/{endpoint_id} \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"status": "active"}'
+```
+
+Re-activation clears the failure bookkeeping; the endpoint starts fresh. You cannot set `disabled` yourself; use `paused` when you want to stop deliveries deliberately.
+
+<Tip>
+Before re-enabling, confirm the fix with a test send. It exercises the same path real deliveries take without waiting for the next event.
+</Tip>
+
+## Pending cap
+
+Each endpoint may have at most **1,000 deliveries pending** at once. If your receiver falls that far behind (or stays rate-limited that long), new deliveries for the endpoint are dropped instead of queued, and the drops are counted.
+
+You find out two ways: the endpoint's stats in the dashboard, and a `dropped_since_last` field carried in the `data` of the next delivery that succeeds, telling you how many deliveries you missed. Flavored cards surface the same notice in the footer. The counter resets on delivery success.
+
+The cap protects the queue, not the facts; anything dropped is gone. If you hit it, your receiver is too slow for its subscription: acknowledge before processing, or narrow the subscription (fewer event types, or `scope_links` to the links you care about).
+
+## Retention
+
+Delivery logs and their event payloads are kept for **30 days**, then deleted automatically. Manual retries only work within that window, and a delivery still deferred by rate limiting when its 30 days run out is dropped with the log. Self-hosted instances can tune retention with `WEBHOOKS_DELIVERY_LOG_TTL_DAYS`; see [configuration](/self-hosting/configuration).

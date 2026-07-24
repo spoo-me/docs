@@ -1,0 +1,157 @@
+---
+title: "Create Links on Your Domain"
+description: "Shorten on your domain, check aliases, and move links between domains"
+icon: "link"
+---
+
+Once a domain is **Active**, it shows up everywhere links are created and managed: the composer, the links list, and the bulk actions. Links on your domain get the full feature set, including analytics, passwords, expiration, and max clicks.
+
+## Pick the domain in the composer
+
+The link composer has a domain picker next to the alias field. It defaults to `spoo.me`; select `ac.me` instead and the new link is created there.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/custom-domains/new-link-on-domain-light.png" alt="Link composer with ac.me selected and the alias launch entered" />
+  <img className="hidden dark:block" src="/images/custom-domains/new-link-on-domain-dark.png" alt="Link composer with ac.me selected and the alias launch entered" />
+</Frame>
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://spoo.me/api/v1/shorten \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://acme.com/product-launch",
+    "alias": "launch",
+    "domain": "ac.me"
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://spoo.me/api/v1/shorten",
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+    json={
+        "url": "https://acme.com/product-launch",
+        "alias": "launch",
+        "domain": "ac.me",
+    },
+)
+print(response.json()["short_url"])  # https://ac.me/launch
+```
+
+</CodeGroup>
+
+## Aliases are per domain
+
+Each domain is its own namespace. `launch` being taken on `spoo.me` says nothing about `ac.me`: the alias check in the composer runs against the domain you picked, so switching domains re-checks availability live.
+
+Two upsides of your own namespace:
+
+- **Short, common aliases are usually free.** You are not competing with every spoo.me user for `launch` or `docs`.
+- **Reserved words do not apply.** Aliases that are reserved on `spoo.me` (they would collide with app routes) are available on your domain.
+
+Programmatically, pass `domain` to the availability check:
+
+<CodeGroup>
+
+```bash cURL
+curl "https://spoo.me/api/v1/shorten/check-alias?alias=launch&domain=ac.me" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://spoo.me/api/v1/shorten/check-alias",
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+    params={"alias": "launch", "domain": "ac.me"},
+)
+print(response.json())  # {"available": true, "reason": null}
+```
+
+</CodeGroup>
+
+## Move a link to another domain
+
+Any link you own can move between domains after creation: from `spoo.me` onto `ac.me`, between two custom domains, or back to `spoo.me`. Open the link's settings and change its domain.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/custom-domains/move-link-light.png" alt="Link settings with the domain field changed to ac.me" />
+  <img className="hidden dark:block" src="/images/custom-domains/move-link-dark.png" alt="Link settings with the domain field changed to ac.me" />
+</Frame>
+
+Rules that apply to a move:
+
+- The target must be a domain you own in **Active** status (or `spoo.me`).
+- The alias must be free on the target domain; availability is re-checked as part of the move. If it is taken, the move is rejected and nothing changes.
+- Moving back to `spoo.me` re-applies its reserved-alias rules, so a link whose alias is reserved there cannot move onto it.
+- The old address stops resolving immediately; the link keeps its stats, settings, and ID.
+
+<CodeGroup>
+
+```bash cURL
+curl -X PATCH https://spoo.me/api/v1/urls/URL_ID \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"domain": "ac.me"}'
+```
+
+```python Python
+import requests
+
+response = requests.patch(
+    "https://spoo.me/api/v1/urls/URL_ID",
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+    json={"domain": "ac.me"},  # or None to move back to spoo.me
+)
+```
+
+</CodeGroup>
+
+## Move links in bulk
+
+Migrating an existing collection? Select multiple links in the dashboard and move them to one target domain in a single action, or call the bulk endpoint with up to 100 link IDs. Each link gets its own verdict, so one taken alias does not fail the batch: that link reports a conflict and the rest move.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://spoo.me/api/v1/urls/bulk/domain \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ids": ["URL_ID_1", "URL_ID_2", "URL_ID_3"],
+    "domain": "ac.me"
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://spoo.me/api/v1/urls/bulk/domain",
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+    json={"ids": ["URL_ID_1", "URL_ID_2", "URL_ID_3"], "domain": "ac.me"},
+)
+for item in response.json()["results"]:
+    print(item["id"], item.get("error_code") or "moved")
+```
+
+</CodeGroup>
+
+<Tip>
+  Retrying a bulk move is safe. Links that already sit on the target domain report success without changing anything, so you can re-send a failed batch as-is.
+</Tip>
+
+## Filter your links by domain
+
+The links list has a domain filter, so you can work with one domain's links in isolation. The same filter exists on the API:
+
+```bash
+curl "https://spoo.me/api/v1/urls?domain=ac.me" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```

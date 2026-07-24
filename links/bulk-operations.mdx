@@ -1,0 +1,134 @@
+---
+title: "Bulk Operations"
+description: "Delete, toggle, expire, or move up to 100 links in one request"
+icon: "layers"
+---
+
+Cleaning up after a campaign should not mean a hundred API calls. The bulk endpoints apply one operation to up to 100 links per request and report a verdict for every link, so partial success is visible instead of silent.
+
+In the dashboard, selecting multiple links surfaces an action bar backed by these same endpoints.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/links/links-bulk-bar-light.png" alt="Links list with several links selected and the bulk action bar visible" />
+  <img className="hidden dark:block" src="/images/links/links-bulk-bar-dark.png" alt="Links list with several links selected and the bulk action bar visible" />
+</Frame>
+
+## The endpoints
+
+All bulk endpoints require authentication with scope `urls:manage` or `admin:all`. Rate limits count requests, not links, so a 100-link batch costs the same budget as a 2-link batch.
+
+| Endpoint | Does | Rate limit |
+|---|---|---|
+| `POST /api/v1/urls/bulk/delete` | Permanently deletes the listed links | 30/min, 100/day |
+| `POST /api/v1/urls/bulk/status` | Sets every listed link `ACTIVE` or `INACTIVE` | 60/min, 200/day |
+| `POST /api/v1/urls/bulk/expiry` | Sets or clears one `expire_after` on every listed link | 60/min, 200/day |
+| `POST /api/v1/urls/bulk/domain` | Moves every listed link to one target domain | 60/min, 200/day |
+| `DELETE /api/v1/urls?domain=` | Deletes **all** your links on one custom domain | 5/min, 50/day |
+
+## Request shape
+
+The four `bulk/*` endpoints share one envelope: an `ids` array of 1 to 100 link ids (the `id` returned by shorten and list endpoints), plus the operation's parameter.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://spoo.me/api/v1/urls/bulk/status \
+  -H "Authorization: Bearer spoo_AbCdEfGhIjKlMnOpQrStUvWxYz" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ids": ["665f0c2f9e7a4b1d2c3d4e5f", "665f0c2f9e7a4b1d2c3d4e60"],
+    "status": "INACTIVE"
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://spoo.me/api/v1/urls/bulk/status",
+    headers={"Authorization": "Bearer spoo_AbCdEfGhIjKlMnOpQrStUvWxYz"},
+    json={
+        "ids": ["665f0c2f9e7a4b1d2c3d4e5f", "665f0c2f9e7a4b1d2c3d4e60"],
+        "status": "INACTIVE",
+    },
+)
+print(response.json()["summary"])
+```
+
+</CodeGroup>
+
+Per-operation parameters:
+
+| Endpoint | Parameter | Notes |
+|---|---|---|
+| `bulk/delete` | none | Ids only. |
+| `bulk/status` | `status` | `"ACTIVE"` or `"INACTIVE"`. Same-status links are success no-ops. |
+| `bulk/expiry` | `expire_after` | ISO 8601 or epoch seconds, must be in the future; `null` clears expiry. One value for the whole batch. Expired links whose expiry is extended or cleared reactivate. |
+| `bulk/domain` | `domain` | A custom domain you own (must be active), or `null` to move back to `spoo.me`. One target for the whole batch. |
+
+Envelope validation is all-or-nothing: an empty list, more than 100 ids, one malformed id, an unusable target domain, or a past expiry rejects the whole request with a `4xx` before anything runs.
+
+## Response shape
+
+A batch that ran always answers `200`, even if every item failed. Per-item failures are answers, not errors:
+
+```json
+{
+  "summary": { "total": 2, "succeeded": 1, "failed": 1 },
+  "results": [
+    { "id": "665f0c2f9e7a4b1d2c3d4e5f", "alias": "launch", "ok": true, "error_code": null, "error": null },
+    { "id": "665f0c2f9e7a4b1d2c3d4e60", "alias": null, "ok": false, "error_code": "not_found", "error": "URL not found" }
+  ]
+}
+```
+
+One row per unique id, in request order (duplicates are deduplicated, first occurrence wins). Branch on `error_code`; the `error` text is for display only.
+
+| `error_code` | Meaning |
+|---|---|
+| `not_found` | No such link in your account. Someone else's id answers the same. |
+| `forbidden` | The link is admin-blocked and cannot be modified or deleted. |
+| `conflict` | Domain move only: the alias is already taken on the target domain. |
+| `validation_error` | Domain move only: a reserved alias cannot move onto `spoo.me`. |
+| `internal` | Unexpected per-item failure, logged server-side. |
+| `not_attempted` | Processing stopped before reaching this item. |
+
+<Tip>
+  Retrying a batch after a timeout is safe. Every operation sets an absolute value or deletes, so re-running it cannot double-apply: already-moved links report success no-ops, and already-deleted ids report `not_found`, which delete clients should treat as success.
+</Tip>
+
+## Delete everything on a domain
+
+Retiring a custom domain? Instead of collecting ids, delete by domain:
+
+<CodeGroup>
+
+```bash cURL
+curl -X DELETE "https://spoo.me/api/v1/urls?domain=ac.me" \
+  -H "Authorization: Bearer spoo_AbCdEfGhIjKlMnOpQrStUvWxYz"
+```
+
+```python Python
+import requests
+
+response = requests.delete(
+    "https://spoo.me/api/v1/urls",
+    headers={"Authorization": "Bearer spoo_AbCdEfGhIjKlMnOpQrStUvWxYz"},
+    params={"domain": "ac.me"},
+)
+print(response.json())  # {"message": "deleted 42 URL(s) on ac.me", "count": 42, "domain": "ac.me"}
+```
+
+</CodeGroup>
+
+This deletes every link you own on that domain. You must own the domain, and the system domain is refused: there is deliberately no single call that wipes your entire `spoo.me` inventory.
+
+<Warning>
+  Both delete operations are irreversible. Deleted aliases become available for anyone to claim. If you might want a link back later, deactivate it with `bulk/status` instead.
+</Warning>
+
+## When to use which
+
+- **A handful of edits to one link**: use the single-item endpoints (`PATCH`/`DELETE /api/v1/urls/{url_id}`).
+- **The same change across many links**: use `bulk/*`. One request per intent keeps you clear of rate limits that per-item loops would burn through.
+- **Everything on a domain has to go**: use `DELETE /api/v1/urls?domain=`.

@@ -1,0 +1,76 @@
+---
+title: "Link Previews"
+description: "Inspect where a short link leads before following it"
+icon: "eye"
+---
+
+Append `+` to any short link to see where it goes without visiting it:
+
+```
+spoo.me/{code}+
+```
+
+For `spoo.me/acme`, the preview lives at `spoo.me/acme+`. It works for every link on the default domain and requires no account.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/analytics/link-preview-page-light.png" alt="Preview page for spoo.me/acme showing the destination domain and link status" />
+  <img className="hidden dark:block" src="/images/analytics/link-preview-page-dark.png" alt="Preview page for spoo.me/acme showing the destination domain and link status" />
+</Frame>
+
+## Why it exists
+
+Short links hide their destination by design, and that opacity is exactly what scammers exploit. The preview page restores trust before the click: anyone handed a spoo.me link can check what is behind it first. If you are ever unsure about a short link, add the `+` before you open it, and if what you find looks malicious, [report it](/trust/reporting-links).
+
+## What the page shows
+
+| Fact | Notes |
+| --- | --- |
+| Alias and short URL | The link being previewed |
+| Status | `active`, `inactive`, `expired`, or `blocked` |
+| Created date | When the link was made |
+| Password protection | Whether a password gates the redirect |
+| Destination | The full destination URL, split into domain and path, with an HTTPS indicator |
+| Geo destinations | For geo-targeted links, every country rule and its destination |
+
+Geo-targeted links list **every** country rule, nothing summarized. A link cannot show one destination to the preview and send certain countries somewhere undisclosed.
+
+Everyone sees the same preview. There is no owner view, and owner-configured social media tags never appear here; the page reflects only where the redirect actually goes.
+
+## When the destination is withheld
+
+The preview never reveals a destination the redirect itself would refuse to serve. The destination (and any geo destinations) appear only while the link is **active and not password-protected**:
+
+| Link state | Preview shows |
+| --- | --- |
+| Active | Full destination |
+| Password-protected | Status and facts, destination withheld |
+| Inactive or expired | Status stated, destination withheld |
+| Blocked | `blocked` status, destination withheld |
+| Nonexistent code | 404 |
+
+Expired, deactivated, and blocked links still answer with their status, so a dead link is distinguishable from one that never existed.
+
+## API
+
+The page is backed by `GET /api/v1/public/preview/{code}`:
+
+<CodeGroup>
+
+```bash curl
+curl "https://spoo.me/api/v1/public/preview/acme"
+```
+
+```python Python
+import requests
+
+response = requests.get("https://spoo.me/api/v1/public/preview/acme")
+preview = response.json()
+if preview["destination"]:
+    print(preview["destination"]["url"])
+else:
+    print("destination withheld, status:", preview["status"])
+```
+
+</CodeGroup>
+
+No authentication. Rate limit: 30/min, 2,000/day.

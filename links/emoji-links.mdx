@@ -1,0 +1,106 @@
+---
+title: "Emoji Links"
+description: "Short links whose alias is made entirely of emoji"
+icon: "smile"
+---
+
+An emoji link uses emoji as the short code: `spoo.me/🚀🔥` is a real, working link. Emoji aliases work everywhere regular aliases do: the composer, the shorten API, availability checks, and link management.
+
+## Create an emoji link
+
+### In the composer
+
+The alias field accepts emoji directly. The emoji button opens a browser with the full accepted set, organized by category and searchable by name (`rocket` finds 🚀), with a counter showing how many of the 15 emoji you have left. The dice button's **Suggest emoji** option fills in a random three-emoji code.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/links/emoji-browser-light.png" alt="Emoji browser open in the link composer" />
+  <img className="hidden dark:block" src="/images/links/emoji-browser-dark.png" alt="Emoji browser open in the link composer" />
+</Frame>
+
+### With the API
+
+Pass emoji in the `alias` field, or set `alias_type` to `"emoji"` to have a three-emoji code generated for you:
+
+<CodeGroup>
+
+```bash cURL
+# Explicit emoji alias
+curl -X POST https://spoo.me/api/v1/shorten \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://acme.com/spring-launch-2026", "alias": "🚀🔥"}'
+
+# Auto-generated emoji alias
+curl -X POST https://spoo.me/api/v1/shorten \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://acme.com/spring-launch-2026", "alias_type": "emoji"}'
+```
+
+```python Python
+import requests
+
+# Explicit emoji alias
+requests.post(
+    "https://spoo.me/api/v1/shorten",
+    json={"url": "https://acme.com/spring-launch-2026", "alias": "🚀🔥"},
+)
+
+# Auto-generated emoji alias
+response = requests.post(
+    "https://spoo.me/api/v1/shorten",
+    json={"url": "https://acme.com/spring-launch-2026", "alias_type": "emoji"},
+)
+print(response.json()["short_url"])  # e.g. https://spoo.me/🌵🎈🍩
+```
+
+</CodeGroup>
+
+`short_url` in the response contains the emoji unencoded; browsers and HTTP clients percent-encode it on use, and both forms resolve.
+
+## The accepted set
+
+Not every emoji makes a reliable URL. Some emoji are actually multi-character sequences that fall apart on certain platforms: flag emoji render as bare letters on Chromium on Windows, and multi-person combinations (ZWJ sequences) can split into their parts. Others depend on an invisible variation selector to render as emoji at all.
+
+So emoji aliases draw from a curated pool. An emoji is accepted when it is:
+
+- a fully qualified, single-codepoint emoji (optionally with a skin-tone modifier), and
+- at or below **Emoji 15.1**, which renders on iOS 17.4+, Android 14+, and Windows 11 23H2+.
+
+ZWJ sequences, flags, keycaps, and text-style symbols are rejected. Auto-generated codes are held to a stricter cap of **Emoji 12.0** so they render even on Windows 10, and are always 3 emoji long. Aliases can be 1 to 15 emoji.
+
+| Policy | Value |
+|---|---|
+| Maximum length | 15 emoji |
+| Accepted for custom aliases | Fully qualified single-codepoint emoji, up to Emoji 15.1 |
+| Used for auto-generation | Same set capped at Emoji 12.0 |
+| Auto-generated length | 3 emoji |
+
+## Fetch the accepted set
+
+`GET /api/v1/emoji-set` returns the full catalogue, so pickers and validators never have to hard-code the policy. No authentication required.
+
+<CodeGroup>
+
+```bash cURL
+curl https://spoo.me/api/v1/emoji-set
+```
+
+```python Python
+import requests
+
+emoji_set = requests.get("https://spoo.me/api/v1/emoji-set").json()
+print(emoji_set["max_graphemes"])          # 15
+print(emoji_set["accept_max_version"])     # 15.1
+print(emoji_set["emoji"][0])               # first accepted entry
+```
+
+</CodeGroup>
+
+Each entry in `emoji` carries the character (`c`), a searchable name (`n`, e.g. `"rocket"`), its category (`g`, e.g. `"Smileys & Emotion"`), whether it is in the auto-generation pool (`gen`), and optional extra search keywords (`k`). Skin-tone variants are not enumerated; the tone modifier is applied client-side to a base emoji.
+
+<Tip>
+  The response is cacheable for a day and carries an `ETag`. Send it back as `If-None-Match` and you get a `304` while the set is unchanged; a deploy that expands the set changes the ETag automatically. Rate limit: 60/min, 2,000/day.
+</Tip>
+
+## Variation selectors
+
+Some emoji, like ⭐, can be typed with or without an invisible variation selector (`U+FE0F`), and the two byte sequences look identical. Emoji aliases are canonicalized on write and on lookup: variation selectors are stripped, so `⭐️🎉` and `⭐🎉` are the same alias and resolve to the same link. Aliases are stored and returned in canonical form, and availability checks run against it, so you never end up with two visually identical links.

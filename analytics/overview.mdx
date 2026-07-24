@@ -1,0 +1,91 @@
+---
+title: "Analytics Overview"
+description: "What spoo.me tracks on every click and where to see it"
+icon: "chart-line"
+---
+
+Every short link on spoo.me comes with click analytics. No setup, no tracking snippet: the redirect itself is the measurement point, so data starts flowing from the first click.
+
+## What gets tracked per click
+
+Each click on a short link records:
+
+| Field | What it captures |
+| --- | --- |
+| Time | When the click happened, bucketed by hour, day, week, or month depending on the range you query |
+| Browser | Browser family, e.g. Chrome, Firefox, Safari |
+| Operating system | OS family, e.g. Windows, macOS, Android, iOS |
+| Device | `mobile`, `tablet`, or `desktop`, derived from the user agent |
+| Country and city | Geolocated from the visitor's IP address |
+| Referrer | The domain the visitor came from, e.g. `google.com`. Only the domain is stored, never the full referring URL |
+| UTM tags | `utm_source`, `utm_medium`, and `utm_campaign` query parameters present on the short link when it was clicked |
+| Redirect time | How long the redirect took, in milliseconds |
+
+Two metrics are computed over this data: **clicks** (every recorded click) and **unique clicks** (deduplicated by visitor IP). When a link has at least one click, the API also derives a unique click rate, repeat click rate, and average clicks per visitor.
+
+<Note>
+  `avg_redirection_time` is `null` when no redirect timings exist in the queried range. It is never reported as `0`, since a zero would read as an instant redirect rather than an absence of data.
+</Note>
+
+Bot traffic is detected on every click. If a link has bot blocking enabled, bot clicks are kept out of its analytics entirely. See [Link safety](/trust/link-safety) for details.
+
+## The analytics dashboard
+
+The dashboard has two boards: **Overview**, a daily briefing across your account, and **Analytics**, a widget grid you compose yourself. Each widget on the Analytics board shows one slice of your data, such as clicks over time, top countries, or top referrers. Add, remove, resize, and rearrange widgets; the layout is saved to your account and follows you across devices. You can reset either board to its default layout at any time.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/analytics/dashboard-widgets-light.png" alt="Analytics board with click, country, and referrer widgets arranged in a grid" />
+  <img className="hidden dark:block" src="/images/analytics/dashboard-widgets-dark.png" alt="Analytics board with click, country, and referrer widgets arranged in a grid" />
+</Frame>
+
+## Link-level vs account-level
+
+Analytics are available at two levels, and both are backed by the same API:
+
+| View | Where | What it covers |
+| --- | --- | --- |
+| Account-level | Dashboard, or `GET /api/v1/stats` with `scope=all` | Aggregated clicks across every link you own, filterable down to specific links, countries, devices, and more |
+| Link-level | A link's stats view, or `GET /api/v1/stats` with `scope=anon&short_code=acme` | One link's clicks. Works without authentication as long as the link's stats are not private |
+
+Account-level queries require authentication. Link-level queries are public by default; the link owner can make them private, in which case only the owner sees them. See [Public stats](/analytics/public-stats).
+
+A quick account-level query:
+
+<CodeGroup>
+
+```bash curl
+curl "https://spoo.me/api/v1/stats?scope=all&group_by=time,country" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://spoo.me/api/v1/stats",
+    params={"scope": "all", "group_by": "time,country"},
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+)
+print(response.json()["summary"])
+```
+
+</CodeGroup>
+
+The response contains a `summary` block (totals, first and last click, average redirect time) and a `metrics` map keyed `{metric}_by_{dimension}`, e.g. `clicks_by_time` and `unique_clicks_by_country`.
+
+## Where to go next
+
+<CardGroup cols={2}>
+  <Card title="Dimensions and filtering" icon="layers" href="/analytics/dimensions">
+    Every dimension, grouping and filtering, and the UTM rules
+  </Card>
+  <Card title="Public stats pages" icon="share-2" href="/analytics/public-stats">
+    Share a link's analytics with anyone, or keep them private
+  </Card>
+  <Card title="Link previews" icon="eye" href="/analytics/link-previews">
+    Let visitors inspect a destination before they click
+  </Card>
+  <Card title="Exports" icon="file-down" href="/analytics/exports">
+    Download your data as JSON, CSV, XLSX, or XML
+  </Card>
+</CardGroup>

@@ -1,0 +1,94 @@
+---
+title: "DNS and Verification"
+description: "Publish your DNS records and get the domain to Active"
+icon: "shield-check"
+---
+
+After [registering a domain](/custom-domains/add-a-domain), you publish the DNS records shown on its domain page. Once they propagate, verification and TLS issuance complete automatically and the domain goes **Active**.
+
+## The records
+
+The domain page lists the exact records for your domain, with copy buttons next to each value. For `ac.me` on spoo.me they look like this:
+
+| Type  | Name                        | Value                | Purpose                    |
+| ----- | --------------------------- | -------------------- | -------------------------- |
+| CNAME | `ac.me`                     | `customers.spoo.me`  | Routes traffic to spoo.me  |
+| TXT   | `_cf-custom-hostname.ac.me` | verification token   | Proves you own the domain  |
+
+- **The CNAME routes traffic.** Every request to `ac.me` lands on spoo.me's edge, which serves your short links.
+- **The TXT record proves ownership.** The token is unique to your registration, so nobody else can claim your domain.
+
+<Note>
+  Always publish exactly what your domain page shows. The records can differ by domain, and the page may include extra setup notes specific to yours. Apex domains need a DNS provider that supports CNAME at the root (often called CNAME flattening, ALIAS, or ANAME).
+</Note>
+
+## Add them at your DNS provider
+
+<Steps>
+  <Step title="Open your DNS settings">
+    Sign in to wherever your domain's DNS is managed (Cloudflare, Namecheap, Route 53, your registrar's panel).
+  </Step>
+  <Step title="Create the CNAME record">
+    Create a CNAME for the name shown on the domain page, pointing at `customers.spoo.me`. Some providers want the bare name (`@` for an apex, `go` for `go.ac.me`) instead of the full domain.
+
+    If your provider proxies records by default (Cloudflare's orange cloud), set this record to **DNS only**.
+  </Step>
+  <Step title="Create the TXT record">
+    Create the TXT record with the name and token value exactly as shown. Do not add quotes or trailing spaces.
+
+    <Frame>
+      <img className="block dark:hidden" src="/images/custom-domains/dns-records-light.png" alt="Domain setup page showing the CNAME and TXT records to publish" />
+      <img className="hidden dark:block" src="/images/custom-domains/dns-records-dark.png" alt="Domain setup page showing the CNAME and TXT records to publish" />
+    </Frame>
+  </Step>
+  <Step title="Wait for propagation">
+    New records usually propagate in a few minutes, but it can take up to an hour, and in rare cases longer, depending on your provider and the previous record's TTL.
+  </Step>
+</Steps>
+
+## Verification
+
+Verification is automatic. Once the CNAME is live and propagated, spoo.me's edge confirms ownership over HTTP and the domain transitions to **Active**, no clicking required. The dashboard polls the status for you while you are on the domain page.
+
+Impatient? Click **Start verification** on the domain page to trigger a fresh check immediately. If a check fails, the page shows the exact reason (the `last_verification_error`), for example a missing CNAME or a token mismatch.
+
+TLS is part of the same flow: when verification succeeds, a certificate is issued for your domain automatically, and it renews itself. You never manage certificates.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/custom-domains/domain-active-light.png" alt="Domain page showing Active status with routing settings" />
+  <img className="hidden dark:block" src="/images/custom-domains/domain-active-dark.png" alt="Domain page showing Active status with routing settings" />
+</Frame>
+
+## Status lifecycle
+
+| Status        | Meaning                                                                                       |
+| ------------- | --------------------------------------------------------------------------------------------- |
+| **Pending**   | Registered, awaiting verification. Publish the DNS records to move forward.                    |
+| **Verifying** | A DNS check is in progress.                                                                    |
+| **Active**    | Verified and serving. TLS is issued and links on the domain resolve.                           |
+| **Suspended** | Re-verification kept failing, or the domain was suspended by an admin. Links stop resolving.   |
+| **Revoked**   | Removed by you or force-removed for abuse. Terminal: a revoked domain never serves again.      |
+
+## Ongoing re-verification
+
+Active domains are re-checked in the background, by default every 7 days, to confirm the DNS records are still in place. A single failed check does nothing; after 3 consecutive failures the domain is **Suspended**: no new certificates are issued and links on it stop resolving.
+
+Suspension is recoverable. Restore the records shown on the domain page, then click **Start verification**. When the check passes, the domain returns to **Active** and links resolve again.
+
+<Warning>
+  Keep the DNS records in place permanently. Removing them after activation takes the domain offline within days.
+</Warning>
+
+## Troubleshooting
+
+### Stuck in Pending or Verifying
+
+- **Record typos.** Compare the published records character for character against the domain page. A common miss is the TXT record name: it must be `_cf-custom-hostname.ac.me`, not `ac.me`.
+- **Proxied CNAME.** If the CNAME sits behind another proxy (Cloudflare's orange cloud on your own zone), verification cannot see the real target. Switch the record to **DNS only**.
+- **CAA records.** If your domain has CAA records that restrict which certificate authorities may issue for it, they can block TLS issuance even when ownership verification succeeds. Remove them, or loosen them to permit issuance, then verify again.
+- **Propagation.** Check what the world sees with `dig ac.me CNAME +short`. If it does not return `customers.spoo.me` yet, wait and retry. Verification attempts are capped at 60 per domain per hour, so give propagation time between clicks.
+- **Read the error.** The domain page surfaces the exact failure reason from the last check. It usually names the missing or mismatched record.
+
+### Suspended
+
+The DNS records were removed or changed after activation. Restore the CNAME and TXT records exactly as shown on the domain page, wait for propagation, then click **Start verification**. The domain returns to Active once a check passes.

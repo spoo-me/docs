@@ -1,0 +1,144 @@
+---
+title: "Webhooks"
+description: "React to link events in your own systems, in real time"
+icon: "webhook"
+---
+
+Webhooks push link events to your server the moment they happen. Instead of polling the stats API, you register an HTTPS endpoint and spoo.me sends a signed POST request for every event you subscribe to: a click lands, a link expires, a link gets edited, and your code reacts.
+
+Every delivery follows the [Standard Webhooks](https://www.standardwebhooks.com) spec, so any Standard Webhooks library verifies spoo.me signatures out of the box.
+
+<Note>
+Webhooks are being rolled out gradually, so creating endpoints may not be available on your account yet. Managing endpoints you already have is never restricted.
+</Note>
+
+## What you can build
+
+- Alert your team in Slack or Discord when a campaign link expires or hits its click cap, with zero code using the [built-in flavors](/webhooks/discord-and-slack)
+- Stream clicks into your own warehouse or analytics pipeline as they happen
+- Trigger follow-up automation when a link crosses a click threshold
+- Keep an external CMS or database in sync as links are created, edited, and deleted
+
+## A real example
+
+Say `acme` runs a product launch behind `ac.me/summer-drop` and wants a Slack ping once the link passes 10,000 clicks. Subscribe an endpoint to `link.clicked`; every event carries the link's running `total_clicks`, so the receiver is a threshold check.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://spoo.me/api/v1/webhooks \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://api.acme.com/webhooks/spoo",
+    "events": ["link.clicked"],
+    "description": "Launch click alerts"
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://spoo.me/api/v1/webhooks",
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+    json={
+        "url": "https://api.acme.com/webhooks/spoo",
+        "events": ["link.clicked"],
+        "description": "Launch click alerts",
+    },
+)
+
+endpoint = response.json()
+print(endpoint["signing_secret"])  # shown once, store it now
+```
+
+</CodeGroup>
+
+Each `link.clicked` delivery arrives at `https://api.acme.com/webhooks/spoo` as JSON:
+
+```json
+{
+  "id": "evt_9f2c1e4a8b7d4c6e9a1b3d5f7a9c2e4b",
+  "type": "link.clicked",
+  "timestamp": "2026-07-22T14:03:10+00:00",
+  "data": {
+    "alias": "summer-drop",
+    "short_url": "https://ac.me/summer-drop",
+    "country": "IN",
+    "device": "mobile",
+    "total_clicks": 10001
+  }
+}
+```
+
+When `data.total_clicks` crosses 10,000, your handler posts to Slack. If you only want the notification and no code at all, point the endpoint straight at a Slack webhook URL with the `slack` flavor instead.
+
+<Note>
+The create response is the only place the full `signing_secret` appears in an API response. Store it immediately; you need it to [verify deliveries](/webhooks/verifying-deliveries). You can reveal it again later from the dashboard in a signed-in session.
+</Note>
+
+Prefer clicking to curling? The same flow lives in the dashboard under **Webhooks**: add an endpoint, pick events, done.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/webhooks/endpoints-list-light.png" alt="Webhooks page in the dashboard listing an active endpoint with its subscribed events and delivery stats" />
+  <img className="hidden dark:block" src="/images/webhooks/endpoints-list-dark.png" alt="Webhooks page in the dashboard listing an active endpoint with its subscribed events and delivery stats" />
+</Frame>
+
+## Subscriptions
+
+An endpoint subscribes to one or more event types from the [catalog](/webhooks/event-types). Patterns are supported:
+
+| Pattern | Matches |
+|---|---|
+| `link.clicked` | Exactly that event |
+| `link.*` | Every link event, including ones added later |
+| `*` | Everything |
+
+By default an endpoint receives events for all your links, including links you create later. Pass `scope_links` with specific link IDs to narrow it to a fixed set.
+
+## Limits
+
+| Limit | Value |
+|---|---|
+| Endpoints per account | 5 |
+| Event patterns per endpoint | 32 |
+| Scoped links per endpoint | 256 |
+| Endpoint URL | HTTPS only, publicly reachable, max 2048 chars |
+| Payload size | 20 KB |
+| Pending deliveries per endpoint | 1,000 |
+| Delivery log retention | 30 days |
+
+Endpoint creation is limited to 10 per hour. Self-hosted instances can tune the endpoint quota and retention; see [configuration](/self-hosting/configuration).
+
+## How delivery works
+
+Deliveries are **at least once**. Rarely, you may receive the same delivery twice; deduplicate on the `webhook-id` header, which stays stable across retries of the same delivery.
+
+Your endpoint has 15 seconds to respond. Any 2xx status counts as delivered. Anything else, and spoo.me retries automatically on the Standard Webhooks schedule: immediately, then 5 seconds, 5 minutes, 30 minutes, 2 hours, 5 hours, and 10 hours after the previous attempt. A delivery that exhausts all attempts is marked failed; you can [retry it manually](/webhooks/managing-deliveries) any time within the retention window.
+
+Two responses get special treatment:
+
+- **429**: treated as flow control, not failure. The delivery is held and reattempted after `Retry-After` (capped at 15 minutes) without consuming a retry or counting against your endpoint's health.
+- **410**: treated as "this endpoint is gone". The endpoint is disabled immediately.
+
+After 10 consecutive deliveries fail through the full retry ladder, the endpoint is **auto-disabled** and stops receiving events. Fix the receiver, then flip the endpoint back to active; that clears the failure count. Details in [managing deliveries](/webhooks/managing-deliveries).
+
+## API keys and scopes
+
+Webhook routes accept session auth or API keys with the `webhooks:manage` scope (`webhooks:read` suffices for read-only routes). One exception: revealing the signing secret requires an interactive session and refuses API keys outright.
+
+<CardGroup cols={2}>
+  <Card title="Event types" icon="list" href="/webhooks/event-types">
+    Every event, when it fires, and its exact payload
+  </Card>
+  <Card title="Verifying deliveries" icon="shield-check" href="/webhooks/verifying-deliveries">
+    Check signatures before trusting a payload
+  </Card>
+  <Card title="Discord and Slack" icon="message-square" href="/webhooks/discord-and-slack">
+    Zero-code notification cards
+  </Card>
+  <Card title="Managing deliveries" icon="history" href="/webhooks/managing-deliveries">
+    Test sends, the delivery log, retries, and auto-disable
+  </Card>
+</CardGroup>

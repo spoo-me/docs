@@ -1,0 +1,89 @@
+---
+title: "Connected Apps"
+description: "Review and revoke the apps that can act on your account"
+icon: "blocks"
+---
+
+Connected apps are official spoo.me clients, like the Spoo CLI, the browser extension, and the Raycast extension, that you have authorized to act on your account. Instead of pasting an API key into each tool, you sign in once through your browser, review exactly what the app is asking for, and approve it. The app never sees your password.
+
+## How an app connects
+
+<Steps>
+  <Step title="The app starts the flow">
+    You run `spoo login` in the CLI, or hit "Sign in" in the extension. The app opens a spoo.me consent page in your browser.
+  </Step>
+  <Step title="You review and approve">
+    The consent screen names the app and lists what it will be able to do, e.g. "Create short links" and "View your analytics". Approving issues the app its own credentials.
+  </Step>
+  <Step title="The app works within its grant">
+    Everything the app does is limited to the permissions you approved, until you revoke it.
+  </Step>
+</Steps>
+
+## Scoped app tokens, in plain words
+
+When you approve an app, it does not get your account. It gets tokens stamped with the specific permissions (scopes) you saw on the consent screen. A CLI approved for creating links and reading analytics can do exactly that; it cannot delete your links, mint API keys, rename your account, or connect other apps. The server enforces this on every request, regardless of what the app asks for.
+
+Account-security surfaces, including your profile, API keys, and the connected apps list itself, always require you personally in an interactive session. No app token or API key can touch them.
+
+<Note>
+  Apps connected before scoped grants existed show an empty permission list labeled as full access. That is full account access, not zero access. If you see one, revoke it and reconnect; the app will come back with an explicit, limited grant.
+</Note>
+
+## Reviewing what's connected
+
+The **Apps** page in your dashboard lists every connected app with the permissions it holds, when you granted access, and when it last authenticated.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/account/connected-apps-light.png" alt="Apps page listing Spoo CLI with its permissions and a disconnect action" />
+  <img className="hidden dark:block" src="/images/account/connected-apps-dark.png" alt="Apps page listing Spoo CLI with its permissions and a disconnect action" />
+</Frame>
+
+The same list is available at `GET /api/v1/apps`:
+
+<CodeGroup>
+
+```bash curl
+curl "https://spoo.me/api/v1/apps" \
+  -H "Authorization: Bearer YOUR_JWT"
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://spoo.me/api/v1/apps",
+    headers={"Authorization": "Bearer YOUR_JWT"},
+)
+for grant in response.json()["items"]:
+    print(grant["app_name"], grant["scopes"], grant["last_used_at"])
+```
+
+</CodeGroup>
+
+Each entry carries the app's identity, its effective `scopes`, the human-readable `permissions` they translate to, `granted_at`, and `last_used_at` (`null` if the app has never authenticated since connecting). This endpoint is deliberately session-only: an API key cannot enumerate your other delegated credentials.
+
+## Revoking access
+
+Disconnect an app from the Apps page. Revocation is immediate:
+
+- The app's grant is deactivated and its tokens stop working.
+- The app can no longer refresh its tokens or complete a pending sign-in.
+- The app disappears from your connected apps list.
+
+Nothing the app created is deleted; your links and their analytics stay untouched. To use the app again, simply sign in through it and approve a fresh grant.
+
+<Tip>
+  Revoke first, ask questions later. If a laptop with an authorized CLI goes missing, revoking the CLI's grant from any browser kills its access instantly.
+</Tip>
+
+## Connected apps vs API keys
+
+| | Connected apps | API keys |
+| --- | --- | --- |
+| Created by | Signing in through an official app | You, in the dashboard |
+| Credential holder | The app | Your own scripts and integrations |
+| Permissions | Fixed at consent, shown before you approve | Scopes you pick at creation |
+| Revocation | Apps page, instant | Keys page, instant |
+
+If you are writing your own automation, you want an [API key](/api-keys). Connected apps are for the official clients.

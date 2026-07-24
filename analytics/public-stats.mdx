@@ -1,0 +1,117 @@
+---
+title: "Public Stats Pages"
+description: "Every link has a shareable stats page, and you control who sees it"
+icon: "share-2"
+---
+
+Every short link has a public stats page at:
+
+```
+spoo.me/stats/{code}
+```
+
+For `spoo.me/acme`, that is `spoo.me/stats/acme`. Share it with a client, drop it in a report, or link it from a campaign recap. No account is needed to view it.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/analytics/public-stats-page-light.png" alt="Public stats page for spoo.me/acme showing link facts and click charts" />
+  <img className="hidden dark:block" src="/images/analytics/public-stats-page-dark.png" alt="Public stats page for spoo.me/acme showing link facts and click charts" />
+</Frame>
+
+## What visitors see
+
+The page shows the link's public facts followed by its click analytics:
+
+| Section | Contents |
+| --- | --- |
+| Link facts | Alias, short URL, destination, creation date, status, click limit, and whether bot blocking or password protection is on |
+| Charts | Clicks and unique clicks over time, plus breakdowns by browser, OS, device, country, city, and referrer |
+
+The default view covers the last 7 days; visitors can change the range up to 90 days per query. Two things are always withheld from the public view:
+
+- **The destination URL is shown only while the link is active.** Expired, deactivated, or blocked links keep their destination hidden.
+- **UTM campaign dimensions never appear.** Campaign tagging is the owner's marketing data.
+
+The API behind the page is `GET /api/v1/public/stats/{code}`:
+
+<CodeGroup>
+
+```bash curl
+curl "https://spoo.me/api/v1/public/stats/acme?timezone=America/New_York"
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://spoo.me/api/v1/public/stats/acme",
+    params={"timezone": "America/New_York"},
+)
+data = response.json()
+print(data["link"]["status"], data["stats"]["summary"])
+```
+
+</CodeGroup>
+
+## Password-protected links
+
+If the link itself is password-protected, its stats page is locked behind the same password. The unlock is a `POST` to the same endpoint with the password in the JSON body:
+
+<CodeGroup>
+
+```bash curl
+curl -X POST "https://spoo.me/api/v1/public/stats/acme" \
+  -H "Content-Type: application/json" \
+  -d '{"password": "secure@123"}'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://spoo.me/api/v1/public/stats/acme",
+    json={"password": "secure@123"},
+)
+```
+
+</CodeGroup>
+
+A locked link answers `401` with code `password_required`; a wrong password answers `401` with code `invalid_password` and can be retried.
+
+<Warning>
+  `GET` never accepts a password. A `?password=` query parameter is ignored, by design: passwords in URLs end up in logs, browser history, and referrer headers. Send the password in a `POST` body only.
+</Warning>
+
+## Private stats
+
+You can take a link's stats page out of public view entirely. A link with private stats responds to everyone except you with a **404 that is byte-identical to the response for a code that does not exist**. Outsiders cannot tell "this link has private stats" apart from "this link was never created", so making stats private does not leak that the link exists.
+
+When you are signed in as the link's owner, none of the gates apply: you see private stats and skip the password prompt.
+
+## Toggling privacy
+
+<Steps>
+  <Step title="From the dashboard">
+    Open the link's settings and switch **Private stats** on or off.
+  </Step>
+  <Step title="From the API">
+    Send `private_stats` in a link update:
+
+    ```bash
+    curl -X PATCH "https://spoo.me/api/v1/urls/URL_ID" \
+      -H "Authorization: Bearer YOUR_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{"private_stats": true}'
+    ```
+
+    You can also set `private_stats` at creation time on `POST /api/v1/shorten`.
+  </Step>
+</Steps>
+
+## Rate limits
+
+| Caller | Limit |
+| --- | --- |
+| Anonymous | 20/min, 500/day |
+| Authenticated | 60/min, 2,000/day |
+
+The anonymous bucket also serves as the password-guess budget for locked pages.

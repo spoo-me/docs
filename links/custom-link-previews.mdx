@@ -1,0 +1,148 @@
+---
+title: "Custom Link Previews"
+description: "Control the social card shown when your link is shared"
+icon: "image"
+---
+
+When a short link is pasted into WhatsApp, Discord, Slack, iMessage, or a social feed, the platform's crawler fetches the link and renders a preview card. By default that card comes from the destination page. Custom meta tags let you replace it: your own title, description, image, and accent color, served to every preview crawler that fetches the link.
+
+Use it to brand the card, A/B copy without touching the destination page, or give a preview to destinations that have none (raw files, deep app links, tracking-parameter-heavy URLs).
+
+<Note>
+  Custom link previews are being rolled out gradually, so they may not be enabled on your account yet. They require a verified, authenticated account; anonymous links cannot carry custom meta tags. Removing existing tags always works.
+</Note>
+
+## The fields
+
+| Field | Required | Limits |
+|---|---|---|
+| `title` | Yes | 1 to 120 characters. Rendered as the card headline (`og:title`). |
+| `description` | No | Up to 240 characters; most platforms render roughly 200. |
+| `image` | No | An `https://` URL (up to 2,048 characters) or an image upload as a data URI. |
+| `color` | No | Hex color like `#FF5733`. Shown as the embed accent on Discord (`theme-color`). |
+
+### Image: URL or upload
+
+`image` accepts two forms:
+
+- **An https URL** pointing at an image you already host. It is validated after the write; if it turns out not to be a usable image, the card simply renders without one.
+- **A data URI upload** (`data:image/png;base64,...`, also `jpeg` and `webp`). The image is validated, stored on spoo.me's CDN, and the link's tags point at the hosted copy, so the card keeps working even if your original goes away. Uploads are capped at 500KB decoded. SVG is rejected; no preview crawler renders it.
+
+<Tip>
+  Use a 1200x630 image and keep it under 300KB. WhatsApp silently drops larger images, and images smaller than 200x200 are dropped by Facebook and WhatsApp entirely.
+</Tip>
+
+## Set a preview in the composer
+
+The composer's **Metadata** tab starts by mirroring the destination page's own tags, labeled "fetched from destination", so you see the card the link would get anyway. The moment you edit any field, the tags become custom and are saved with the link; **Reset to destination** flips back to mirroring. A live preview renders the card beside the fields as you type.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/links/meta-tags-editor-light.png" alt="Metadata tab with custom tags and a live card preview" />
+  <img className="hidden dark:block" src="/images/links/meta-tags-editor-dark.png" alt="Metadata tab with custom tags and a live card preview" />
+</Frame>
+
+## Set a preview with the API
+
+Pass `meta_tags` on create or update. On `PATCH`, the object replaces the whole setting, and `null` removes it (the link falls back to the destination's own tags):
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://spoo.me/api/v1/shorten \
+  -H "Authorization: Bearer spoo_AbCdEfGhIjKlMnOpQrStUvWxYz" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://acme.com/spring-launch-2026",
+    "alias": "launch",
+    "meta_tags": {
+      "title": "Acme Spring Launch",
+      "description": "Everything we shipped this spring, in one page.",
+      "image": "https://acme.com/og/spring-launch.png",
+      "color": "#5B21B6"
+    }
+  }'
+```
+
+```python Python
+import requests
+
+headers = {"Authorization": "Bearer spoo_AbCdEfGhIjKlMnOpQrStUvWxYz"}
+
+# Create with a custom preview
+requests.post(
+    "https://spoo.me/api/v1/shorten",
+    headers=headers,
+    json={
+        "url": "https://acme.com/spring-launch-2026",
+        "alias": "launch",
+        "meta_tags": {
+            "title": "Acme Spring Launch",
+            "description": "Everything we shipped this spring, in one page.",
+            "image": "https://acme.com/og/spring-launch.png",
+            "color": "#5B21B6",
+        },
+    },
+)
+
+# Later: replace the card
+requests.patch(
+    "https://spoo.me/api/v1/urls/665f0c2f9e7a4b1d2c3d4e5f",
+    headers=headers,
+    json={"meta_tags": {"title": "Spring Launch: now with pricing"}},
+)
+
+# Or remove it entirely
+requests.patch(
+    "https://spoo.me/api/v1/urls/665f0c2f9e7a4b1d2c3d4e5f",
+    headers=headers,
+    json={"meta_tags": None},
+)
+```
+
+</CodeGroup>
+
+To upload an image instead of linking one, send it as a data URI:
+
+```json
+{
+  "meta_tags": {
+    "title": "Acme Spring Launch",
+    "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+  }
+}
+```
+
+## How crawlers see it
+
+Preview crawlers fetching your short link receive a page carrying your custom tags; human visitors are redirected as usual and never see it. The tags are served at the edge, so crawler fetches are fast worldwide.
+
+<Warning>
+  Platforms cache preview cards aggressively, typically 7 to 30 days. Editing `meta_tags` on a link that has already been shared propagates slowly. The Facebook Sharing Debugger, LinkedIn Post Inspector, and Telegram's @WebpageBot can force a refresh on their platforms.
+</Warning>
+
+## Prefill from the destination
+
+`GET /api/v1/metadata` fetches a destination page and returns its existing tags, so you can start from what the page already declares instead of a blank form (this is what the composer's mirroring uses):
+
+<CodeGroup>
+
+```bash cURL
+curl "https://spoo.me/api/v1/metadata?url=https://acme.com/spring-launch-2026" \
+  -H "Authorization: Bearer spoo_AbCdEfGhIjKlMnOpQrStUvWxYz"
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://spoo.me/api/v1/metadata",
+    headers={"Authorization": "Bearer spoo_AbCdEfGhIjKlMnOpQrStUvWxYz"},
+    params={"url": "https://acme.com/spring-launch-2026"},
+)
+tags = response.json()
+print(tags["title"], tags["image"])
+```
+
+</CodeGroup>
+
+It returns normalized best-pick fields (`title`, `description`, `image`, `color`, `site_name`, chosen from OpenGraph, then Twitter, then plain HTML fallbacks) plus the raw `og` and `twitter` tag families. The URL must be `https`. Authentication is required with scope `urls:read`, `urls:manage`, or `admin:all`; the rate limit is 20/min and 500/day, with results cached server-side for about an hour, so repeat calls for the same URL are cheap. A page that cannot be fetched or is not HTML answers `422`; a page that does not respond in time answers `504`.

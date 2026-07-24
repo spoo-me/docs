@@ -1,0 +1,84 @@
+---
+title: "Removing a Domain"
+description: "Revoke a domain, decide what happens to its links, free the slot"
+icon: "trash-2"
+---
+
+Removal is a two-stage process by design. **Revoking** takes the domain offline and is terminal for the domain itself. **Permanent delete** then removes the revoked record from your account and frees the slot. The split keeps an audit trail and gives you a moment between "stop serving" and "erase".
+
+## Revoke a domain
+
+Revoke from the danger zone at the bottom of the domain page.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/custom-domains/revoke-confirm-light.png" alt="Revoke domain confirmation dialog for ac.me" />
+  <img className="hidden dark:block" src="/images/custom-domains/revoke-confirm-dark.png" alt="Revoke domain confirmation dialog for ac.me" />
+</Frame>
+
+What revoking does:
+
+- **Links on the domain stop resolving immediately.** Anyone opening `ac.me/launch` gets nothing.
+- **The status becomes Revoked, which is terminal.** A revoked domain never serves again. To use the domain in the future you register it from scratch and go through DNS verification again.
+- **The slot stays occupied.** A revoked domain still counts against your domain limit until you permanently delete it.
+
+<Warning>
+  There is no undo. Every link on the domain goes dark the moment you confirm, including any you have printed, embedded, or shipped in emails.
+</Warning>
+
+## What happens to the links
+
+You choose at revoke time:
+
+| Option                    | Effect on the domain's links                                                              |
+| ------------------------- | ----------------------------------------------------------------------------------------- |
+| **Keep links** (default)  | Links stay in your account with their stats, but are unreachable since the domain no longer serves. |
+| **Delete links** (cascade) | Every link you own on the domain is deleted along with its stats.                          |
+
+Kept links remain visible in your links list. If you want them live again, [move them to another domain](/custom-domains/create-links#move-links-in-bulk) before revoking; a move after the fact works too, the links just stay dark until you do it.
+
+Over the API, cascade is a query flag on the revoke call:
+
+<CodeGroup>
+
+```bash cURL
+# Revoke, keep the links
+curl -X DELETE https://spoo.me/api/v1/custom-domains/DOMAIN_ID \
+  -H "Authorization: Bearer YOUR_API_KEY"
+
+# Revoke and delete every link on the domain
+curl -X DELETE "https://spoo.me/api/v1/custom-domains/DOMAIN_ID?cascade=true" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```python Python
+import requests
+
+# Revoke and delete every link on the domain
+response = requests.delete(
+    "https://spoo.me/api/v1/custom-domains/DOMAIN_ID",
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+    params={"cascade": "true"},
+)
+print(response.json()["urls_deleted"])
+```
+
+</CodeGroup>
+
+<Tip>
+  Want to clear out a domain's links without touching the domain? Use the bulk delete on the links list, or `DELETE /api/v1/urls?domain=ac.me`, which deletes every link you own on that domain and leaves the domain active.
+</Tip>
+
+## Free the slot: permanent delete
+
+A revoked domain lingers on your Domains page so the record of what happened is preserved. When you no longer need it, permanently delete it from the same danger zone. This removes the domain from your account and frees the slot toward your domain limit.
+
+Permanent delete only works on domains that are already revoked.
+
+```bash
+curl -X DELETE https://spoo.me/api/v1/custom-domains/DOMAIN_ID/permanent \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+## After removal
+
+Your DNS records are yours to clean up: delete the CNAME and TXT records at your provider once the domain is revoked. Nothing breaks if you leave them, but stale records pointing at a service you no longer use are worth removing.

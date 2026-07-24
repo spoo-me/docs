@@ -1,0 +1,140 @@
+---
+title: "Geo Targeting"
+description: "Send visitors from specific countries to different destinations"
+icon: "earth"
+---
+
+One short link, different destinations by country. Share `ac.me/launch` everywhere: visitors from Germany land on `acme.de/launch`, visitors from India land on `acme.in/launch`, and everyone else gets the default destination.
+
+Geo rules are matched at the edge, at redirect time, based on the visitor's country. There is no extra hop and no client-side detection.
+
+<Note>
+  Geo targeting is being rolled out gradually, so it may not be enabled on your account yet. It requires authentication; anonymous links cannot carry geo rules. Removing existing rules always works.
+</Note>
+
+## How rules work
+
+A link carries at most one rule set: a map of ISO 3166-1 alpha-2 country codes to destination URLs.
+
+```json
+{
+  "DE": "https://acme.de/launch",
+  "IN": "https://acme.in/launch"
+}
+```
+
+- A visitor from a listed country is redirected to that country's URL.
+- A visitor from any other country gets the link's default destination (`long_url`).
+- The default destination is the fallback; it is always required and always active.
+
+| Constraint | Value |
+|---|---|
+| Countries per link | Up to 50 |
+| Country codes | ISO 3166-1 alpha-2 (`DE`, `IN`, `US`, ...), validated against the real ISO list |
+| Destination URLs | Same validation as the main destination, up to 8,192 characters |
+
+Codes are case-insensitive on input (`de` becomes `DE`), but a request containing both `de` and `DE` is rejected rather than silently merged.
+
+## Set geo rules
+
+### In the composer
+
+Open the **Targeting** tab. Each rule is a country picker paired with a destination URL; add as many rows as you need.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/links/geo-rules-editor-light.png" alt="Geo targeting editor with rules for Germany and India" />
+  <img className="hidden dark:block" src="/images/links/geo-rules-editor-dark.png" alt="Geo targeting editor with rules for Germany and India" />
+</Frame>
+
+### With the API
+
+Pass `geo_rules` on create:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://spoo.me/api/v1/shorten \
+  -H "Authorization: Bearer spoo_AbCdEfGhIjKlMnOpQrStUvWxYz" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://acme.com/launch",
+    "alias": "launch",
+    "domain": "ac.me",
+    "geo_rules": {
+      "DE": "https://acme.de/launch",
+      "IN": "https://acme.in/launch"
+    }
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://spoo.me/api/v1/shorten",
+    headers={"Authorization": "Bearer spoo_AbCdEfGhIjKlMnOpQrStUvWxYz"},
+    json={
+        "url": "https://acme.com/launch",
+        "alias": "launch",
+        "domain": "ac.me",
+        "geo_rules": {
+            "DE": "https://acme.de/launch",
+            "IN": "https://acme.in/launch",
+        },
+    },
+)
+print(response.json())
+```
+
+</CodeGroup>
+
+Validation failures name the exact rule: an unknown code or a blocked destination answers `422` with a field path like `geo_rules.DE`.
+
+## Edit or remove rules
+
+`geo_rules` on `PATCH /api/v1/urls/{url_id}` replaces the whole map. Send the complete set you want, not a diff. `null` or `{}` removes all rules; omitting the field leaves existing rules unchanged.
+
+<CodeGroup>
+
+```bash cURL
+# Replace the rule set (drops IN, adds FR)
+curl -X PATCH https://spoo.me/api/v1/urls/665f0c2f9e7a4b1d2c3d4e5f \
+  -H "Authorization: Bearer spoo_AbCdEfGhIjKlMnOpQrStUvWxYz" \
+  -H "Content-Type: application/json" \
+  -d '{"geo_rules": {"DE": "https://acme.de/launch", "FR": "https://acme.fr/launch"}}'
+
+# Remove all rules
+curl -X PATCH https://spoo.me/api/v1/urls/665f0c2f9e7a4b1d2c3d4e5f \
+  -H "Authorization: Bearer spoo_AbCdEfGhIjKlMnOpQrStUvWxYz" \
+  -H "Content-Type: application/json" \
+  -d '{"geo_rules": null}'
+```
+
+```python Python
+import requests
+
+headers = {"Authorization": "Bearer spoo_AbCdEfGhIjKlMnOpQrStUvWxYz"}
+
+# Replace the rule set (drops IN, adds FR)
+requests.patch(
+    "https://spoo.me/api/v1/urls/665f0c2f9e7a4b1d2c3d4e5f",
+    headers=headers,
+    json={"geo_rules": {
+        "DE": "https://acme.de/launch",
+        "FR": "https://acme.fr/launch",
+    }},
+)
+
+# Remove all rules
+requests.patch(
+    "https://spoo.me/api/v1/urls/665f0c2f9e7a4b1d2c3d4e5f",
+    headers=headers,
+    json={"geo_rules": None},
+)
+```
+
+</CodeGroup>
+
+<Tip>
+  Keep country destinations parallel to the default one. If `ac.me/launch` points at a campaign page, point `DE` at the same campaign on your German site rather than a generic homepage; a visitor should never be able to tell they were rerouted.
+</Tip>

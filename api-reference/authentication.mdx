@@ -1,0 +1,162 @@
+---
+title: "Authentication"
+description: "How to authenticate with the Spoo.me API: API keys, JWT sessions, and anonymous access"
+icon: "key-round"
+---
+
+The Spoo.me API accepts three kinds of callers. Pick the one that matches how your code runs:
+
+| Method | Credential | Best for |
+|--------|-----------|----------|
+| **API key** | `Authorization: Bearer spoo_...` | Scripts, servers, CI, integrations |
+| **JWT session** | `Authorization: Bearer <jwt>` or `access_token` cookie | The web dashboard and connected apps |
+| **Anonymous** | None | One-off link creation, public reads |
+
+Authentication is resolved in a fixed order: a bearer token starting with `spoo_` is treated as an API key, any other bearer token is treated as a JWT, then the `access_token` cookie is checked, and finally the request falls through to anonymous.
+
+## API keys
+
+API keys are long-lived tokens for programmatic access. Every key starts with the `spoo_` prefix and is sent in the `Authorization` header with the `Bearer` scheme:
+
+```text
+Authorization: Bearer spoo_AbCdEfGhIjKlMnOpQrStUvWxYz
+```
+
+<CodeGroup>
+
+```bash curl
+curl -X POST "https://spoo.me/api/v1/shorten" \
+  -H "Authorization: Bearer spoo_YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"long_url": "https://example.com/very/long/url"}'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://spoo.me/api/v1/shorten",
+    headers={"Authorization": "Bearer spoo_YOUR_API_KEY"},
+    json={"long_url": "https://example.com/very/long/url"},
+)
+print(response.json())
+```
+
+</CodeGroup>
+
+Keys are created from the dashboard or via `POST /api/v1/keys`, carry an explicit scope list, and can be given an expiration date. The full token is shown exactly once at creation. See the [API keys guide](/api-keys) for creation, rotation, and storage practices.
+
+<Warning>
+  A revoked, expired, or mistyped API key does not always produce an error. Protected endpoints return `401`, but on optional-auth endpoints the request silently proceeds as anonymous, with anonymous rate limits and no ownership. If links you create stop appearing in your account, check the key first.
+</Warning>
+
+## JWT sessions
+
+Logging in on spoo.me issues a short-lived JWT, delivered as the `access_token` cookie for browser sessions. The same token is accepted in the `Authorization` header:
+
+```text
+Authorization: Bearer eyJhbGciOi...
+```
+
+Interactive sessions are unrestricted: they are not limited by scopes and can reach every endpoint, including API key management. Connected apps (CLI, Raycast, browser extensions) go through the device authorization flow and receive JWTs restricted to the scopes you approved at sign-in.
+
+## Anonymous access
+
+Public endpoints work without any credentials: shortening, alias checks, public link stats, link previews, exports, and abuse reports. Anonymous callers get lower [rate limits](/rate-limits), and links created anonymously have no owner, so they can never be edited or deleted later.
+
+## Scopes
+
+Scopes restrict what a credential may do. They apply to API keys and to connected-app tokens. Interactive dashboard sessions are never scope-restricted.
+
+| Scope | Grants |
+|-------|--------|
+| `shorten:create` | Create short links, check alias availability |
+| `urls:read` | List and read your links, plus everything `stats:read` grants, plus destination metadata fetch |
+| `urls:manage` | Everything `urls:read` grants, plus update, delete, and bulk operations |
+| `stats:read` | Link statistics and exports, including owner access on public stats |
+| `domains:read` | List and read your custom domains |
+| `domains:manage` | Everything `domains:read` grants, plus register, verify, configure, and remove domains |
+| `reports:create` | Submit abuse reports |
+| `webhooks:read` | List webhook endpoints and their deliveries |
+| `webhooks:manage` | Everything `webhooks:read` grants, plus create, update, delete, test, and retry |
+| `keys:manage` | List and delete API keys. Connected-app tokens only, see below |
+| `admin:all` | Everything above except API key management |
+
+Two scopes have deliberate carve-outs:
+
+- **`admin:all` never covers `/api/v1/keys`.** Key management requires an interactive session or the dedicated `keys:manage` scope.
+- **`keys:manage` cannot be granted to an API key.** Only a connected app can hold it, and even then it covers listing and deleting keys only. Creating a key always requires an interactive session.
+
+<Note>
+  Reading a webhook signing secret (`GET /api/v1/webhooks/{id}/secret`) is interactive-session only. Even `webhooks:manage` does not unlock it.
+</Note>
+
+## Optional-auth endpoints
+
+Several endpoints accept authentication without requiring it. Anonymous requests work, but sending credentials changes the behavior:
+
+- **Higher rate limits.** Authenticated callers get larger budgets on shorten, stats, exports, and reports. See [rate limits](/rate-limits).
+- **Ownership.** A link shortened with credentials belongs to your account and can be managed later. Anonymous links cannot.
+- **Private data.** On `GET /api/v1/public/stats/{short_code}`, the owner's session unlocks stats for links marked private and skips the password gate. Everyone else sees a private link answered exactly like a nonexistent one.
+- **Trust.** Authenticated abuse reports skip the captcha and may batch up to 100 items per request.
+
+## Verified email requirements
+
+Endpoints that create durable resources reject authenticated accounts whose email is not verified. Anonymous requests are unaffected where anonymous access exists.
+
+| Endpoint | Requirement |
+|----------|-------------|
+| `POST /api/v1/shorten` | Verified email when authenticated |
+| `GET /api/v1/shorten/check-alias` | Verified email when authenticated |
+| `POST /api/v1/keys` | Verified email, interactive session |
+| `POST /api/v1/custom-domains` | Verified email |
+| `/api/v1/webhooks/*` (all endpoints except the public event catalog) | Verified email |
+
+An unverified account gets a `403` with code `EMAIL_NOT_VERIFIED`. Verify from the email sent at signup, or request a new verification email from the dashboard.
+
+## Why key management is session-only
+
+Creating an API key requires a logged-in interactive session. API keys and connected-app tokens cannot call `POST /api/v1/keys`, and `admin:all` does not include it. This is a containment guarantee: if a key leaks, the attacker cannot use it to mint fresh keys that survive revocation. Revoke the leaked key and the damage stops there.
+
+## Error responses
+
+All errors use the same JSON envelope: `{"error": "<human-readable message>", "code": "<machine-readable code>"}`. Validation errors may add `field` or `details`.
+
+**401 Unauthorized**: the request needs credentials and has none, or the token failed verification.
+
+```json
+{
+  "error": "Authentication required",
+  "code": "authentication_error"
+}
+```
+
+**403 Forbidden**: the credentials are valid but not sufficient. The `code` tells you which gate fired.
+
+```json
+{
+  "error": "Insufficient scope for this operation",
+  "code": "forbidden"
+}
+```
+
+```json
+{
+  "error": "Email verification required",
+  "code": "EMAIL_NOT_VERIFIED",
+  "message": "You must verify your email address before creating resources. Check your inbox for the verification code."
+}
+```
+
+Treat `401` as "get new credentials" and `403` as "these credentials will never work here": retrying a `403` without changing the key's scopes or verifying your email will keep failing.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="API Keys" icon="key" href="/api-keys">
+    Create, scope, and rotate API keys
+  </Card>
+  <Card title="Rate Limits" icon="gauge" href="/rate-limits">
+    Per-endpoint budgets for authenticated and anonymous callers
+  </Card>
+</CardGroup>

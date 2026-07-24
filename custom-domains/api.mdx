@@ -1,0 +1,179 @@
+---
+title: "Custom Domains API"
+description: "Manage domains programmatically, from registration to routing"
+icon: "code"
+---
+
+Everything the dashboard does with domains is a thin layer over these endpoints. This page is the quick tour; full request and response schemas live in the [API reference](/api-reference).
+
+## Endpoints
+
+| Endpoint                                        | What it does                                   | Scope            | Rate limit                       |
+| ----------------------------------------------- | ---------------------------------------------- | ---------------- | -------------------------------- |
+| `POST /api/v1/custom-domains`                   | Register a domain                              | `domains:manage` | 10/hour                          |
+| `GET /api/v1/custom-domains`                    | List your domains (paginated)                  | `domains:read`   | 60/min                           |
+| `GET /api/v1/custom-domains/{id}`               | Fetch one domain                               | `domains:read`   | 60/min                           |
+| `POST /api/v1/custom-domains/{id}/verify`       | Trigger a verification check                   | `domains:manage` | 10/min, 60/hour per domain       |
+| `PATCH /api/v1/custom-domains/{id}`             | Update routing settings                        | `domains:manage` | 30/min                           |
+| `DELETE /api/v1/custom-domains/{id}`            | Revoke (add `?cascade=true` to delete links)   | `domains:manage` | 10/min                           |
+| `DELETE /api/v1/custom-domains/{id}/permanent`  | Remove a revoked domain from the account       | `domains:manage` | 10/min                           |
+
+Notes on auth:
+
+- `domains:manage` includes everything `domains:read` covers. A JWT session works for any operation without scopes.
+- Registration additionally requires a verified account email, including for API key callers.
+
+## Full flow: register, verify, shorten
+
+The complete life of `ac.me`, from nothing to a live branded link.
+
+### 1. Register the domain
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://spoo.me/api/v1/custom-domains \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"fqdn": "ac.me"}'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://spoo.me/api/v1/custom-domains",
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+    json={"fqdn": "ac.me"},
+)
+domain = response.json()
+print(domain["id"], domain["status"])  # e.g. 665f0c2f9e7a4b1d2c3d4e5f pending
+```
+
+</CodeGroup>
+
+The response carries the DNS records to publish, plus any setup notes specific to your domain:
+
+```json
+{
+  "id": "665f0c2f9e7a4b1d2c3d4e5f",
+  "fqdn": "ac.me",
+  "status": "pending",
+  "dns_records": [
+    {
+      "type": "CNAME",
+      "name": "ac.me",
+      "value": "customers.spoo.me",
+      "purpose": "routes traffic to spoo.me"
+    },
+    {
+      "type": "TXT",
+      "name": "_cf-custom-hostname.ac.me",
+      "value": "3b1f9a52-...-verification-token",
+      "purpose": "proves domain ownership"
+    }
+  ],
+  "setup_notes": [],
+  "last_verification_error": null
+}
+```
+
+### 2. Publish DNS, then verify
+
+Add the records at your DNS provider (see [DNS and verification](/custom-domains/dns-and-verification)). Verification happens automatically once the CNAME propagates; call the verify endpoint to trigger a fresh check and read back the current state.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://spoo.me/api/v1/custom-domains/665f0c2f9e7a4b1d2c3d4e5f/verify \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```python Python
+import time
+import requests
+
+headers = {"Authorization": "Bearer YOUR_API_KEY"}
+domain_id = "665f0c2f9e7a4b1d2c3d4e5f"
+
+while True:
+    response = requests.post(
+        f"https://spoo.me/api/v1/custom-domains/{domain_id}/verify",
+        headers=headers,
+    )
+    domain = response.json()
+    if domain["status"] == "active":
+        break
+    print("not yet:", domain["last_verification_error"])
+    time.sleep(120)  # DNS propagation takes minutes; poll gently
+```
+
+</CodeGroup>
+
+On failure, `last_verification_error` names the problem, for example a missing CNAME. Attempts are capped at 60 per domain per hour, so poll on the order of minutes, not seconds.
+
+### 3. Create a link on the domain
+
+Once the status is `active`, pass `domain` to the shorten endpoint:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://spoo.me/api/v1/shorten \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://acme.com/product-launch",
+    "alias": "launch",
+    "domain": "ac.me"
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://spoo.me/api/v1/shorten",
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+    json={
+        "url": "https://acme.com/product-launch",
+        "alias": "launch",
+        "domain": "ac.me",
+    },
+)
+print(response.json()["short_url"])  # https://ac.me/launch
+```
+
+</CodeGroup>
+
+`https://ac.me/launch` is live.
+
+## Related link endpoints
+
+Domains also appear as a parameter across the link APIs:
+
+| Endpoint                              | Domain usage                                             |
+| ------------------------------------- | -------------------------------------------------------- |
+| `POST /api/v1/shorten`                | `domain` in the body creates the link on that domain     |
+| `GET /api/v1/shorten/check-alias`     | `?domain=` scopes the availability check                 |
+| `GET /api/v1/urls`                    | `?domain=` filters the list to one domain                |
+| `PATCH /api/v1/urls/{id}`             | `domain` in the body moves the link (`null` = spoo.me)   |
+| `POST /api/v1/urls/bulk/domain`       | Moves up to 100 links to one target domain               |
+| `DELETE /api/v1/urls?domain=`         | Deletes all your links on a domain (5/min, 50/day)       |
+
+## Reference
+
+<CardGroup cols={2}>
+  <Card title="API Reference" icon="book-open" href="/api-reference">
+    Full request and response schemas for every custom domain endpoint
+  </Card>
+  <Card title="API Keys" icon="key" href="/api-keys">
+    Create a key with the domains:manage scope
+  </Card>
+  <Card title="Rate Limits" icon="gauge" href="/rate-limits">
+    How limits are counted across keys, sessions, and IPs
+  </Card>
+  <Card title="DNS and verification" icon="shield-check" href="/custom-domains/dns-and-verification">
+    What the records mean and how to unstick a verification
+  </Card>
+</CardGroup>

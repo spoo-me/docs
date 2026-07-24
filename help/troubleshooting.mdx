@@ -1,0 +1,140 @@
+---
+title: "Troubleshooting"
+description: "Fixes for the most common Spoo.me errors, from verification gates to rate limits"
+icon: "life-buoy"
+---
+
+Find your symptom below. Each entry explains what triggered the error and how to fix it.
+
+<AccordionGroup>
+  <Accordion title="403 error: Email verification required (EMAIL_NOT_VERIFIED)" icon="mail-warning">
+    **Symptom**: Creating a link, checking an alias, creating an API key, registering a custom domain, or managing webhooks fails with a `403` response and the code `EMAIL_NOT_VERIFIED`.
+
+    **Cause**: These actions create durable resources, so they are blocked for signed-in accounts that have not verified their email address.
+
+    **Fix**:
+
+    1. Check the inbox of the email you signed up with for the verification code.
+    2. If you cannot find it, sign in at [spoo.me](https://spoo.me) and request a new verification email from the banner or account settings.
+    3. Resends are limited to 1 per minute and 3 per hour, so wait before requesting again.
+    4. Enter the code, then retry the request. No other change is needed.
+
+    Note that anonymous link creation is unaffected. This gate only applies when you are signed in or using an API key tied to an unverified account.
+  </Accordion>
+
+  <Accordion title="429 error: Too many requests" icon="gauge">
+    **Symptom**: Requests fail with status `429` and this body:
+
+    ```json
+    {
+      "error": "Too many requests",
+      "code": "rate_limit_exceeded"
+    }
+    ```
+
+    **Cause**: You exceeded the budget for that endpoint, tracked per API key, per session, or per IP address for anonymous requests.
+
+    **Fix**:
+
+    1. Back off and retry with increasing delays. The API does not send `X-RateLimit-*` headers, so pace your client against the published [rate limits](/rate-limits).
+    2. Authenticate your requests. Signed-in and API-key callers get 3x the per-minute budget and 5x the daily budget on core endpoints.
+    3. Batch where possible: bulk endpoints count one request regardless of how many links it touches.
+    4. If your use case genuinely needs more, email [support@spoo.me](mailto:support@spoo.me) with your expected volume.
+  </Accordion>
+
+  <Accordion title="Alias is rejected: invalid, reserved, or already taken" icon="link-2-off">
+    **Symptom**: Creating a link with a custom alias fails, or the alias checker reports the name is unavailable.
+
+    **Cause**: The alias failed one of the creation rules: too long, invalid characters, a reserved name, an emoji sequence outside the accepted set, or simply taken by an existing link.
+
+    **Fix**:
+
+    1. Use `GET /api/v1/shorten/check-alias` (or the live checker in the link composer) to see the exact reason: `length`, `format`, `reserved`, `taken`, or `emoji_policy`.
+    2. **Taken**: someone already owns that alias on that domain. Pick another name.
+    3. **Reserved**: names matching Spoo.me product paths (`about`, `api`, `dashboard`, `docs`, and similar) can never be issued on `spoo.me`, because a link there would be shadowed by the site itself. Reserved names are perfectly legal on your own [custom domain](/custom-domains).
+    4. **Format or length**: stick to the allowed characters and length shown in the composer.
+    5. **Emoji policy**: emoji aliases must use emojis from the accepted set, available at `GET /api/v1/emoji-set`.
+  </Accordion>
+
+  <Accordion title="Custom domain stuck in Pending or marked Suspended" icon="globe-lock">
+    **Symptom**: Your domain never flips to Active after you added the DNS records, or a previously working domain shows Suspended and its links stopped redirecting.
+
+    **Cause**: Verification cannot see the required DNS records, most often because they have not propagated yet or because the CNAME is being proxied.
+
+    **Fix**:
+
+    1. Open the domain in the dashboard and compare your DNS records against the exact CNAME and TXT values shown there. Both must exist, at the exact names given.
+    2. **If your DNS is on Cloudflare**: set the CNAME to **DNS only** (grey cloud icon), not Proxied (orange cloud). A proxied record hides the target and verification will fail.
+    3. Wait for propagation. DNS changes can take minutes to hours depending on your provider's TTL.
+    4. Run **Verify** again from the dashboard. Verification attempts are limited (10 per minute, with an hourly cap per domain), so fix the records before retrying in a loop.
+    5. **Suspended** means periodic re-verification found the records missing or changed. Restore the original records, then verify again to reactivate. Your links and their stats are kept while the domain is suspended.
+  </Accordion>
+
+  <Accordion title="Sign-in fails in the CLI or extension: update the app (PKCE)" icon="monitor-smartphone">
+    **Symptom**: Signing in from a CLI, browser extension, or desktop app fails with a message like: "This app's sign-in request is missing a valid security challenge (PKCE). Please update the app to its latest version and try again."
+
+    **Cause**: Connected apps now must prove possession of the sign-in request with PKCE, and the version you are running predates that requirement.
+
+    **Fix**:
+
+    1. Update the app to its latest version (reinstall the CLI, update the extension from its store, or pull the latest release).
+    2. Retry the sign-in. No account changes are needed; only the client was out of date.
+  </Accordion>
+
+  <Accordion title="Lost or unreadable API key" icon="key-round">
+    **Symptom**: You need an API key you created earlier, but the dashboard only shows its name and prefix, never the full token.
+
+    **Cause**: The full key is displayed exactly once, at creation. It is stored hashed and cannot be recovered afterward, by you or by Spoo.me.
+
+    **Fix**:
+
+    1. Create a new key from the [API keys page](https://spoo.me/dashboard/keys) with the same scopes.
+    2. Copy the token immediately and store it in a secrets manager or environment variable.
+    3. Delete the lost key so it cannot sit unused with live permissions.
+
+    Key creation is limited to 5 per hour and always requires being signed in on the dashboard. See the [API keys guide](/api-keys) for storage practices.
+  </Accordion>
+
+  <Accordion title="Public stats page shows 404 for a link that exists" icon="chart-line">
+    **Symptom**: Opening the stats page for a short link returns 404, even though the link itself redirects fine.
+
+    **Cause**: Links with private stats intentionally answer exactly like a nonexistent link, so outsiders cannot tell a private link from no link at all.
+
+    **Fix**:
+
+    1. If it is your link, sign in. The owner's session bypasses the privacy gate and the password gate on the public stats endpoint, and the dashboard always shows your own analytics.
+    2. If it is someone else's link, there is nothing to fix: the owner has made its stats private, and 404 is the intended answer.
+    3. If the link is password-protected, the stats endpoint returns `401` with code `password_required`. Submit the password via POST, never in the URL.
+  </Accordion>
+
+  <Accordion title="Cannot edit or delete a link created without an account" icon="user-x">
+    **Symptom**: A link you created works, but it does not appear in your dashboard and the API returns 404 when you try to update or delete it.
+
+    **Cause**: Links created anonymously have no owner, and ownership is assigned only at creation time, so no account can ever manage them.
+
+    **Fix**:
+
+    1. Recreate the link while signed in (or with an API key) so it is owned by your account, and share the new short URL.
+    2. Going forward, authenticate every request that creates links you may want to edit, expire, or delete later.
+    3. An anonymous link that violates policy or needs removal can be reported via the report page, but it cannot be claimed.
+  </Accordion>
+</AccordionGroup>
+
+## Still stuck?
+
+<CardGroup cols={2}>
+  <Card
+    title="Ask on Discord"
+    icon="message-circle"
+    href="https://spoo.me/discord"
+  >
+    The fastest way to get help from the team and community
+  </Card>
+  <Card
+    title="Email support"
+    icon="mail"
+    href="mailto:support@spoo.me"
+  >
+    Include the failing request, the response body, and a timestamp
+  </Card>
+</CardGroup>

@@ -1,0 +1,115 @@
+---
+title: "Custom Aliases"
+description: "Pick the short code yourself, check availability, and understand reserved names"
+icon: "signature"
+---
+
+The alias is the part after the slash: in `spoo.me/launch`, the alias is `launch`. Leave it out and one is generated for you; set it and the link reads like it was made for the campaign.
+
+## Alias rules
+
+| Style | Length | Allowed characters |
+|---|---|---|
+| Alphanumeric | 3 to 16 characters | `a-z`, `A-Z`, `0-9`, `_`, `-` |
+| Emoji | 1 to 15 emoji | See [Emoji Links](/links/emoji-links) |
+
+An alias is either fully alphanumeric or fully emoji. Mixed input is rejected.
+
+## Check availability
+
+### In the composer
+
+The alias field checks availability live as you type, scoped to whichever domain you picked. A spinner means the check is in flight, a check mark means the alias is yours to take, and an alert icon comes with a message telling you exactly what is wrong (too short, invalid characters, reserved, already taken).
+
+<Frame>
+  <img className="block dark:hidden" src="/images/links/composer-basic-light.png" alt="Alias field showing a live availability check" />
+  <img className="hidden dark:block" src="/images/links/composer-basic-dark.png" alt="Alias field showing a live availability check" />
+</Frame>
+
+### With the API
+
+`GET /api/v1/shorten/check-alias` answers the same question the create endpoint would, without creating anything:
+
+<CodeGroup>
+
+```bash cURL
+curl "https://spoo.me/api/v1/shorten/check-alias?alias=launch"
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://spoo.me/api/v1/shorten/check-alias",
+    params={"alias": "launch"},
+)
+print(response.json())
+```
+
+</CodeGroup>
+
+```json
+{ "available": false, "reason": "taken" }
+```
+
+When `available` is `false`, `reason` tells you which rule failed first:
+
+| Reason | Meaning |
+|---|---|
+| `length` | Outside the 3 to 16 character bounds (or over 15 emoji). |
+| `format` | Characters outside the allowed set, or mixed emoji and text. |
+| `reserved` | The name is reserved on `spoo.me`. |
+| `taken` | Another link already uses this alias on that domain. |
+| `emoji_policy` | Emoji-only, but contains emoji outside the accepted set. |
+
+Out-of-range input still returns a structured answer instead of a validation error, so UIs can surface the reason inline. Pass `domain=ac.me` to check against a custom domain's namespace; that requires authentication and ownership of the domain. Rate limits: 180/min and 10,000/day authenticated, 60/min and 2,000/day anonymous.
+
+## Reserved names
+
+On `spoo.me`, aliases that match product paths (`api`, `dashboard`, `login`, `stats`, `docs`, `blog`, and similar) are rejected: a link at one of those addresses would be shadowed by the app itself and never resolve. The check is case-insensitive, so `Dashboard` is rejected along with `dashboard`.
+
+Two things follow from that:
+
+- **Custom domains are exempt.** Your domain carries no app paths, so `ac.me/dashboard` is a perfectly good short link.
+- **Moving a link enforces the rule too.** A link named `dashboard` on `ac.me` cannot be moved onto `spoo.me`; the move is rejected until the alias changes.
+
+## Per-domain namespaces
+
+Aliases are unique per domain, not globally. `spoo.me/launch` and `ac.me/launch` are two independent links that can point at different destinations. When you move a link between domains, the alias must be free on the target domain or the move fails with a conflict.
+
+## Suggest an alias
+
+Out of ideas? The dice button next to the alias field offers two generators:
+
+- **Suggest words** builds a memorable word-and-number alias like `ember-42`.
+- **Suggest emoji** picks three emoji from the server's safe generation pool.
+
+## Renaming a link
+
+The alias is editable after creation. Update it with `PATCH /api/v1/urls/{url_id}`; the new alias goes through the same rules and answers `409 Conflict` if it is already taken.
+
+<CodeGroup>
+
+```bash cURL
+curl -X PATCH https://spoo.me/api/v1/urls/665f0c2f9e7a4b1d2c3d4e5f \
+  -H "Authorization: Bearer spoo_AbCdEfGhIjKlMnOpQrStUvWxYz" \
+  -H "Content-Type: application/json" \
+  -d '{"alias": "spring-launch"}'
+```
+
+```python Python
+import requests
+
+response = requests.patch(
+    "https://spoo.me/api/v1/urls/665f0c2f9e7a4b1d2c3d4e5f",
+    headers={"Authorization": "Bearer spoo_AbCdEfGhIjKlMnOpQrStUvWxYz"},
+    json={"alias": "spring-launch"},
+)
+print(response.json())
+```
+
+</CodeGroup>
+
+<Note>
+  Renaming frees the old alias for anyone to claim. Links you have already shared under the old alias stop resolving.
+</Note>

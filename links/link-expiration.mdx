@@ -1,0 +1,95 @@
+---
+title: "Link Expiration"
+description: "Stop a link at a point in time or after a click budget"
+icon: "timer"
+---
+
+Links can expire two ways, and you can combine both on one link:
+
+- **Time expiry** (`expire_after`): the link stops redirecting at a specific moment.
+- **Max clicks** (`max_clicks`): the link stops redirecting once it has been clicked that many times.
+
+Both live on the composer's **Basic** tab, next to the alias: pick a date and time (presets for common windows are one click away) or type a click budget.
+
+## Set expiration
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://spoo.me/api/v1/shorten \
+  -H "Authorization: Bearer spoo_AbCdEfGhIjKlMnOpQrStUvWxYz" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://acme.com/flash-sale",
+    "alias": "sale",
+    "expire_after": "2026-08-01T00:00:00Z",
+    "max_clicks": 500
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://spoo.me/api/v1/shorten",
+    headers={"Authorization": "Bearer spoo_AbCdEfGhIjKlMnOpQrStUvWxYz"},
+    json={
+        "url": "https://acme.com/flash-sale",
+        "alias": "sale",
+        "expire_after": "2026-08-01T00:00:00Z",
+        "max_clicks": 500,
+    },
+)
+print(response.json())
+```
+
+</CodeGroup>
+
+`expire_after` accepts an ISO 8601 timestamp (`2026-08-01T00:00:00Z`) or Unix epoch seconds (`1785542400`), and must be in the future. `max_clicks` is any positive integer.
+
+## How an expired link behaves
+
+Expiry is exact, not eventually consistent. The link's `status` is derived on every read: the moment `expire_after` passes, or the moment total clicks reach `max_clicks`, the link reads `EXPIRED` and stops redirecting. Visitors get an error page instead of the destination.
+
+The link itself is not deleted. It stays in your dashboard and API listings with status `EXPIRED`, keeps its analytics, and can be brought back.
+
+## Update, clear, or extend
+
+Change expiration on a live link with `PATCH /api/v1/urls/{url_id}`:
+
+| Intent | Request body |
+|---|---|
+| Extend the deadline | `{"expire_after": "2026-09-01T00:00:00Z"}` |
+| Remove time expiry | `{"expire_after": null}` |
+| Raise the click budget | `{"max_clicks": 2000}` |
+| Remove the click limit | `{"max_clicks": null}` (or `0`) |
+
+<CodeGroup>
+
+```bash cURL
+curl -X PATCH https://spoo.me/api/v1/urls/665f0c2f9e7a4b1d2c3d4e5f \
+  -H "Authorization: Bearer spoo_AbCdEfGhIjKlMnOpQrStUvWxYz" \
+  -H "Content-Type: application/json" \
+  -d '{"expire_after": "2026-09-01T00:00:00Z", "max_clicks": null}'
+```
+
+```python Python
+import requests
+
+response = requests.patch(
+    "https://spoo.me/api/v1/urls/665f0c2f9e7a4b1d2c3d4e5f",
+    headers={"Authorization": "Bearer spoo_AbCdEfGhIjKlMnOpQrStUvWxYz"},
+    json={"expire_after": "2026-09-01T00:00:00Z", "max_clicks": None},
+)
+print(response.json())
+```
+
+</CodeGroup>
+
+### Reactivation is automatic
+
+When a link is `EXPIRED` and your update lifts the condition that expired it, the link reactivates in the same request: extending or clearing `expire_after`, raising `max_clicks` above the current click count, or clearing it, all flip the link back to `ACTIVE`. No separate status call needed. (If your update explicitly sets a `status`, that value wins instead.)
+
+## Bulk expiry
+
+To set or clear expiration on many links at once, use `POST /api/v1/urls/bulk/expiry`: one `expire_after` value applied to up to 100 links per request, with per-link results. Expired links in the batch reactivate under the same rules. See [Bulk Operations](/links/bulk-operations).

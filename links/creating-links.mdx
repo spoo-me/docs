@@ -1,0 +1,157 @@
+---
+title: "Creating Links"
+description: "Create short links from the dashboard composer or with one API call"
+icon: "square-pen"
+---
+
+Every link starts the same way: a destination URL goes in, a short link comes out. The dashboard composer and the API expose the same options, so anything you can configure in the UI you can automate.
+
+## Create a link in the dashboard
+
+<Steps>
+  <Step title="Open the link composer">
+    From the dashboard, open the link composer. It opens on the **Basic** tab with the destination field focused.
+  </Step>
+  <Step title="Paste the destination">
+    Enter the full URL you want to shorten, for example `https://acme.com/spring-launch-2026`. The composer normalizes the URL and shows you exactly what will be saved.
+  </Step>
+  <Step title="Pick a domain and alias (optional)">
+    The short link control combines a domain picker and an alias field. The picker lists `spoo.me` plus any active [custom domains](/custom-domains); the alias field checks availability live as you type. Leave it empty for an auto-generated code, or use the dice button to get a suggestion. See [Custom Aliases](/links/custom-aliases).
+  </Step>
+  <Step title="Set expiration (optional)">
+    Still on the Basic tab: **Expiration** stops the link redirecting at a specific moment (presets for common windows are one click away), and **Max clicks** deactivates it after a click budget is spent. See [Link Expiration](/links/link-expiration).
+  </Step>
+  <Step title="Configure security (optional)">
+    The **Security** tab holds the password field (see [Password Protection](/links/password-protection)), a **Block bots** switch that keeps crawlers and preview bots from consuming the redirect, and a **Private stats** switch that turns off the link's public stats page.
+  </Step>
+  <Step title="Create">
+    Press **Create link** (or hit Enter from the destination field). The short link is live immediately.
+  </Step>
+</Steps>
+
+<Frame>
+  <img className="block dark:hidden" src="/images/links/composer-basic-light.png" alt="Link composer on the Basic tab with a destination and alias filled in" />
+  <img className="hidden dark:block" src="/images/links/composer-basic-dark.png" alt="Link composer on the Basic tab with a destination and alias filled in" />
+</Frame>
+
+<Frame>
+  <img className="block dark:hidden" src="/images/links/composer-security-light.png" alt="Link composer Security tab with password, block bots, and private stats" />
+  <img className="hidden dark:block" src="/images/links/composer-security-dark.png" alt="Link composer Security tab with password, block bots, and private stats" />
+</Frame>
+
+Depending on your account, the composer also shows a **Targeting** tab for [geo targeting](/links/geo-targeting) and a **Metadata** tab for [custom link previews](/links/custom-link-previews).
+
+## Create a link with the API
+
+The minimal call is one field:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://spoo.me/api/v1/shorten \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://acme.com/spring-launch-2026"}'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://spoo.me/api/v1/shorten",
+    json={"url": "https://acme.com/spring-launch-2026"},
+)
+print(response.json()["short_url"])
+```
+
+</CodeGroup>
+
+The request body accepts `url` or `long_url` for the destination. With an API key (sent as `Authorization: Bearer <key>`, scope `shorten:create` or `admin:all`) you get higher rate limits and the full option set:
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://spoo.me/api/v1/shorten \
+  -H "Authorization: Bearer spoo_AbCdEfGhIjKlMnOpQrStUvWxYz" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://acme.com/spring-launch-2026",
+    "alias": "launch",
+    "domain": "ac.me",
+    "password": "orbit.mango.42",
+    "max_clicks": 1000,
+    "expire_after": "2026-09-30T23:59:59Z",
+    "block_bots": true,
+    "private_stats": false
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://spoo.me/api/v1/shorten",
+    headers={"Authorization": "Bearer spoo_AbCdEfGhIjKlMnOpQrStUvWxYz"},
+    json={
+        "url": "https://acme.com/spring-launch-2026",
+        "alias": "launch",
+        "domain": "ac.me",
+        "password": "orbit.mango.42",
+        "max_clicks": 1000,
+        "expire_after": "2026-09-30T23:59:59Z",
+        "block_bots": True,
+        "private_stats": False,
+    },
+)
+print(response.json())
+```
+
+</CodeGroup>
+
+A successful call returns `201` with the new link, including the `id` that all management endpoints address the link by:
+
+```json
+{
+  "id": "665f0c2f9e7a4b1d2c3d4e5f",
+  "alias": "launch",
+  "short_url": "https://ac.me/launch",
+  "long_url": "https://acme.com/spring-launch-2026",
+  "owner_id": "507f1f77bcf86cd799439011",
+  "created_at": 1758153599,
+  "status": "ACTIVE",
+  "private_stats": false
+}
+```
+
+### Request fields
+
+| Field | Type | Notes |
+|---|---|---|
+| `url` / `long_url` | string | Required. `http://` or `https://`, up to 8,192 characters. |
+| `alias` | string | Custom short code, alphanumeric or emoji. Auto-generated if omitted. |
+| `alias_type` | string | `"alphanumeric"` (default) or `"emoji"`: the style to auto-generate when `alias` is omitted. |
+| `password` | string | 8 to 128 characters. |
+| `max_clicks` | integer | Positive click budget; the link expires when it is spent. |
+| `expire_after` | string or integer | ISO 8601 timestamp or Unix epoch seconds. Must be in the future. |
+| `block_bots` | boolean | Serve crawlers a preview page instead of the redirect. |
+| `private_stats` | boolean | Disable the public stats page. Defaults to `true` for authenticated links. |
+| `domain` | string | An owned, active custom domain. Requires authentication. |
+| `geo_rules` | object | Per-country destination overrides. See [Geo Targeting](/links/geo-targeting). |
+| `meta_tags` | object | Custom social preview. See [Custom Link Previews](/links/custom-link-previews). |
+
+## Anonymous vs authenticated
+
+Authentication is optional for creating links, but anonymous links are fire-and-forget: they are not tied to any account, so there is no way to edit, delete, or list them later.
+
+| | Anonymous | Authenticated |
+|---|---|---|
+| Create links | Yes | Yes |
+| Manage links later (edit, delete, list) | No | Yes |
+| Private stats | No | Yes (default on) |
+| Custom domains | No | Yes |
+| Geo targeting | No | Yes |
+| Custom meta tags | No | Yes |
+| Rate limit | 20/min, 1,000/day | 60/min, 5,000/day |
+
+<Warning>
+  If you authenticate, your account's email must be verified. A signed-in user or API key belonging to an unverified account gets a `403` on link creation.
+</Warning>

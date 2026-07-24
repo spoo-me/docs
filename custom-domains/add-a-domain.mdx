@@ -1,0 +1,59 @@
+---
+title: "Add a Domain"
+description: "Register a custom domain from the dashboard"
+icon: "plus"
+---
+
+Registering a domain takes one dialog. You give spoo.me the domain name, spoo.me gives you the DNS records to publish. This page covers the registration step; [DNS and verification](/custom-domains/dns-and-verification) covers everything after.
+
+## Before you start
+
+- **Verify your account email.** Domain registration requires a verified email. If yours is not verified yet, the dashboard prompts you before you can register.
+- **Own the domain.** You need access to the domain's DNS settings at your registrar or DNS provider.
+
+You can use an apex domain (`ac.me`) or a subdomain (`go.ac.me`). Subdomains are a good choice when the apex already serves your website.
+
+<Note>
+  The number of domains you can connect is shown on the Domains page. Registered domains count against the limit regardless of status, including revoked ones you have not yet [permanently deleted](/custom-domains/removing-a-domain#free-the-slot-permanent-delete).
+</Note>
+
+## Register the domain
+
+<Steps>
+  <Step title="Open the Domains page">
+    In the dashboard, go to **Domains**. This lists every domain on your account with its current status.
+
+    <Frame>
+      <img className="block dark:hidden" src="/images/custom-domains/domains-list-light.png" alt="Domains page listing connected domains and their statuses" />
+      <img className="hidden dark:block" src="/images/custom-domains/domains-list-dark.png" alt="Domains page listing connected domains and their statuses" />
+    </Frame>
+  </Step>
+  <Step title="Click Add domain">
+    Enter the domain exactly as you want it on your links, for example `ac.me`. Case does not matter; the domain is stored lowercased.
+
+    <Frame>
+      <img className="block dark:hidden" src="/images/custom-domains/add-domain-light.png" alt="Add domain dialog with ac.me entered" />
+      <img className="hidden dark:block" src="/images/custom-domains/add-domain-dark.png" alt="Add domain dialog with ac.me entered" />
+    </Frame>
+  </Step>
+  <Step title="Register">
+    Confirm to register. The domain is created in **Pending** status and its detail page opens with the DNS records you need to publish.
+  </Step>
+</Steps>
+
+## What registration does
+
+Registering does two things:
+
+1. **Reserves the domain on your account.** It appears on the Domains page in **Pending** status. Links cannot resolve on it yet.
+2. **Issues your DNS records.** The domain page shows exactly which records to add at your DNS provider, with copy buttons next to each value: a CNAME that routes traffic to spoo.me and a TXT record that proves you own the domain.
+
+Nothing on your domain changes until you publish those records, so registering is safe to do at any time, even for a domain that currently serves a website.
+
+## Next step
+
+Publish the records and get the domain verified.
+
+<Card title="DNS and verification" icon="shield-check" href="/custom-domains/dns-and-verification">
+  Add the records at your DNS provider and watch the domain go Active
+</Card>

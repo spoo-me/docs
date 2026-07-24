@@ -1,0 +1,86 @@
+---
+title: "Exporting Analytics"
+description: "Download click data as JSON, CSV, XLSX, or XML"
+icon: "file-down"
+---
+
+`GET /api/v1/export` returns your analytics as a downloadable file. It accepts the same parameters as `GET /api/v1/stats` (scope, date range, `group_by`, filters, timezone) plus a required `format`, so anything you can query you can export.
+
+## Formats
+
+| `format` | You get |
+| --- | --- |
+| `json` | A single JSON file (`spoo-me-export.json`) with the full stats response |
+| `xml` | A single XML file with the same data |
+| `xlsx` | An Excel workbook: a **Summary** sheet plus one sheet per metric-dimension pair |
+| `csv` | A **ZIP archive** (`spoo-me-export-csv.zip`) containing `summary.csv` plus one CSV file per metric-dimension pair |
+
+<Note>
+  `format=csv` returns a ZIP, not a bare CSV. CSV has no concept of multiple tables, so each grouped breakdown ships as its own file inside the archive.
+</Note>
+
+## What the files contain
+
+The summary (sheet or `summary.csv`) carries the totals:
+
+| Field | Meaning |
+| --- | --- |
+| `total_clicks` | All clicks in the range |
+| `unique_clicks` | Clicks deduplicated by visitor IP |
+| `first_click` | Timestamp of the first click in range |
+| `last_click` | Timestamp of the most recent click in range |
+| `avg_redirection_time` | Average redirect latency in ms; empty when no timings exist |
+
+Each dimension file or sheet is named after its metric key, e.g. `clicks_by_time` or `unique_clicks_by_country`, with one row per dimension value: the value itself, the metric count, and its percentage share. Which files you get follows your `group_by`; the default is grouping by `time` with both metrics.
+
+## Examples
+
+Export one link's last 30 days as an Excel workbook:
+
+<CodeGroup>
+
+```bash curl
+curl -G "https://spoo.me/api/v1/export" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  --data-urlencode "scope=all" \
+  --data-urlencode "short_code=acme" \
+  --data-urlencode "format=xlsx" \
+  --data-urlencode "start_date=2026-06-24T00:00:00Z" \
+  --data-urlencode "group_by=time,country,device" \
+  -o acme-stats.xlsx
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://spoo.me/api/v1/export",
+    params={
+        "scope": "all",
+        "short_code": "acme",
+        "format": "xlsx",
+        "start_date": "2026-06-24T00:00:00Z",
+        "group_by": "time,country,device",
+    },
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+)
+with open("acme-stats.xlsx", "wb") as f:
+    f.write(response.content)
+```
+
+</CodeGroup>
+
+The response is a binary download with a `Content-Disposition` header carrying the filename.
+
+Exports work anonymously too, for any link whose stats are public: use `scope=anon` with a `short_code` and skip the auth header.
+
+## Limits
+
+Export generation is resource-intensive, so it has tighter limits than the rest of the API:
+
+| Caller | Limit |
+| --- | --- |
+| Authenticated | 30/min, 1,000/day |
+| Anonymous | 10/min, 200/day |
+
+Date ranges are capped at 90 days per export, same as stats queries. For longer histories, export in chunks.

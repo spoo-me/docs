@@ -1,0 +1,171 @@
+---
+title: "Verifying deliveries"
+description: "Check the signature on every delivery before trusting it"
+icon: "shield-check"
+---
+
+Anyone who discovers your endpoint URL can POST JSON at it. The signature is what proves a delivery actually came from spoo.me and was not tampered with in transit. Verify it on every request before acting on the payload.
+
+spoo.me signs deliveries per the [Standard Webhooks](https://www.standardwebhooks.com) spec, so you can use any Standard Webhooks library (`pip install standardwebhooks`, `npm install standardwebhooks`) instead of the manual code below. Both work with the same secret.
+
+## The headers
+
+Every delivery carries three headers:
+
+| Header | Example | Meaning |
+|---|---|---|
+| `webhook-id` | `msg_7f3a9c1e5b2d4f6a8c0e2b4d6f8a0c2e` | Delivery identity. Stable across retries of the same delivery: your dedup key. |
+| `webhook-timestamp` | `1784908990` | Unix seconds when this attempt was sent. Fresh on every attempt. |
+| `webhook-signature` | `v1,K5oZfzN95Z9UVu1EsfQmfVNQhnkZ2pj9o9NDN/H/pI4=` | One or more space-delimited signatures. |
+
+Requests also arrive with `Content-Type: application/json` and the user agent `spoo.me-webhooks/1.0 (+https://spoo.me)`.
+
+## The secret
+
+Your endpoint's signing secret looks like:
+
+```
+whsec_C2FVsBQIhrscChlQIMV+b5sSYspob7oD
+```
+
+It appears in the response when you create the endpoint, and only there in the API. To read it again, open the endpoint in the dashboard and reveal it:
+
+<Frame>
+  <img className="block dark:hidden" src="/images/webhooks/reveal-secret-light.png" alt="Endpoint settings showing the masked signing secret with a reveal button" />
+  <img className="hidden dark:block" src="/images/webhooks/reveal-secret-dark.png" alt="Endpoint settings showing the masked signing secret with a reveal button" />
+</Frame>
+
+Or call the API:
+
+```bash
+curl https://spoo.me/api/v1/webhooks/{endpoint_id}/secret \
+  -H "Authorization: Bearer YOUR_SESSION_TOKEN"
+```
+
+<Note>
+Revealing the secret requires an **interactive session**: you must be signed in. API keys are refused on this route, like every spoo.me operation that exposes credential material. Everywhere else, endpoint responses only show the first few characters as `signing_secret_prefix` so you can tell secrets apart.
+</Note>
+
+The HMAC key is not the string as-is: per Standard Webhooks, it is the base64-decoded portion **after** the `whsec_` prefix. The code below handles that.
+
+## The scheme
+
+The signature is HMAC-SHA256 over the string `{webhook-id}.{webhook-timestamp}.{body}`, base64-encoded and prefixed with `v1,`:
+
+```
+signature = "v1," + base64(HMAC_SHA256(base64_decode(secret_after_prefix), id + "." + timestamp + "." + body))
+```
+
+Two things matter in practice:
+
+- **Verify against the raw request bytes.** Parse the JSON only after the signature checks out; re-serializing the parsed body will not reproduce the exact bytes that were signed.
+- **The header may contain several signatures**, space-delimited. During a secret rotation grace window, deliveries are signed with both the new and the old secret. Accept the delivery if any signature matches.
+
+## Verification code
+
+<CodeGroup>
+
+```python Python
+import base64
+import hashlib
+import hmac
+import time
+
+TOLERANCE_SECONDS = 300  # 5 minutes
+
+
+def verify(secret: str, headers: dict, body: bytes) -> None:
+    """Raises ValueError unless this is an authentic, fresh delivery."""
+    msg_id = headers["webhook-id"]
+    timestamp = headers["webhook-timestamp"]
+    signatures = headers["webhook-signature"]
+
+    if abs(time.time() - int(timestamp)) > TOLERANCE_SECONDS:
+        raise ValueError("Timestamp outside tolerance")
+
+    key = base64.b64decode(secret.removeprefix("whsec_"))
+    signed = f"{msg_id}.{timestamp}.".encode() + body
+    expected = "v1," + base64.b64encode(
+        hmac.new(key, signed, hashlib.sha256).digest()
+    ).decode()
+
+    if not any(
+        hmac.compare_digest(expected, candidate)
+        for candidate in signatures.split(" ")
+        if candidate
+    ):
+        raise ValueError("No matching signature")
+
+
+# Example with FastAPI: read the RAW body, verify, then parse.
+#
+# @app.post("/webhooks/spoo")
+# async def receive(request: Request):
+#     body = await request.body()
+#     verify(SECRET, request.headers, body)
+#     event = json.loads(body)
+#     ...
+#     return {"ok": True}
+```
+
+```javascript Node.js
+import { createHmac, timingSafeEqual } from "node:crypto";
+
+const TOLERANCE_SECONDS = 300; // 5 minutes
+
+function verify(secret, headers, rawBody) {
+  const msgId = headers["webhook-id"];
+  const timestamp = headers["webhook-timestamp"];
+  const signatures = headers["webhook-signature"];
+
+  if (Math.abs(Date.now() / 1000 - Number(timestamp)) > TOLERANCE_SECONDS) {
+    throw new Error("Timestamp outside tolerance");
+  }
+
+  const key = Buffer.from(secret.slice("whsec_".length), "base64");
+  const expected =
+    "v1," +
+    createHmac("sha256", key)
+      .update(`${msgId}.${timestamp}.${rawBody}`)
+      .digest("base64");
+
+  const expectedBuf = Buffer.from(expected);
+  const ok = signatures.split(" ").some((candidate) => {
+    const candidateBuf = Buffer.from(candidate);
+    return (
+      candidateBuf.length === expectedBuf.length &&
+      timingSafeEqual(candidateBuf, expectedBuf)
+    );
+  });
+  if (!ok) throw new Error("No matching signature");
+}
+
+// Example with Express: capture the RAW body, verify, then parse.
+//
+// app.post(
+//   "/webhooks/spoo",
+//   express.raw({ type: "application/json" }),
+//   (req, res) => {
+//     verify(SECRET, req.headers, req.body.toString());
+//     const event = JSON.parse(req.body);
+//     ...
+//     res.sendStatus(200);
+//   }
+// );
+```
+
+</CodeGroup>
+
+## Replay protection
+
+An attacker who captures a signed delivery could resend it later unchanged; the signature would still verify. The timestamp closes that window:
+
+- Reject deliveries whose `webhook-timestamp` is more than **5 minutes** from your clock, in either direction. This is the Standard Webhooks convention and the code above enforces it.
+- spoo.me re-signs with a fresh timestamp on every retry attempt, so legitimate retries always pass a tolerance check. The body stays byte-identical across retries; only the timestamp and signature change.
+- Keep your server's clock synced (NTP), or legitimate deliveries will fail the check.
+
+For deduplication, track recently seen `webhook-id` values and skip any you have already processed. Retries and [manual redeliveries](/webhooks/managing-deliveries#retrying-a-delivery) reuse the same `webhook-id` with the same body.
+
+## Respond fast
+
+Verification is cheap; do it inline. Everything else should happen after you respond. Your endpoint has 15 seconds before the attempt times out, and slow handlers on a busy `link.clicked` subscription are the most common way endpoints end up in the retry ladder. Verify, enqueue, return 200.

@@ -1,0 +1,106 @@
+---
+title: "Reporting Links"
+description: "Report malicious short links, individually or in bulk"
+icon: "flag"
+---
+
+If a spoo.me link is being used for phishing, malware, or spam, report it. Reports go straight to the operators, and confirmed-malicious links are blocked platform-wide.
+
+<Tip>
+  Not sure whether a link is malicious? Append `+` to it (`spoo.me/acme+`) to [preview the destination](/analytics/link-previews) without visiting it.
+</Tip>
+
+## Reporting from the web
+
+The report form lives at [spoo.me/report](https://spoo.me/report). No account required.
+
+<Steps>
+  <Step title="Paste the link">
+    A bare code (`acme`), the full short URL (`spoo.me/acme`), or a branded short URL on a custom domain all work. You can add several links to one report.
+  </Step>
+  <Step title="Pick a reason">
+    Choose the closest match: **phishing**, **malware**, **spam**, **illegal content**, or **other**. Optionally add free-text details and where the link reached you (SMS, email, DM, social, web).
+  </Step>
+  <Step title="Complete the captcha and submit">
+    Anonymous reports are captcha-gated. You can leave a contact email if you want follow-up on the resolution.
+  </Step>
+</Steps>
+
+<Frame>
+  <img className="block dark:hidden" src="/images/trust/report-form-light.png" alt="Report form with a link pasted and phishing selected as the reason" />
+  <img className="hidden dark:block" src="/images/trust/report-form-dark.png" alt="Report form with a link pasted and phishing selected as the reason" />
+</Frame>
+
+## Bulk reporting for researchers
+
+Security researchers and threat-intel feeds can submit reports programmatically via `POST /api/v1/reports`. The endpoint is bulk-first: one request carries up to **25 links anonymously** (captcha required) or up to **100 links authenticated**. API keys need the `reports:create` scope.
+
+<CodeGroup>
+
+```bash curl
+curl -X POST "https://spoo.me/api/v1/reports" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "reporter_org": "Acme Threat Intel",
+    "reporter_email": "abuse@acme.com",
+    "items": [
+      {"code_or_url": "https://spoo.me/acme", "reason": "phishing", "vector": "sms"},
+      {"code_or_url": "xk39dm", "reason": "malware", "details": "drops stealer payload"}
+    ]
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://spoo.me/api/v1/reports",
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+    json={
+        "reporter_org": "Acme Threat Intel",
+        "reporter_email": "abuse@acme.com",
+        "items": [
+            {"code_or_url": "https://spoo.me/acme", "reason": "phishing", "vector": "sms"},
+            {"code_or_url": "xk39dm", "reason": "malware", "details": "drops stealer payload"},
+        ],
+    },
+)
+print(response.json())
+```
+
+</CodeGroup>
+
+The response gives a per-item breakdown, so bad entries never sink the batch:
+
+```json
+{
+  "submission_id": "665f1c2ab7e94d0c8a1f2b3c",
+  "accepted": 1,
+  "rejected": [
+    {"index": 1, "input": "xk39dm", "code": "not_found"}
+  ]
+}
+```
+
+| Rejection code | Meaning |
+| --- | --- |
+| `invalid_input` | The entry cannot name a short link (bad scheme, malformed URL) |
+| `not_found` | No short link exists for that code or URL |
+| `duplicate_in_batch` | The same link appeared earlier in this request; the first occurrence counts |
+
+Reporting the same link again later does not file a duplicate: it increments the existing report's counter, which raises its priority for review.
+
+**Rate limits** (per submission, not per item): authenticated 30/min, 500/day; anonymous 5/min, 40/day.
+
+## What happens after a report
+
+Every accepted report is stored and the operators are notified once per submission. Reports are reviewed against the link's actual destination; your selected reason is a triage hint, not a verdict, so a mislabeled report still gets looked at.
+
+If the link is confirmed malicious, it is blocked. A blocked link stops redirecting and serves an HTTP `451` page explaining that the link was blocked for abuse, to everyone, everywhere it was shared. See [Link safety](/trust/link-safety) for what that page looks like and how blocking works.
+
+If you left a contact email, it may be used to follow up on the resolution.
+
+## Contacting the operators
+
+For anything that is not a link report, such as abuse appeals or general inquiries, use the contact form at [spoo.me/contact](https://spoo.me/contact) or `POST /api/v1/contact` with `email` and `message`. Rate limit: 5/min, 20/hour, 50/day.

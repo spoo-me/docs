@@ -1,0 +1,91 @@
+---
+title: "Discord and Slack"
+description: "Zero-code notification cards for your channels"
+icon: "message-square"
+---
+
+You do not need to run a server to get value out of webhooks. Every endpoint has a **flavor** that controls how the payload is presented:
+
+| Flavor | Body | For |
+|---|---|---|
+| `raw` | The Standard Webhooks JSON envelope | Your own code |
+| `discord` | A ready-to-post Discord message | A Discord channel webhook URL |
+| `slack` | A ready-to-post Block Kit message | A Slack incoming webhook URL |
+
+With `discord` or `slack`, the endpoint URL is not your server; it is the webhook URL Discord or Slack gives you. spoo.me renders each event into a formatted card and posts it straight into your channel.
+
+## Discord
+
+<Steps>
+  <Step title="Create a channel webhook">
+    In Discord, open the channel's settings, then **Integrations**, then **Webhooks**, and create one. Copy the webhook URL; it looks like `https://discord.com/api/webhooks/1234.../AbCd...`.
+  </Step>
+  <Step title="Create the endpoint with the discord flavor">
+    ```bash
+    curl -X POST https://spoo.me/api/v1/webhooks \
+      -H "Authorization: Bearer YOUR_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "url": "https://discord.com/api/webhooks/1234567890/AbCdEfGh",
+        "events": ["link.expired", "link.updated"],
+        "flavor": "discord",
+        "description": "Acme launch alerts"
+      }'
+    ```
+    Or pick **Discord** as the destination when creating the endpoint in the dashboard.
+  </Step>
+  <Step title="Send a test">
+    Use a [test send](/webhooks/managing-deliveries#test-sends) with any event type to see the card in your channel before real traffic arrives.
+  </Step>
+</Steps>
+
+Events arrive as compact cards posted by a **spoo.me** bot user: an accent color per event type (green for created, red for deleted, orange for expired), a heading that links to the short URL, the substance of the event, and a timestamp Discord renders in each viewer's local time. Clicks show device and traffic source with a running click count; edits render an old/new diff of exactly what changed.
+
+
+Payload values never ping anyone: mentions are disabled on every message spoo.me posts.
+
+## Slack
+
+<Steps>
+  <Step title="Create an incoming webhook">
+    In Slack, create an app (or use an existing one) at [api.slack.com/apps](https://api.slack.com/apps), enable **Incoming Webhooks**, and add one to your channel. Copy the URL; it looks like `https://hooks.slack.com/services/T000/B000/XXXX`.
+  </Step>
+  <Step title="Create the endpoint with the slack flavor">
+    ```bash
+    curl -X POST https://spoo.me/api/v1/webhooks \
+      -H "Authorization: Bearer YOUR_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "url": "https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX",
+        "events": ["link.*"],
+        "flavor": "slack",
+        "description": "Acme link activity"
+      }'
+    ```
+  </Step>
+  <Step title="Send a test">
+    Same as Discord: a test send shows the card in-channel immediately.
+  </Step>
+</Steps>
+
+Slack messages are Block Kit: a titled section linking the short URL, a field grid for the event's details (edits render as `old → new` pairs), and a context footer with the event time. The notification toast and any unexpanded preview show a one-line summary.
+
+
+## Flavor or raw?
+
+Flavors are **lossy renderings for humans**. The `raw` envelope is the versioned contract for machines. Pick accordingly:
+
+- **Use a flavor** when the goal is a notification in a channel. No server, no verification code, no parsing.
+- **Use raw** when code consumes the event: you get every field, the Standard Webhooks envelope, and signatures you can actually verify. Discord and Slack ignore the signature headers spoo.me still sends.
+- Do not point a `raw` endpoint at a Discord or Slack webhook URL; they will reject the body. The flavor exists precisely so you never have to translate.
+
+A few practical notes:
+
+- Delivery semantics are identical across flavors: same retries, same auto-disable rules, same delivery log. The rendered card body is stored per delivery, so the log shows exactly what was posted.
+- Discord and Slack rate-limit their webhook URLs. spoo.me treats 429s as flow control and paces deliveries to match, so a burst of clicks arrives as a steady stream of messages rather than failures. Details in [managing deliveries](/webhooks/managing-deliveries).
+- `link.clicked` on a popular link is a lot of channel messages. For notification channels, subscribing to the low-frequency lifecycle events (`link.created`, `link.updated`, `link.deleted`, `link.expired`) usually reads better.
+- You can switch an existing endpoint's flavor any time with a `PATCH`; it applies from the next delivery onward.
+
+<Tip>
+Want both? Endpoints are independent. Run a `raw` endpoint into your systems and a `slack` endpoint for the team channel, subscribed to different events.
+</Tip>

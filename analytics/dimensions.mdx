@@ -1,0 +1,101 @@
+---
+title: "Dimensions & Filtering"
+description: "Group and filter click analytics by time, device, geography, referrer, and campaign tags"
+icon: "layers"
+---
+
+Every analytics query slices clicks along one or more dimensions. The same dimensions power the dashboard widgets and the `GET /api/v1/stats` API.
+
+## All dimensions
+
+| Dimension | Meaning |
+| --- | --- |
+| `time` | Clicks bucketed by hour, day, week, or month, auto-selected from the range you query |
+| `browser` | Browser family, e.g. Chrome, Firefox |
+| `os` | Operating system family, e.g. Windows, iOS |
+| `device` | `mobile`, `tablet`, `desktop`, or `unknown` |
+| `country` | Visitor country, from IP geolocation |
+| `city` | Visitor city, from IP geolocation |
+| `referrer` | Domain the visitor came from; `Direct` when there was no referrer |
+| `short_code` | The short link that was clicked; useful for account-wide breakdowns |
+| `utm_source` | `utm_source` tag on the clicked short link; `(none)` when untagged |
+| `utm_medium` | `utm_medium` tag; `(none)` when untagged |
+| `utm_campaign` | `utm_campaign` tag; `(none)` when untagged |
+
+Metrics are `clicks` and `unique_clicks` (deduplicated by visitor IP). Both are computed for every dimension you group by.
+
+## Grouping and filtering
+
+In the dashboard, each widget is a grouped view: a countries widget groups by `country`, a devices widget by `device`, and so on. Filters narrow every widget at once.
+
+In the API, pass `group_by` as a comma-separated list. Filters can be sent two ways: as individual query parameters (`browser=Chrome,Firefox`) or as a single JSON `filters` object. Both accept multiple values, combined with OR within a dimension and AND across dimensions.
+
+<CodeGroup>
+
+```bash curl
+# Mobile Chrome clicks from the US and Germany, grouped by day and campaign
+curl -G "https://spoo.me/api/v1/stats" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  --data-urlencode "scope=all" \
+  --data-urlencode "group_by=time,utm_campaign" \
+  --data-urlencode 'filters={"browser":["Chrome"],"device":["mobile"],"country":["United States","Germany"]}'
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://spoo.me/api/v1/stats",
+    params={
+        "scope": "all",
+        "group_by": "time,utm_campaign",
+        "browser": "Chrome",
+        "device": "mobile",
+        "country": "United States,Germany",
+    },
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+)
+print(response.json()["metrics"]["clicks_by_utm_campaign"])
+```
+
+</CodeGroup>
+
+<Note>
+  Filter values are case-sensitive. `chrome` will not match `Chrome`. The `short_code` filter is ignored on `scope=anon` queries, where the target link is already fixed by the `short_code` parameter.
+</Note>
+
+## How device is determined
+
+There is no reliable "device type" field in a user agent, so spoo.me derives one:
+
+- iOS resolves to `mobile`, or `tablet` for iPads.
+- Android resolves to `mobile` when the UA carries the `Mobile` token, `tablet` otherwise.
+- Desktop OS families (Windows, macOS, Linux, Chrome OS) resolve to `desktop`.
+- Anything unclassifiable lands in `unknown`.
+
+These signals survive Chrome's user agent reduction. One known limit: iPad Safari has sent a Mac user agent since iPadOS 13, so those visits count as `desktop`. This is indistinguishable server-side and matches how GA4, Adobe, and Matomo count it.
+
+## Sentinel values
+
+Some dimension values stand in for "no data" and are filterable like any real value:
+
+| Dimension | Sentinel | Meaning |
+| --- | --- | --- |
+| `referrer` | `Direct` | The visitor arrived with no referrer header |
+| `device` | `unknown` | The user agent could not be classified. Also covers clicks recorded before device tracking existed |
+| `utm_source`, `utm_medium`, `utm_campaign` | `(none)` | The click carried no such tag |
+
+Filtering by a sentinel matches both the stored sentinel value and older clicks where the field is absent, so `device=unknown` and `utm_source=(none)` return complete results.
+
+## UTM tags: recorded, not forwarded
+
+When someone clicks `spoo.me/acme?utm_source=newsletter&utm_medium=email`, the UTM parameters are recorded in your analytics and the visitor is redirected to the link's stored destination. **The UTM parameters are not appended to the destination URL.** If your destination needs its own campaign tags, put them in the long URL when you create the link.
+
+UTM dimensions are also **never shown on public stats pages**. Campaign tagging is your marketing data; only you (and your API credentials) can query it. See [Public stats](/analytics/public-stats).
+
+## Date ranges and timezones
+
+- `start_date` and `end_date` accept ISO 8601 strings (`2026-01-01T00:00:00Z`) or Unix timestamps in seconds.
+- Omit both and you get the last 7 days. Omit one and the other anchors a 7-day window (or runs to now).
+- A single query can span at most **90 days**. Longer ranges return a 400; page through them in chunks.
+- `timezone` accepts any IANA name (`America/New_York`) and controls how time buckets are cut and labeled. Defaults to UTC.

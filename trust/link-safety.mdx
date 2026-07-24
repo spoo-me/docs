@@ -1,0 +1,66 @@
+---
+title: "Link Safety"
+description: "How spoo.me blocks malicious destinations and what visitors see"
+icon: "shield"
+---
+
+spoo.me enforces safety at both ends of a link's life: malicious destinations are rejected at creation, and links that turn malicious later are blocked and stop redirecting.
+
+## Blocked destinations at creation
+
+Every destination URL is checked against a blocklist when a link is created or edited. This covers the main destination and every per-country destination on geo-targeted links.
+
+A blocked destination is rejected with `400`:
+
+```json
+{
+  "error": "URL is blocked",
+  "code": "validation_error",
+  "field": "long_url"
+}
+```
+
+<Note>
+  The legacy v0 API (`POST /`) returns the same rejection as `403` with body `{"BlockedUrlError": "Blocked URL"}`. New integrations should use `POST /api/v1/shorten`.
+</Note>
+
+You also cannot shorten a spoo.me link itself: destinations pointing back at the shortener are rejected at creation with `400` and the message `URL is not allowed or invalid`, which closes off redirect loops.
+
+## The 451 page
+
+When an existing link is confirmed malicious, usually via [user reports](/trust/reporting-links), it is blocked. A blocked link stops redirecting entirely: visitors get an HTTP `451` page stating the link was blocked for abuse. The destination is never disclosed, not on the error page and not on the link's [preview page](/analytics/link-previews), which shows status `blocked` with the destination withheld.
+
+The block applies everywhere the link was shared, immediately. The page also points visitors to the report form, so a blocked link becomes a dead end rather than a live threat.
+
+
+Machine callers can distinguish outcomes by status code:
+
+| Status | Meaning |
+| --- | --- |
+| `302` | Healthy link, redirect served |
+| `404` | No link exists for this code |
+| `410` | The link expired or was deactivated |
+| `451` | The link was blocked for abuse |
+
+## The claimable 404
+
+Visiting a code that has never been claimed, like `spoo.me/acme-launch`, returns a `404` page that says so plainly and lets you claim the alias on the spot by shortening a link with it. A dead end becomes a starting point, and because the page is explicit that the link never existed, it cannot be confused with a link that was removed or blocked.
+
+## Bot blocking
+
+Every link has an optional **Block bots** setting, off by default. Toggle it in the link's settings or via the API:
+
+```bash
+curl -X PATCH "https://spoo.me/api/v1/urls/URL_ID" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"block_bots": true}'
+```
+
+With bot blocking on, clicks from known bot user agents (crawlers, scrapers, link scanners) are kept out of your analytics. The redirect itself still resolves, so link unfurls in chat apps and legitimate preview fetches keep working; the bot traffic just never pollutes your click counts.
+
+<Note>
+  Links created on the legacy platform generation behave more strictly: with bot blocking on, bots receive a `403` instead of the redirect.
+</Note>
+
+Whether or not blocking is enabled, bot detection runs on every click, and the bot blocking state of any link is visible on its [public stats page](/analytics/public-stats).
