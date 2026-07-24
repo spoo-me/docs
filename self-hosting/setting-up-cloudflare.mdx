@@ -1,0 +1,146 @@
+---
+title: "Setting Up Cloudflare"
+description: "Custom domains, edge caching, and image storage for self-hosted instances"
+icon: "cloud"
+---
+
+Three optional features of a self-hosted instance are backed by Cloudflare. Each one is independent, fully off by default, and activates only when its environment variables are set:
+
+| Feature | Cloudflare product | Env prefix |
+|---|---|---|
+| [Custom domains](#custom-domains) | Cloudflare for SaaS (custom hostnames) | `CUSTOM_DOMAINS_` |
+| [Edge cache](#edge-cache) | Workers + Workers KV | `EDGE_CACHE_` |
+| [Link preview images](#link-preview-images-r2) | R2 object storage | `R2_` |
+
+You need a Cloudflare account, and for custom domains and the edge cache, your instance's domain must be a zone on that account. This page covers obtaining each credential and wiring it up; the full variable list with defaults lives in [configuration](/self-hosting/configuration).
+
+Values you will collect along the way:
+
+- **Account ID**: Cloudflare dashboard, any zone's **Overview** page, right-hand **API** panel. Also shown on the Workers & Pages overview.
+- **Zone ID**: same **API** panel on the zone's Overview page.
+- **API tokens**: dashboard, profile menu, **My Profile**, **API Tokens**, **Create Token**, **Create Custom Token**. Create one token per feature with only the permission that feature needs.
+
+## Custom domains
+
+Lets your users point their own domains at your instance and serve short links from them, TLS included. Cloudflare for SaaS issues and renews a certificate per customer hostname and routes the traffic into your zone.
+
+<Steps>
+  <Step title="Enable Cloudflare for SaaS on your zone">
+    In your zone, open **SSL/TLS**, then **Custom Hostnames**, and enable it. Set the **fallback origin** to a hostname in your zone that resolves to your origin server (for example `proxy-fallback.acme-links.com` with a DNS record pointing at the machine running the app). Custom-hostname traffic lands there.
+  </Step>
+  <Step title="Create the CNAME target">
+    Add a proxied (orange-cloud) DNS record in your zone that your users will point their domains at, for example `customers.acme-links.com` targeting your origin. This is the value users see in their DNS instructions.
+  </Step>
+  <Step title="Create an API token">
+    Create a custom token with **Zone → SSL and Certificates → Edit**, scoped to your zone only. The app uses it to create, poll, and delete custom hostnames.
+  </Step>
+  <Step title="Configure the instance">
+    ```bash
+    CUSTOM_DOMAINS_ENABLED=true
+    CUSTOM_DOMAINS_CF_ZONE_ID=023e105f4ecef8ad9ca31a8372d0c353
+    CUSTOM_DOMAINS_CF_API_TOKEN=your-token
+    CUSTOM_DOMAINS_CF_CNAME_TARGET=customers.acme-links.com
+    ```
+  </Step>
+  <Step title="Optional: delegated DCV">
+    By default, certificate validation re-probes each hostname. If you enable **Delegated DCV** on the zone (in the Custom Hostnames settings), Cloudflare shows a per-zone delegation hostname ending in `.dcv.cloudflare.com`; set it so the app includes the extra `_acme-challenge` CNAME instruction in users' DNS setup, and certificates renew without re-probing:
+
+    ```bash
+    CUSTOM_DOMAINS_CF_DCV_DELEGATION_TARGET=abc123def456.dcv.cloudflare.com
+    ```
+  </Step>
+</Steps>
+
+<Warning>
+Setting `CUSTOM_DOMAINS_CF_ZONE_ID` without `CUSTOM_DOMAINS_CF_API_TOKEN` fails validation and the app **refuses to boot**. Set both, or neither. With neither set, the feature simply reports itself as disabled even when `CUSTOM_DOMAINS_ENABLED=true`.
+</Warning>
+
+For local development without Cloudflare, `CUSTOM_DOMAINS_MOCK_DCV=true` makes verification always succeed; the app refuses to boot with it on in production.
+
+## Edge cache
+
+Serves your hottest redirects straight from Cloudflare's edge, skipping your origin entirely. The origin detects hot links and writes them into a Workers KV namespace; a small Worker deployed on your zone answers matching requests from KV and passes everything else through untouched.
+
+This one has a prerequisite chain: promotion rides the click pipeline's hotness consumer, so you need **stream-mode click events** first:
+
+```bash
+CLICK_EVENTS_SINK=stream
+CLICK_EVENTS_QUEUE_REDIS_URI=redis://queue-redis:6379/0
+CLICK_EVENTS_HOTNESS_ENABLED=true
+```
+
+That means a second Redis (`noeviction`, persistent, separate from the cache Redis) and the click worker process running. See [configuration](/self-hosting/configuration) for the pipeline details.
+
+<Steps>
+  <Step title="Deploy the Worker">
+    The Worker lives in the main repo at `edge/spoo-edge-cache`. Edit `wrangler.jsonc` to replace the spoo.me routes with your own zone's:
+
+    ```jsonc
+    "routes": [
+      { "pattern": "acme-links.com/*", "zone_name": "acme-links.com" }
+    ]
+    ```
+
+    Then, from that directory:
+
+    ```bash
+    npm install
+    npx wrangler deploy --env production
+    ```
+
+    On first deploy, wrangler provisions the KV namespace for you and writes its id back into `wrangler.jsonc`. That id is your `EDGE_CACHE_KV_NAMESPACE_ID`. (You can also create the namespace manually under **Storage & Databases → KV** and pin its id in the config first.)
+  </Step>
+  <Step title="Create an API token">
+    Create a custom token with **Account → Workers KV Storage → Edit**. The origin uses it to write cache entries; the Worker itself only reads through its binding and needs no token.
+  </Step>
+  <Step title="Configure the instance">
+    ```bash
+    EDGE_CACHE_CF_ACCOUNT_ID=your-account-id
+    EDGE_CACHE_CF_API_TOKEN=your-token
+    EDGE_CACHE_KV_NAMESPACE_ID=0cbb363671fc49afb8c87d5f2efb43f6
+    ```
+
+    The feature turns on only when all three are set. Hot links now promote automatically and serve from the edge for `EDGE_CACHE_TTL_SECONDS` (default 300).
+  </Step>
+</Steps>
+
+<Note>
+Invalidation is TTL-only: after you edit or delete a cached link, the old redirect can keep serving from the edge for up to the TTL. Keep the TTL short, and use `wrangler kv key delete` for an immediate manual purge (the key format is `cache:{domain}:{short_code}`).
+</Note>
+
+## Link preview images (R2)
+
+Custom link previews let users upload their own og:image. Uploaded images are stored in an R2 bucket and served from a public URL. Without R2, previews still work with hosted https image URLs; only direct uploads are rejected.
+
+<Steps>
+  <Step title="Create a bucket">
+    In the dashboard under **R2**, create a bucket, for example `acme-og-images`.
+  </Step>
+  <Step title="Give it a public URL">
+    In the bucket's **Settings**, enable public access. A custom domain on your zone (for example `og.acme-links.com`) is the production-grade option; the managed `https://pub-....r2.dev` URL also works and is fine to start with. Whatever serves the bucket becomes the prefix of every stored image URL.
+  </Step>
+  <Step title="Create an R2 API token">
+    Under **R2 → Manage R2 API Tokens**, create a token with **Object Read & Write** on the bucket. This yields an S3-style **Access Key ID** and **Secret Access Key** (this is the one Cloudflare credential that is not a Bearer token).
+  </Step>
+  <Step title="Configure the instance">
+    ```bash
+    R2_ACCOUNT_ID=your-account-id
+    R2_ACCESS_KEY_ID=your-access-key-id
+    R2_SECRET_ACCESS_KEY=your-secret-access-key
+    R2_BUCKET=acme-og-images
+    R2_PUBLIC_BASE_URL=https://og.acme-links.com
+    ```
+
+    All five are required; with any missing, the feature stays off. Uploads are capped at 512 KB decoded (`R2_UPLOAD_MAX_BYTES`), and stored objects are content-addressed and immutable, so long CDN caching is safe.
+  </Step>
+</Steps>
+
+## Checklist
+
+| You want | You need | Refuses to boot when |
+|---|---|---|
+| Custom domains | `CUSTOM_DOMAINS_ENABLED`, `CUSTOM_DOMAINS_CF_ZONE_ID`, `CUSTOM_DOMAINS_CF_API_TOKEN`, `CUSTOM_DOMAINS_CF_CNAME_TARGET` (+ optional `CUSTOM_DOMAINS_CF_DCV_DELEGATION_TARGET`) | Zone id set without the API token |
+| Edge cache | Stream-mode clicks + hotness, the deployed Worker, `EDGE_CACHE_CF_ACCOUNT_ID`, `EDGE_CACHE_CF_API_TOKEN`, `EDGE_CACHE_KV_NAMESPACE_ID` | Never; missing values leave it off |
+| Preview image uploads | `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_PUBLIC_BASE_URL` | Never; missing values leave it off |
+
+Full variable reference, defaults, and tuning knobs: [configuration](/self-hosting/configuration).

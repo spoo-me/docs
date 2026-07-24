@@ -1,0 +1,35 @@
+/*
+ * Mesh gradient background for spoo.me docs.
+ *
+ * Mintlify renders a fixed, full-viewport span#background-color behind all
+ * content (-z-10, pointer-events: none). We paint the mesh on a ::before of
+ * that layer so text contrast, sidebar, and content panels are unaffected.
+ * Brand hues come from docs.json: #A855F7 (primary), #C084FC (light),
+ * #7C3AED (dark).
+ */
+
+#background-color::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Dark mode: near-black base with a faint brand-purple bloom at the top */
+html.dark #background-color {
+  background-color: #100c16;
+}
+
+html.dark #background-color::before {
+  background:
+    radial-gradient(58% 42% at 22% -12%, rgba(168, 85, 247, 0.14), transparent 68%),
+    radial-gradient(48% 36% at 74% -14%, rgba(124, 58, 237, 0.11), transparent 66%),
+    radial-gradient(70% 34% at 50% -10%, rgba(30, 22, 42, 0.9), transparent 75%);
+}
+
+/* Light mode: barely-there lavender bloom on white */
+html:not(.dark) #background-color::before {
+  background:
+    radial-gradient(55% 40% at 22% -12%, rgba(168, 85, 247, 0.08), transparent 66%),
+    radial-gradient(46% 34% at 74% -14%, rgba(192, 132, 252, 0.06), transparent 64%);
+}
