@@ -1,88 +1,70 @@
 ---
 title: "Custom Domains"
-description: "Serve branded short links from your own domain"
+description: "Serve short links from your own domain"
 icon: "globe"
 ---
 
-Custom domains let you serve short links from a domain you own (for example `links.acme.com`) instead of `spoo.me`. Once a domain is active, you can scope new short links to it and manage its routing behavior.
+Put your brand on every link you share. With a custom domain, your short links live on a domain you own, so instead of `spoo.me/xyz` you share links like `ac.me/launch`. Same analytics, same management, your name on the door.
 
 <Note>
-  Custom domain **registration** is being rolled out gradually. If it is not enabled for your account yet, `POST /api/v1/custom-domains` responds with a 404. Management of already-registered domains is not restricted.
+  Custom domain registration is being rolled out gradually, so it may not be available on your account yet. Managing already-connected domains is never restricted.
 </Note>
 
-## Requirements
+## Add your domain
 
-- A **verified email address** on your Spoo.me account
-- A JWT session or an API key with the `domains:manage` scope
-- Access to your domain's DNS settings
+Head to **Domains** in the dashboard and click **Add domain**. Type the domain you want your links on and register it.
 
-## Domain Lifecycle
+<Frame>
+  <img src="/images/custom-domains/add-domain.png" alt="Add a custom domain dialog with ac.me entered" />
+</Frame>
 
-<Steps>
-<Step title="Register the domain">
-    Call `POST /api/v1/custom-domains` with the fully-qualified domain name:
+## Point DNS at spoo.me
 
-    ```bash
-    curl -X POST https://spoo.me/api/v1/custom-domains \
-      -H "Authorization: Bearer spoo_YOUR_API_KEY" \
-      -H "Content-Type: application/json" \
-      -d '{"fqdn": "links.acme.com"}'
-    ```
+After registering, the domain page walks you through setup step by step. You publish two DNS records at your provider: a CNAME that routes traffic, and a TXT record that proves you own the domain. Copy buttons are right there next to each value.
 
-    The domain is created in `PENDING` state. The response contains a `dns_records` list, where each entry has a `type` (`CNAME`, `TXT`, or `A`), `name`, `value`, and a human-readable `purpose`, plus `setup_notes` with any domain-specific instructions.
+<Frame>
+  <img src="/images/custom-domains/dns-records.png" alt="Guided domain setup showing the CNAME and TXT records to add at your DNS provider" />
+</Frame>
 
-    <Info>
-    Registration is limited to 5 domains per hour.
-    </Info>
-</Step>
+Once the records resolve, verification and TLS issuance complete automatically. You can also nudge it with **Start verification** if you are impatient. When the badge flips to **Active**, links on your domain start resolving, HTTPS included, no certificates to manage.
 
-<Step title="Publish the DNS records">
-    Create the records from `dns_records` at your DNS provider exactly as returned. DNS propagation usually takes a few minutes but can take longer depending on your provider and TTLs.
-</Step>
+## Create branded links
 
-<Step title="Verify">
-    Trigger a verification check:
+From then on, your domain shows up in the domain picker whenever you create a link. Pick it, choose an alias, done: `ac.me/launch` is live.
 
-    ```bash
-    curl -X POST https://spoo.me/api/v1/custom-domains/{domain_id}/verify \
-      -H "Authorization: Bearer spoo_YOUR_API_KEY"
-    ```
+<Frame>
+  <img src="/images/custom-domains/new-link-on-domain.png" alt="New link dialog creating ac.me/launch" />
+</Frame>
 
-    On the hosted spoo.me service, verification also completes automatically once the CNAME is live and propagated. On success the domain transitions to `ACTIVE` and short links on it start resolving. If verification fails, the response and `last_verification_error` on the domain explain why.
-</Step>
+Links on your domain behave exactly like links on spoo.me: full analytics, password protection, expiration, max clicks, everything.
 
-<Step title="Create links on your domain">
-    Pass the `domain` field when shortening:
+## Routing you control
 
-    ```bash
-    curl -X POST https://spoo.me/api/v1/shorten \
-      -H "Authorization: Bearer spoo_YOUR_API_KEY" \
-      -H "Content-Type: application/json" \
-      -d '{"long_url": "https://example.com/launch", "alias": "launch", "domain": "links.acme.com"}'
-    ```
+Each domain has its own routing settings, so the domain feels like yours even outside of short links:
 
-    The `domain` field also works on `PATCH /api/v1/urls/{id}` (to move a link between domains) and as a filter on `GET /api/v1/urls`.
-</Step>
-</Steps>
+- **Root redirect**: where visitors land when they open the bare domain
+- **Not-found redirect**: a fallback for typos and missing aliases
+- **Custom robots.txt**: control how crawlers treat your domain
 
-## Routing Configuration
+<Frame>
+  <img src="/images/custom-domains/domain-active.png" alt="Active domain page with routing settings and DNS records" />
+</Frame>
 
-`PATCH /api/v1/custom-domains/{domain_id}` controls how your domain behaves outside of short-link redirects:
+Leave any of these blank and sensible defaults apply. Keep the DNS records in place though; removing them takes the domain offline.
 
-| Field | Behavior |
-|-------|----------|
-| `root_redirect` | Where visits to the bare domain root go |
-| `not_found_redirect` | Where visits to unknown short codes go |
-| `custom_robots_txt` | Custom `robots.txt` content served on your domain |
+## Removing a domain
 
-Fields you omit stay unchanged; fields you explicitly set to `null` are cleared.
+The danger zone at the bottom of the domain page lets you revoke a domain. Links on it stop resolving immediately, and revocation is terminal. You can permanently delete a revoked domain afterwards.
 
-## Removing a Domain
+## Good to know
 
-- `DELETE /api/v1/custom-domains/{domain_id}` revokes the domain. Short links on it stop resolving. Add `?cascade=true` to also delete the URLs scoped to it.
-- `DELETE /api/v1/custom-domains/{domain_id}/permanent` permanently removes a revoked domain from your account.
+- Your account email must be verified before you can register a domain.
+- You can connect multiple domains and move existing links between them.
+- Abuse of redirects gets a domain revoked; the routing settings are a feature, not a loophole.
 
-## Next Steps
+## Prefer the API?
+
+Everything above is available programmatically, from registration through DNS verification to routing config.
 
 <CardGroup cols={2}>
   <Card title="API Reference" icon="code" href="/api-reference">
