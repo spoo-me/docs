@@ -45,7 +45,7 @@ Vercel offers the most generous free plan and excellent performance for Spoo.me 
 <Step title="Deploy with One Click">
     Click the deploy button to start the deployment process:
     
-    <a href="https://vercel.com/new/clone?repository-url=https://github.com/spoo-me/spoo&env=MONGODB_URI,SECRET_KEY,HOST_URI,CONTACT_WEBHOOK,URL_REPORT_WEBHOOK" target="_blank">
+    <a href="https://vercel.com/new/clone?repository-url=https://github.com/spoo-me/spoo&env=MONGODB_URI,SECRET_KEY,APP_URL,CONTACT_WEBHOOK,URL_REPORT_WEBHOOK" target="_blank">
         <img noZoom src="https://vercel.com/button" alt="Deploy with Vercel" />
     </a>
     
@@ -112,9 +112,13 @@ Vercel offers the most generous free plan and excellent performance for Spoo.me 
     Application secret key. Generate with: `python -c "import os; print(os.urandom(32).hex())"`
     </ParamField>
 
-    <ParamField path="HOST_URI" type="string" required>
-    Your deployment domain (e.g., `your-project.vercel.app`). Used for generating short URLs.
+    <ParamField path="APP_URL" type="string" required>
+    The full public URL of your deployment, including the scheme (e.g., `https://your-project.vercel.app`). The app derives its default short-link domain from this value.
     </ParamField>
+
+    <Warning>
+    `APP_URL` must match the domain you actually serve the app from. Requests arriving on any other hostname are treated as an unknown custom domain and answered with a 404, so a missing or wrong `APP_URL` makes the entire deployment appear broken.
+    </Warning>
 
     <ParamField path="ENV" type="string" default="production">
     Set to `production` for cloud deployments.

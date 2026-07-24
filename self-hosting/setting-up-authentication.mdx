@@ -218,7 +218,7 @@ Here's a complete example `.env` configuration with all authentication settings:
 ```bash
 # App Configuration
 SECRET_KEY="your-random-secret-key-here"
-HOST_URI="127.0.0.1:8000"  # Change to your domain in production
+APP_URL="http://localhost:8000"  # Change to your full public URL in production
 
 # JWT Configuration
 JWT_ISSUER=spoo.me
@@ -297,7 +297,7 @@ After successful login, you should be redirected to the dashboard at `http://127
 **Solution**:
 - For local development, set `COOKIE_SECURE=false`
 - For production with HTTPS, set `COOKIE_SECURE=true`
-- Check that `HOST_URI` matches your actual domain
+- Check that `APP_URL` matches your actual domain
 - Ensure your browser allows cookies from localhost/your domain
 </Accordion>
 
