@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "spoo.me",
-    "description": "REST API for spoo.me — free and open-source URL shortening service serving 400k+ redirects/day.\n\nAuthenticate using either:\n- **API Key**: `Authorization: Bearer spoo_<your_key>`\n- **JWT Token**: `Authorization: Bearer <jwt>` (obtained via /auth/login)\n- **Session Cookie**: `access_token` cookie (set automatically on login)",
+    "description": "REST API for spoo.me - free and open-source URL shortening service serving 400k+ redirects/day.\n\nAuthenticate using either:\n- **API Key**: `Authorization: Bearer spoo_<your_key>`\n- **JWT Token**: `Authorization: Bearer <jwt>` (obtained via /auth/login)\n- **Session Cookie**: `access_token` cookie (set automatically on login)",
     "contact": {
       "name": "spoo.me",
       "url": "https://spoo.me/contact",
@@ -66,7 +66,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -76,7 +76,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -86,7 +86,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -159,7 +159,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -169,7 +169,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -179,7 +179,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -209,7 +209,7 @@
             }
           },
           "409": {
-            "description": "Conflict — resource already exists",
+            "description": "Conflict - resource already exists",
             "content": {
               "application/json": {
                 "schema": {
@@ -252,7 +252,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -262,7 +262,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -272,7 +272,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -347,7 +347,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -357,7 +357,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -367,7 +367,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -405,7 +405,7 @@
           "Authentication"
         ],
         "summary": "Set Password",
-        "description": "Set a password for an OAuth-only account.\n\nAllows users who signed up via OAuth to add a password so they can\nalso log in with email + password. Fails if the user already has a\npassword set.\n\n**Authentication**: Required (JWT only — API keys cannot set passwords)\n\n**Rate Limits**: 5/min",
+        "description": "Set a password for an OAuth-only account.\n\nAllows users who signed up via OAuth to add a password so they can\nalso log in with email + password. Fails if the user already has a\npassword set.\n\n**Authentication**: Required (JWT only - API keys cannot set passwords)\n\n**Rate Limits**: 5/min",
         "operationId": "setPassword",
         "requestBody": {
           "content": {
@@ -429,7 +429,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -439,7 +439,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -449,7 +449,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -511,7 +511,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -521,7 +521,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -531,7 +531,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -593,7 +593,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -603,7 +603,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -613,7 +613,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -728,7 +728,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -738,7 +738,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -748,7 +748,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -821,7 +821,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -831,7 +831,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -841,7 +841,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -890,7 +890,7 @@
           "Authentication"
         ],
         "summary": "Refresh Device Auth Tokens",
-        "description": "Refresh an app's JWT tokens using a refresh token.\n\nAccepts the refresh token in the request body (not cookies) for use\nby external apps (browser extensions, desktop, CLI, bots).  If the\nrefresh token contains an ``app_id`` claim, the server verifies the\napp grant is still active — revoked apps cannot refresh.\n\n**Authentication**: Not required (the refresh token itself is the credential)\n\n**Rate Limits**: 20/min",
+        "description": "Refresh an app's JWT tokens using a refresh token.\n\nAccepts the refresh token in the request body (not cookies) for use\nby external apps (browser extensions, desktop, CLI, bots).  If the\nrefresh token contains an ``app_id`` claim, the server verifies the\napp grant is still active - revoked apps cannot refresh.\n\n**Authentication**: Not required (the refresh token itself is the credential)\n\n**Rate Limits**: 20/min",
         "operationId": "refreshDeviceTokens",
         "requestBody": {
           "content": {
@@ -914,7 +914,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -924,7 +924,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -934,7 +934,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -997,7 +997,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -1007,7 +1007,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -1017,7 +1017,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -1080,7 +1080,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -1090,7 +1090,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -1100,7 +1100,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -1171,7 +1171,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -1181,7 +1181,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -1191,7 +1191,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -1263,7 +1263,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -1273,7 +1273,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -1283,7 +1283,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -1355,7 +1355,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -1365,7 +1365,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -1375,7 +1375,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -1423,7 +1423,7 @@
           "URL Shortening"
         ],
         "summary": "Create Shortened URL",
-        "description": "Create a new shortened URL.\n\nCreate a shortened URL with optional customization including password\nprotection, expiration, click limits, and bot blocking. Authenticated\nusers may target an owned, ACTIVE custom domain via the ``domain`` field.\n\n**Authentication**: Optional — higher rate limits when authenticated.\nRequired if ``domain`` is supplied.\n\n**API Key Scope**: `shorten:create` or `admin:all`\n\n**Rate Limits**:\n\n- Authenticated: 60/min, 5,000/day\n- Anonymous: 20/min, 1,000/day\n\n**Anonymous Usage Consequences**:\n\n- Lower rate limits\n- Cannot manage or view URLs later\n- Cannot use private stats\n- URLs not linked to any account\n- Cannot use custom domains",
+        "description": "Create a new shortened URL.\n\nCreate a shortened URL with optional customization including password\nprotection, expiration, click limits, and bot blocking. Authenticated\nusers may target an owned, ACTIVE custom domain via the ``domain`` field.\n\n**Authentication**: Optional - higher rate limits when authenticated.\nRequired if ``domain`` is supplied.\n\n**API Key Scope**: `shorten:create` or `admin:all`\n\n**Rate Limits**:\n\n- Authenticated: 60/min, 5,000/day\n- Anonymous: 20/min, 1,000/day\n\n**Anonymous Usage Consequences**:\n\n- Lower rate limits\n- Cannot manage or view URLs later\n- Cannot use private stats\n- URLs not linked to any account\n- Cannot use custom domains",
         "operationId": "shortenUrl",
         "requestBody": {
           "content": {
@@ -1447,7 +1447,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -1457,7 +1457,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -1467,7 +1467,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -1497,7 +1497,7 @@
             }
           },
           "409": {
-            "description": "Conflict — resource already exists",
+            "description": "Conflict - resource already exists",
             "content": {
               "application/json": {
                 "schema": {
@@ -1534,7 +1534,7 @@
           "URL Shortening"
         ],
         "summary": "Check Alias Availability",
-        "description": "Check whether a proposed alias would be accepted by POST /api/v1/shorten.\n\nReason codes on a negative result (``length``/``format``/``taken``) let the\nUI render precise inline feedback without duplicating the validation rules.\n\nPass ``domain`` to scope the check to a custom-domain tenant — required\nfor the create modal's live availability indicator when the user has\npicked a non-default domain. Authz mirrors the shorten endpoint: anon\ncallers can't probe custom domains; authed callers must own the target.\n\n**Authentication**: Optional — higher rate limits when authenticated.\nRequired if ``domain`` is supplied.",
+        "description": "Check whether a proposed alias would be accepted by POST /api/v1/shorten.\n\nReason codes on a negative result (``length``/``format``/``taken``) let the\nUI render precise inline feedback without duplicating the validation rules.\n\nPass ``domain`` to scope the check to a custom-domain tenant - required\nfor the create modal's live availability indicator when the user has\npicked a non-default domain. Authz mirrors the shorten endpoint: anon\ncallers can't probe custom domains; authed callers must own the target.\n\n**Authentication**: Optional - higher rate limits when authenticated.\nRequired if ``domain`` is supplied.",
         "operationId": "checkAliasAvailability",
         "parameters": [
           {
@@ -1588,7 +1588,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -1598,7 +1598,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -1608,7 +1608,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -1638,7 +1638,7 @@
             }
           },
           "409": {
-            "description": "Conflict — resource already exists",
+            "description": "Conflict - resource already exists",
             "content": {
               "application/json": {
                 "schema": {
@@ -1762,7 +1762,7 @@
                   "type": "null"
                 }
               ],
-              "description": "JSON string containing filter criteria for URLs. Format: `{\"field\": value}`\n\n**Available filter fields:**\n\n- **status** — Filter by URL status (`\"ACTIVE\"` or `\"INACTIVE\"`)\n- **createdAfter** — Filter URLs created after this date (ISO 8601 datetime or Unix timestamp)\n- **createdBefore** — Filter URLs created before this date (ISO 8601 datetime or Unix timestamp)\n- **passwordSet** — Filter by password protection (boolean: `true`/`false`)\n- **maxClicksSet** — Filter by click limit presence (boolean: `true`/`false`)\n- **search** — Search in alias or long_url (case-insensitive string)\n\n**Value formats:**\n\n- **status**: String — `\"ACTIVE\"` or `\"INACTIVE\"` (case-sensitive)\n- **createdAfter / createdBefore**: ISO 8601 datetime string (e.g., `\"2024-01-01T00:00:00Z\"`) or Unix timestamp (e.g., `1704067200`)\n- **passwordSet / maxClicksSet**: Boolean — `true` or `false`\n- **search**: String — case-insensitive search term\n\n**Examples:**\n\n- `{\"status\": \"ACTIVE\"}` — Only active URLs\n- `{\"passwordSet\": true}` — Only password-protected URLs\n- `{\"createdAfter\": \"2024-01-01T00:00:00Z\"}` — URLs created after Jan 1, 2024\n- `{\"status\": \"ACTIVE\", \"maxClicksSet\": true}` — Active URLs with click limits\n- `{\"search\": \"example\"}` — URLs containing \"example\" in alias or long_url\n- `{\"createdAfter\": \"2024-01-01\", \"createdBefore\": \"2024-12-31\", \"status\": \"ACTIVE\"}` — Active URLs from 2024",
+              "description": "JSON string containing filter criteria for URLs. Format: `{\"field\": value}`\n\n**Available filter fields:**\n\n- **status** - Filter by URL status (`\"ACTIVE\"` or `\"INACTIVE\"`)\n- **createdAfter** - Filter URLs created after this date (ISO 8601 datetime or Unix timestamp)\n- **createdBefore** - Filter URLs created before this date (ISO 8601 datetime or Unix timestamp)\n- **passwordSet** - Filter by password protection (boolean: `true`/`false`)\n- **maxClicksSet** - Filter by click limit presence (boolean: `true`/`false`)\n- **search** - Search in alias or long_url (case-insensitive string)\n\n**Value formats:**\n\n- **status**: String - `\"ACTIVE\"` or `\"INACTIVE\"` (case-sensitive)\n- **createdAfter / createdBefore**: ISO 8601 datetime string (e.g., `\"2024-01-01T00:00:00Z\"`) or Unix timestamp (e.g., `1704067200`)\n- **passwordSet / maxClicksSet**: Boolean - `true` or `false`\n- **search**: String - case-insensitive search term\n\n**Examples:**\n\n- `{\"status\": \"ACTIVE\"}` - Only active URLs\n- `{\"passwordSet\": true}` - Only password-protected URLs\n- `{\"createdAfter\": \"2024-01-01T00:00:00Z\"}` - URLs created after Jan 1, 2024\n- `{\"status\": \"ACTIVE\", \"maxClicksSet\": true}` - Active URLs with click limits\n- `{\"search\": \"example\"}` - URLs containing \"example\" in alias or long_url\n- `{\"createdAfter\": \"2024-01-01\", \"createdBefore\": \"2024-12-31\", \"status\": \"ACTIVE\"}` - Active URLs from 2024",
               "examples": [
                 "{\"status\":\"ACTIVE\"}",
                 "{\"passwordSet\": true}",
@@ -1773,7 +1773,7 @@
               ],
               "title": "Filter"
             },
-            "description": "JSON string containing filter criteria for URLs. Format: `{\"field\": value}`\n\n**Available filter fields:**\n\n- **status** — Filter by URL status (`\"ACTIVE\"` or `\"INACTIVE\"`)\n- **createdAfter** — Filter URLs created after this date (ISO 8601 datetime or Unix timestamp)\n- **createdBefore** — Filter URLs created before this date (ISO 8601 datetime or Unix timestamp)\n- **passwordSet** — Filter by password protection (boolean: `true`/`false`)\n- **maxClicksSet** — Filter by click limit presence (boolean: `true`/`false`)\n- **search** — Search in alias or long_url (case-insensitive string)\n\n**Value formats:**\n\n- **status**: String — `\"ACTIVE\"` or `\"INACTIVE\"` (case-sensitive)\n- **createdAfter / createdBefore**: ISO 8601 datetime string (e.g., `\"2024-01-01T00:00:00Z\"`) or Unix timestamp (e.g., `1704067200`)\n- **passwordSet / maxClicksSet**: Boolean — `true` or `false`\n- **search**: String — case-insensitive search term\n\n**Examples:**\n\n- `{\"status\": \"ACTIVE\"}` — Only active URLs\n- `{\"passwordSet\": true}` — Only password-protected URLs\n- `{\"createdAfter\": \"2024-01-01T00:00:00Z\"}` — URLs created after Jan 1, 2024\n- `{\"status\": \"ACTIVE\", \"maxClicksSet\": true}` — Active URLs with click limits\n- `{\"search\": \"example\"}` — URLs containing \"example\" in alias or long_url\n- `{\"createdAfter\": \"2024-01-01\", \"createdBefore\": \"2024-12-31\", \"status\": \"ACTIVE\"}` — Active URLs from 2024"
+            "description": "JSON string containing filter criteria for URLs. Format: `{\"field\": value}`\n\n**Available filter fields:**\n\n- **status** - Filter by URL status (`\"ACTIVE\"` or `\"INACTIVE\"`)\n- **createdAfter** - Filter URLs created after this date (ISO 8601 datetime or Unix timestamp)\n- **createdBefore** - Filter URLs created before this date (ISO 8601 datetime or Unix timestamp)\n- **passwordSet** - Filter by password protection (boolean: `true`/`false`)\n- **maxClicksSet** - Filter by click limit presence (boolean: `true`/`false`)\n- **search** - Search in alias or long_url (case-insensitive string)\n\n**Value formats:**\n\n- **status**: String - `\"ACTIVE\"` or `\"INACTIVE\"` (case-sensitive)\n- **createdAfter / createdBefore**: ISO 8601 datetime string (e.g., `\"2024-01-01T00:00:00Z\"`) or Unix timestamp (e.g., `1704067200`)\n- **passwordSet / maxClicksSet**: Boolean - `true` or `false`\n- **search**: String - case-insensitive search term\n\n**Examples:**\n\n- `{\"status\": \"ACTIVE\"}` - Only active URLs\n- `{\"passwordSet\": true}` - Only password-protected URLs\n- `{\"createdAfter\": \"2024-01-01T00:00:00Z\"}` - URLs created after Jan 1, 2024\n- `{\"status\": \"ACTIVE\", \"maxClicksSet\": true}` - Active URLs with click limits\n- `{\"search\": \"example\"}` - URLs containing \"example\" in alias or long_url\n- `{\"createdAfter\": \"2024-01-01\", \"createdBefore\": \"2024-12-31\", \"status\": \"ACTIVE\"}` - Active URLs from 2024"
           },
           {
             "name": "filterBy",
@@ -1829,7 +1829,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -1839,7 +1839,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -1849,7 +1849,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -1895,7 +1895,7 @@
           "Link Management"
         ],
         "summary": "Bulk Delete URLs on a Custom Domain",
-        "description": "Bulk-delete all URLs the caller owns on the given custom domain.\n\n**Authentication**: Required.\n\n**API Key Scope**: `urls:manage` or `admin:all`\n\n**Rate Limits**: 5/min, 50/day.\n\n**Restrictions**: refuses the system-default domain — protects against\naccidental nuke of the user's entire spoo.me URL inventory. Caller must\nown the domain.",
+        "description": "Bulk-delete all URLs the caller owns on the given custom domain.\n\n**Authentication**: Required.\n\n**API Key Scope**: `urls:manage` or `admin:all`\n\n**Rate Limits**: 5/min, 50/day.\n\n**Restrictions**: refuses the system-default domain - protects against\naccidental nuke of the user's entire spoo.me URL inventory. Caller must\nown the domain.",
         "operationId": "bulkDeleteUrls",
         "parameters": [
           {
@@ -1927,7 +1927,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -1937,7 +1937,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -1947,7 +1947,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -1977,7 +1977,7 @@
             }
           },
           "409": {
-            "description": "Conflict — resource already exists",
+            "description": "Conflict - resource already exists",
             "content": {
               "application/json": {
                 "schema": {
@@ -2005,7 +2005,7 @@
           "Link Management"
         ],
         "summary": "Update URL",
-        "description": "Update an existing URL's properties.\n\nPartially update a shortened URL. Only provided fields are modified; omitted\nfields remain unchanged. Pass `null` to remove optional settings like\n`password`, `max_clicks`, or `expire_after`.\n\n**Authentication**: Required — you must own the URL.\n\n**API Key Scope**: `urls:manage` or `admin:all`\n\n**Rate Limits**: 120/min, 2,000/day\n\n**Updatable Fields**: `long_url`, `alias`, `password`, `block_bots`,\n`max_clicks`, `expire_after`, `private_stats`, `status`, `domain`\n\n**Notes**:\n\n- Setting `max_clicks` to `0` or `null` removes the click limit\n- Changing the `alias` checks availability and may fail with 409 Conflict\n- Setting `domain` moves the URL to a different tenant; caller must own\n  the target as an ACTIVE custom domain, or pass `null` to move back to\n  the system default. Alias collision is verified on the target.\n- The `url_id` is the MongoDB ObjectId, not the alias",
+        "description": "Update an existing URL's properties.\n\nPartially update a shortened URL. Only provided fields are modified; omitted\nfields remain unchanged. Pass `null` to remove optional settings like\n`password`, `max_clicks`, or `expire_after`.\n\n**Authentication**: Required - you must own the URL.\n\n**API Key Scope**: `urls:manage` or `admin:all`\n\n**Rate Limits**: 120/min, 2,000/day\n\n**Updatable Fields**: `long_url`, `alias`, `password`, `block_bots`,\n`max_clicks`, `expire_after`, `private_stats`, `status`, `domain`\n\n**Notes**:\n\n- Setting `max_clicks` to `0` or `null` removes the click limit\n- Changing the `alias` checks availability and may fail with 409 Conflict\n- Setting `domain` moves the URL to a different tenant; caller must own\n  the target as an ACTIVE custom domain, or pass `null` to move back to\n  the system default. Alias collision is verified on the target.\n- The `url_id` is the MongoDB ObjectId, not the alias",
         "operationId": "updateUrl",
         "parameters": [
           {
@@ -2045,7 +2045,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -2055,7 +2055,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -2065,7 +2065,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -2095,7 +2095,7 @@
             }
           },
           "409": {
-            "description": "Conflict — resource already exists",
+            "description": "Conflict - resource already exists",
             "content": {
               "application/json": {
                 "schema": {
@@ -2121,7 +2121,7 @@
           "Link Management"
         ],
         "summary": "Delete URL",
-        "description": "Delete a URL permanently.\n\n**This action is IRREVERSIBLE.** The URL, its alias, and all associated\nclick analytics data will be permanently deleted. The alias may be reclaimed\nby another user afterward.\n\n**Authentication**: Required — you must own the URL.\n\n**API Key Scope**: `urls:manage` or `admin:all`\n\n**Rate Limits**: 60/min, 1,000/day\n\n**Recommendation**: Consider setting the URL status to `INACTIVE` via\n`PATCH /urls/{url_id}/status` instead if you may want to restore it later.",
+        "description": "Delete a URL permanently.\n\n**This action is IRREVERSIBLE.** The URL, its alias, and all associated\nclick analytics data will be permanently deleted. The alias may be reclaimed\nby another user afterward.\n\n**Authentication**: Required - you must own the URL.\n\n**API Key Scope**: `urls:manage` or `admin:all`\n\n**Rate Limits**: 60/min, 1,000/day\n\n**Recommendation**: Consider setting the URL status to `INACTIVE` via\n`PATCH /urls/{url_id}/status` instead if you may want to restore it later.",
         "operationId": "deleteUrl",
         "parameters": [
           {
@@ -2151,7 +2151,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -2161,7 +2161,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -2171,7 +2171,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -2219,7 +2219,7 @@
           "Link Management"
         ],
         "summary": "Update URL Status",
-        "description": "Update only the status of a URL (ACTIVE / INACTIVE).\n\nToggle a URL between active and inactive without modifying other properties.\n\n**Authentication**: Required — you must own the URL.\n\n**API Key Scope**: `urls:manage` or `admin:all`\n\n**Rate Limits**: 120/min, 2,000/day\n\n**Status Values** (user-editable via this endpoint):\n\n- `ACTIVE` — URL is accessible and redirects normally\n- `INACTIVE` — URL is disabled and returns an error page\n\n**Note**: `BLOCKED` is an admin-set status — blocked URLs cannot be modified\nor deleted by the owner. `EXPIRED` URLs (auto-set on max clicks or expiry\ntime) can be reactivated by setting status back to `ACTIVE`.\n\n**Use Cases**:\n\n- Set `INACTIVE` to temporarily disable redirects without deleting the URL\n- Set `ACTIVE` to re-enable a previously disabled URL",
+        "description": "Update only the status of a URL (ACTIVE / INACTIVE).\n\nToggle a URL between active and inactive without modifying other properties.\n\n**Authentication**: Required - you must own the URL.\n\n**API Key Scope**: `urls:manage` or `admin:all`\n\n**Rate Limits**: 120/min, 2,000/day\n\n**Status Values** (user-editable via this endpoint):\n\n- `ACTIVE` - URL is accessible and redirects normally\n- `INACTIVE` - URL is disabled and returns an error page\n\n**Note**: `BLOCKED` is an admin-set status - blocked URLs cannot be modified\nor deleted by the owner. `EXPIRED` URLs (auto-set on max clicks or expiry\ntime) can be reactivated by setting status back to `ACTIVE`.\n\n**Use Cases**:\n\n- Set `INACTIVE` to temporarily disable redirects without deleting the URL\n- Set `ACTIVE` to re-enable a previously disabled URL",
         "operationId": "updateUrlStatus",
         "parameters": [
           {
@@ -2259,7 +2259,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -2269,7 +2269,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -2279,7 +2279,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -2327,7 +2327,7 @@
           "Statistics"
         ],
         "summary": "URL Statistics",
-        "description": "Get click statistics for URLs.\n\nRetrieve aggregated click analytics with flexible grouping, filtering,\nand time-range options.\n\n**Authentication**: Optional for `scope=anon` (public stats on a single URL);\nrequired for `scope=all` (all URLs owned by the user).\n\n**API Key Scope**: `stats:read`, `urls:read`, or `admin:all`\n\n**Rate Limits**:\n\n- Authenticated: 60/min, 5,000/day\n- Anonymous: 20/min, 1,000/day\n\n**Scopes**:\n\n- `scope=anon` + `short_code=<alias>` — public stats for one URL (if stats are not private)\n- `scope=all` — aggregate stats across all URLs owned by the authenticated user\n\n**Grouping Dimensions**: `time`, `browser`, `os`, `country`, `city`,\n`referrer`, `short_code`\n\n**Metrics**: `clicks`, `unique_clicks`\n\n**Filtering**: Filter by `browser`, `os`, `country`, `city`, `referrer`,\nor `short_code` using query params or a JSON `filters` object.",
+        "description": "Get click statistics for URLs.\n\nRetrieve aggregated click analytics with flexible grouping, filtering,\nand time-range options.\n\n**Authentication**: Optional for `scope=anon` (public stats on a single URL);\nrequired for `scope=all` (all URLs owned by the user).\n\n**API Key Scope**: `stats:read`, `urls:read`, or `admin:all`\n\n**Rate Limits**:\n\n- Authenticated: 60/min, 5,000/day\n- Anonymous: 20/min, 1,000/day\n\n**Scopes**:\n\n- `scope=anon` + `short_code=<alias>` - public stats for one URL (if stats are not private)\n- `scope=all` - aggregate stats across all URLs owned by the authenticated user\n\n**Grouping Dimensions**: `time`, `browser`, `os`, `country`, `city`,\n`referrer`, `short_code`\n\n**Metrics**: `clicks`, `unique_clicks`\n\n**Filtering**: Filter by `browser`, `os`, `country`, `city`, `referrer`,\nor `short_code` using query params or a JSON `filters` object.",
         "operationId": "getStats",
         "parameters": [
           {
@@ -2340,11 +2340,11 @@
                 "anon"
               ],
               "type": "string",
-              "description": "Statistics scope: `all` (authenticated only) or `anon` (public access).\n\n- `all` — aggregate stats across all URLs owned by the authenticated user. Requires authentication.\n- `anon` — public stats for a single URL. Requires `short_code` parameter. No authentication needed (unless stats are private).",
+              "description": "Statistics scope: `all` (authenticated only) or `anon` (public access).\n\n- `all` - aggregate stats across all URLs owned by the authenticated user. Requires authentication.\n- `anon` - public stats for a single URL. Requires `short_code` parameter. No authentication needed (unless stats are private).",
               "default": "all",
               "title": "Scope"
             },
-            "description": "Statistics scope: `all` (authenticated only) or `anon` (public access).\n\n- `all` — aggregate stats across all URLs owned by the authenticated user. Requires authentication.\n- `anon` — public stats for a single URL. Requires `short_code` parameter. No authentication needed (unless stats are private)."
+            "description": "Statistics scope: `all` (authenticated only) or `anon` (public access).\n\n- `all` - aggregate stats across all URLs owned by the authenticated user. Requires authentication.\n- `anon` - public stats for a single URL. Requires `short_code` parameter. No authentication needed (unless stats are private)."
           },
           {
             "name": "short_code",
@@ -2426,7 +2426,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Comma-separated grouping dimensions for the statistics breakdown. Defaults to `time` if omitted.\n\n**Available dimensions:**\n\n- `time` — group by time buckets (day/week/month, auto-selected based on range)\n- `browser` — group by browser name (e.g., Chrome, Firefox, Safari)\n- `os` — group by operating system (e.g., Windows, macOS, Linux)\n- `country` — group by country\n- `city` — group by city\n- `referrer` — group by referrer URL\n- `short_code` — group by URL alias (only with `scope=all`)\n\nMultiple dimensions can be combined: `time,browser` returns time series broken down by browser.",
+              "description": "Comma-separated grouping dimensions for the statistics breakdown. Defaults to `time` if omitted.\n\n**Available dimensions:**\n\n- `time` - group by time buckets (day/week/month, auto-selected based on range)\n- `browser` - group by browser name (e.g., Chrome, Firefox, Safari)\n- `os` - group by operating system (e.g., Windows, macOS, Linux)\n- `country` - group by country\n- `city` - group by city\n- `referrer` - group by referrer URL\n- `short_code` - group by URL alias (only with `scope=all`)\n\nMultiple dimensions can be combined: `time,browser` returns time series broken down by browser.",
               "examples": [
                 "time,browser",
                 "country",
@@ -2434,7 +2434,7 @@
               ],
               "title": "Group By"
             },
-            "description": "Comma-separated grouping dimensions for the statistics breakdown. Defaults to `time` if omitted.\n\n**Available dimensions:**\n\n- `time` — group by time buckets (day/week/month, auto-selected based on range)\n- `browser` — group by browser name (e.g., Chrome, Firefox, Safari)\n- `os` — group by operating system (e.g., Windows, macOS, Linux)\n- `country` — group by country\n- `city` — group by city\n- `referrer` — group by referrer URL\n- `short_code` — group by URL alias (only with `scope=all`)\n\nMultiple dimensions can be combined: `time,browser` returns time series broken down by browser."
+            "description": "Comma-separated grouping dimensions for the statistics breakdown. Defaults to `time` if omitted.\n\n**Available dimensions:**\n\n- `time` - group by time buckets (day/week/month, auto-selected based on range)\n- `browser` - group by browser name (e.g., Chrome, Firefox, Safari)\n- `os` - group by operating system (e.g., Windows, macOS, Linux)\n- `country` - group by country\n- `city` - group by city\n- `referrer` - group by referrer URL\n- `short_code` - group by URL alias (only with `scope=all`)\n\nMultiple dimensions can be combined: `time,browser` returns time series broken down by browser."
           },
           {
             "name": "metrics",
@@ -2450,14 +2450,14 @@
                   "type": "null"
                 }
               ],
-              "description": "Comma-separated metrics to include. Defaults to `clicks,unique_clicks` if omitted.\n\n**Available metrics:**\n\n- `clicks` — total click count\n- `unique_clicks` — unique visitor count (deduplicated by IP + User-Agent)",
+              "description": "Comma-separated metrics to include. Defaults to `clicks,unique_clicks` if omitted.\n\n**Available metrics:**\n\n- `clicks` - total click count\n- `unique_clicks` - unique visitor count (deduplicated by IP + User-Agent)",
               "examples": [
                 "clicks,unique_clicks",
                 "clicks"
               ],
               "title": "Metrics"
             },
-            "description": "Comma-separated metrics to include. Defaults to `clicks,unique_clicks` if omitted.\n\n**Available metrics:**\n\n- `clicks` — total click count\n- `unique_clicks` — unique visitor count (deduplicated by IP + User-Agent)"
+            "description": "Comma-separated metrics to include. Defaults to `clicks,unique_clicks` if omitted.\n\n**Available metrics:**\n\n- `clicks` - total click count\n- `unique_clicks` - unique visitor count (deduplicated by IP + User-Agent)"
           },
           {
             "name": "timezone",
@@ -2490,14 +2490,14 @@
                   "type": "null"
                 }
               ],
-              "description": "**Method 1: JSON Filters Object**\n\nJSON string containing dimension filters. Format: `{\"dimension\": [\"value1\", \"value2\"]}`\n\n**Available filter dimensions:**\n\n- `browser` — Filter by browser name (e.g., Chrome, Firefox, Safari, Edge)\n- `os` — Filter by operating system (e.g., Windows, macOS, Linux, iOS, Android)\n- `country` — Filter by country name (e.g., United States, Canada, Germany)\n- `city` — Filter by city name (e.g., New York, London, Mumbai)\n- `referrer` — Filter by referrer URL (e.g., https://google.com, https://twitter.com)\n- `short_code` — Filter by URL alias (e.g., mylink, promo2024) — **not allowed** with `scope=anon`\n\n**Value format:** Array of strings for each dimension.\n\n**Important:** Filter values are case-sensitive. Use exact capitalization as stored in the database.\n\n**Examples:**\n\n- `{\"browser\": [\"Chrome\", \"Firefox\"]}` — Chrome OR Firefox clicks\n- `{\"country\": [\"United States\", \"Canada\"], \"browser\": [\"Chrome\"]}` — US/CA clicks from Chrome\n- `{\"short_code\": [\"link1\", \"link2\"]}` — Stats for specific URLs (`scope=all` only)\n\n**Alternative:** You can also pass filters as individual query parameters (see `browser`, `os`, `country`, `city`, `referrer` parameters below).",
+              "description": "**Method 1: JSON Filters Object**\n\nJSON string containing dimension filters. Format: `{\"dimension\": [\"value1\", \"value2\"]}`\n\n**Available filter dimensions:**\n\n- `browser` - Filter by browser name (e.g., Chrome, Firefox, Safari, Edge)\n- `os` - Filter by operating system (e.g., Windows, macOS, Linux, iOS, Android)\n- `country` - Filter by country name (e.g., United States, Canada, Germany)\n- `city` - Filter by city name (e.g., New York, London, Mumbai)\n- `referrer` - Filter by referrer URL (e.g., https://google.com, https://twitter.com)\n- `short_code` - Filter by URL alias (e.g., mylink, promo2024) - **not allowed** with `scope=anon`\n\n**Value format:** Array of strings for each dimension.\n\n**Important:** Filter values are case-sensitive. Use exact capitalization as stored in the database.\n\n**Examples:**\n\n- `{\"browser\": [\"Chrome\", \"Firefox\"]}` - Chrome OR Firefox clicks\n- `{\"country\": [\"United States\", \"Canada\"], \"browser\": [\"Chrome\"]}` - US/CA clicks from Chrome\n- `{\"short_code\": [\"link1\", \"link2\"]}` - Stats for specific URLs (`scope=all` only)\n\n**Alternative:** You can also pass filters as individual query parameters (see `browser`, `os`, `country`, `city`, `referrer` parameters below).",
               "examples": [
                 "{\"browser\":[\"Chrome\",\"Firefox\"]}",
                 "{\"country\":[\"United States\",\"Canada\"],\"browser\":[\"Chrome\"]}"
               ],
               "title": "Filters"
             },
-            "description": "**Method 1: JSON Filters Object**\n\nJSON string containing dimension filters. Format: `{\"dimension\": [\"value1\", \"value2\"]}`\n\n**Available filter dimensions:**\n\n- `browser` — Filter by browser name (e.g., Chrome, Firefox, Safari, Edge)\n- `os` — Filter by operating system (e.g., Windows, macOS, Linux, iOS, Android)\n- `country` — Filter by country name (e.g., United States, Canada, Germany)\n- `city` — Filter by city name (e.g., New York, London, Mumbai)\n- `referrer` — Filter by referrer URL (e.g., https://google.com, https://twitter.com)\n- `short_code` — Filter by URL alias (e.g., mylink, promo2024) — **not allowed** with `scope=anon`\n\n**Value format:** Array of strings for each dimension.\n\n**Important:** Filter values are case-sensitive. Use exact capitalization as stored in the database.\n\n**Examples:**\n\n- `{\"browser\": [\"Chrome\", \"Firefox\"]}` — Chrome OR Firefox clicks\n- `{\"country\": [\"United States\", \"Canada\"], \"browser\": [\"Chrome\"]}` — US/CA clicks from Chrome\n- `{\"short_code\": [\"link1\", \"link2\"]}` — Stats for specific URLs (`scope=all` only)\n\n**Alternative:** You can also pass filters as individual query parameters (see `browser`, `os`, `country`, `city`, `referrer` parameters below)."
+            "description": "**Method 1: JSON Filters Object**\n\nJSON string containing dimension filters. Format: `{\"dimension\": [\"value1\", \"value2\"]}`\n\n**Available filter dimensions:**\n\n- `browser` - Filter by browser name (e.g., Chrome, Firefox, Safari, Edge)\n- `os` - Filter by operating system (e.g., Windows, macOS, Linux, iOS, Android)\n- `country` - Filter by country name (e.g., United States, Canada, Germany)\n- `city` - Filter by city name (e.g., New York, London, Mumbai)\n- `referrer` - Filter by referrer URL (e.g., https://google.com, https://twitter.com)\n- `short_code` - Filter by URL alias (e.g., mylink, promo2024) - **not allowed** with `scope=anon`\n\n**Value format:** Array of strings for each dimension.\n\n**Important:** Filter values are case-sensitive. Use exact capitalization as stored in the database.\n\n**Examples:**\n\n- `{\"browser\": [\"Chrome\", \"Firefox\"]}` - Chrome OR Firefox clicks\n- `{\"country\": [\"United States\", \"Canada\"], \"browser\": [\"Chrome\"]}` - US/CA clicks from Chrome\n- `{\"short_code\": [\"link1\", \"link2\"]}` - Stats for specific URLs (`scope=all` only)\n\n**Alternative:** You can also pass filters as individual query parameters (see `browser`, `os`, `country`, `city`, `referrer` parameters below)."
           },
           {
             "name": "browser",
@@ -2622,7 +2622,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -2632,7 +2632,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -2642,7 +2642,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -2699,7 +2699,7 @@
           "Statistics"
         ],
         "summary": "Export Statistics",
-        "description": "Export URL click statistics as a downloadable file.\n\nGenerate a file export of click analytics data in the specified format.\nThe response is a binary download with appropriate `Content-Disposition` header.\n\n**Authentication**: Optional for `scope=anon` (public stats on a single URL);\nrequired for `scope=all`.\n\n**API Key Scope**: `stats:read`, `urls:read`, or `admin:all`\n\n**Rate Limits**:\n\n- Authenticated: 30/min, 1,000/day\n- Anonymous: 10/min, 200/day\n\n**Export Formats**:\n\n- `json` — single JSON file\n- `xml` — single XML file\n- `xlsx` — Excel spreadsheet with multiple sheets\n- `csv` — **ZIP archive** containing `summary.csv` plus one CSV file per metrics dimension\n\n**Note**: Export generation is resource-intensive. Lower rate limits apply\ncompared to other endpoints.",
+        "description": "Export URL click statistics as a downloadable file.\n\nGenerate a file export of click analytics data in the specified format.\nThe response is a binary download with appropriate `Content-Disposition` header.\n\n**Authentication**: Optional for `scope=anon` (public stats on a single URL);\nrequired for `scope=all`.\n\n**API Key Scope**: `stats:read`, `urls:read`, or `admin:all`\n\n**Rate Limits**:\n\n- Authenticated: 30/min, 1,000/day\n- Anonymous: 10/min, 200/day\n\n**Export Formats**:\n\n- `json` - single JSON file\n- `xml` - single XML file\n- `xlsx` - Excel spreadsheet with multiple sheets\n- `csv` - **ZIP archive** containing `summary.csv` plus one CSV file per metrics dimension\n\n**Note**: Export generation is resource-intensive. Lower rate limits apply\ncompared to other endpoints.",
         "operationId": "exportStats",
         "parameters": [
           {
@@ -2712,11 +2712,11 @@
                 "anon"
               ],
               "type": "string",
-              "description": "Statistics scope: `all` (authenticated only) or `anon` (public access).\n\n- `all` — aggregate stats across all URLs owned by the authenticated user. Requires authentication.\n- `anon` — public stats for a single URL. Requires `short_code` parameter. No authentication needed (unless stats are private).",
+              "description": "Statistics scope: `all` (authenticated only) or `anon` (public access).\n\n- `all` - aggregate stats across all URLs owned by the authenticated user. Requires authentication.\n- `anon` - public stats for a single URL. Requires `short_code` parameter. No authentication needed (unless stats are private).",
               "default": "all",
               "title": "Scope"
             },
-            "description": "Statistics scope: `all` (authenticated only) or `anon` (public access).\n\n- `all` — aggregate stats across all URLs owned by the authenticated user. Requires authentication.\n- `anon` — public stats for a single URL. Requires `short_code` parameter. No authentication needed (unless stats are private)."
+            "description": "Statistics scope: `all` (authenticated only) or `anon` (public access).\n\n- `all` - aggregate stats across all URLs owned by the authenticated user. Requires authentication.\n- `anon` - public stats for a single URL. Requires `short_code` parameter. No authentication needed (unless stats are private)."
           },
           {
             "name": "short_code",
@@ -2798,7 +2798,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Comma-separated grouping dimensions for the statistics breakdown. Defaults to `time` if omitted.\n\n**Available dimensions:**\n\n- `time` — group by time buckets (day/week/month, auto-selected based on range)\n- `browser` — group by browser name (e.g., Chrome, Firefox, Safari)\n- `os` — group by operating system (e.g., Windows, macOS, Linux)\n- `country` — group by country\n- `city` — group by city\n- `referrer` — group by referrer URL\n- `short_code` — group by URL alias (only with `scope=all`)\n\nMultiple dimensions can be combined: `time,browser` returns time series broken down by browser.",
+              "description": "Comma-separated grouping dimensions for the statistics breakdown. Defaults to `time` if omitted.\n\n**Available dimensions:**\n\n- `time` - group by time buckets (day/week/month, auto-selected based on range)\n- `browser` - group by browser name (e.g., Chrome, Firefox, Safari)\n- `os` - group by operating system (e.g., Windows, macOS, Linux)\n- `country` - group by country\n- `city` - group by city\n- `referrer` - group by referrer URL\n- `short_code` - group by URL alias (only with `scope=all`)\n\nMultiple dimensions can be combined: `time,browser` returns time series broken down by browser.",
               "examples": [
                 "time,browser",
                 "country",
@@ -2806,7 +2806,7 @@
               ],
               "title": "Group By"
             },
-            "description": "Comma-separated grouping dimensions for the statistics breakdown. Defaults to `time` if omitted.\n\n**Available dimensions:**\n\n- `time` — group by time buckets (day/week/month, auto-selected based on range)\n- `browser` — group by browser name (e.g., Chrome, Firefox, Safari)\n- `os` — group by operating system (e.g., Windows, macOS, Linux)\n- `country` — group by country\n- `city` — group by city\n- `referrer` — group by referrer URL\n- `short_code` — group by URL alias (only with `scope=all`)\n\nMultiple dimensions can be combined: `time,browser` returns time series broken down by browser."
+            "description": "Comma-separated grouping dimensions for the statistics breakdown. Defaults to `time` if omitted.\n\n**Available dimensions:**\n\n- `time` - group by time buckets (day/week/month, auto-selected based on range)\n- `browser` - group by browser name (e.g., Chrome, Firefox, Safari)\n- `os` - group by operating system (e.g., Windows, macOS, Linux)\n- `country` - group by country\n- `city` - group by city\n- `referrer` - group by referrer URL\n- `short_code` - group by URL alias (only with `scope=all`)\n\nMultiple dimensions can be combined: `time,browser` returns time series broken down by browser."
           },
           {
             "name": "metrics",
@@ -2822,14 +2822,14 @@
                   "type": "null"
                 }
               ],
-              "description": "Comma-separated metrics to include. Defaults to `clicks,unique_clicks` if omitted.\n\n**Available metrics:**\n\n- `clicks` — total click count\n- `unique_clicks` — unique visitor count (deduplicated by IP + User-Agent)",
+              "description": "Comma-separated metrics to include. Defaults to `clicks,unique_clicks` if omitted.\n\n**Available metrics:**\n\n- `clicks` - total click count\n- `unique_clicks` - unique visitor count (deduplicated by IP + User-Agent)",
               "examples": [
                 "clicks,unique_clicks",
                 "clicks"
               ],
               "title": "Metrics"
             },
-            "description": "Comma-separated metrics to include. Defaults to `clicks,unique_clicks` if omitted.\n\n**Available metrics:**\n\n- `clicks` — total click count\n- `unique_clicks` — unique visitor count (deduplicated by IP + User-Agent)"
+            "description": "Comma-separated metrics to include. Defaults to `clicks,unique_clicks` if omitted.\n\n**Available metrics:**\n\n- `clicks` - total click count\n- `unique_clicks` - unique visitor count (deduplicated by IP + User-Agent)"
           },
           {
             "name": "timezone",
@@ -2862,14 +2862,14 @@
                   "type": "null"
                 }
               ],
-              "description": "**Method 1: JSON Filters Object**\n\nJSON string containing dimension filters. Format: `{\"dimension\": [\"value1\", \"value2\"]}`\n\n**Available filter dimensions:**\n\n- `browser` — Filter by browser name (e.g., Chrome, Firefox, Safari, Edge)\n- `os` — Filter by operating system (e.g., Windows, macOS, Linux, iOS, Android)\n- `country` — Filter by country name (e.g., United States, Canada, Germany)\n- `city` — Filter by city name (e.g., New York, London, Mumbai)\n- `referrer` — Filter by referrer URL (e.g., https://google.com, https://twitter.com)\n- `short_code` — Filter by URL alias (e.g., mylink, promo2024) — **not allowed** with `scope=anon`\n\n**Value format:** Array of strings for each dimension.\n\n**Important:** Filter values are case-sensitive. Use exact capitalization as stored in the database.\n\n**Examples:**\n\n- `{\"browser\": [\"Chrome\", \"Firefox\"]}` — Chrome OR Firefox clicks\n- `{\"country\": [\"United States\", \"Canada\"], \"browser\": [\"Chrome\"]}` — US/CA clicks from Chrome\n- `{\"short_code\": [\"link1\", \"link2\"]}` — Stats for specific URLs (`scope=all` only)\n\n**Alternative:** You can also pass filters as individual query parameters (see `browser`, `os`, `country`, `city`, `referrer` parameters below).",
+              "description": "**Method 1: JSON Filters Object**\n\nJSON string containing dimension filters. Format: `{\"dimension\": [\"value1\", \"value2\"]}`\n\n**Available filter dimensions:**\n\n- `browser` - Filter by browser name (e.g., Chrome, Firefox, Safari, Edge)\n- `os` - Filter by operating system (e.g., Windows, macOS, Linux, iOS, Android)\n- `country` - Filter by country name (e.g., United States, Canada, Germany)\n- `city` - Filter by city name (e.g., New York, London, Mumbai)\n- `referrer` - Filter by referrer URL (e.g., https://google.com, https://twitter.com)\n- `short_code` - Filter by URL alias (e.g., mylink, promo2024) - **not allowed** with `scope=anon`\n\n**Value format:** Array of strings for each dimension.\n\n**Important:** Filter values are case-sensitive. Use exact capitalization as stored in the database.\n\n**Examples:**\n\n- `{\"browser\": [\"Chrome\", \"Firefox\"]}` - Chrome OR Firefox clicks\n- `{\"country\": [\"United States\", \"Canada\"], \"browser\": [\"Chrome\"]}` - US/CA clicks from Chrome\n- `{\"short_code\": [\"link1\", \"link2\"]}` - Stats for specific URLs (`scope=all` only)\n\n**Alternative:** You can also pass filters as individual query parameters (see `browser`, `os`, `country`, `city`, `referrer` parameters below).",
               "examples": [
                 "{\"browser\":[\"Chrome\",\"Firefox\"]}",
                 "{\"country\":[\"United States\",\"Canada\"],\"browser\":[\"Chrome\"]}"
               ],
               "title": "Filters"
             },
-            "description": "**Method 1: JSON Filters Object**\n\nJSON string containing dimension filters. Format: `{\"dimension\": [\"value1\", \"value2\"]}`\n\n**Available filter dimensions:**\n\n- `browser` — Filter by browser name (e.g., Chrome, Firefox, Safari, Edge)\n- `os` — Filter by operating system (e.g., Windows, macOS, Linux, iOS, Android)\n- `country` — Filter by country name (e.g., United States, Canada, Germany)\n- `city` — Filter by city name (e.g., New York, London, Mumbai)\n- `referrer` — Filter by referrer URL (e.g., https://google.com, https://twitter.com)\n- `short_code` — Filter by URL alias (e.g., mylink, promo2024) — **not allowed** with `scope=anon`\n\n**Value format:** Array of strings for each dimension.\n\n**Important:** Filter values are case-sensitive. Use exact capitalization as stored in the database.\n\n**Examples:**\n\n- `{\"browser\": [\"Chrome\", \"Firefox\"]}` — Chrome OR Firefox clicks\n- `{\"country\": [\"United States\", \"Canada\"], \"browser\": [\"Chrome\"]}` — US/CA clicks from Chrome\n- `{\"short_code\": [\"link1\", \"link2\"]}` — Stats for specific URLs (`scope=all` only)\n\n**Alternative:** You can also pass filters as individual query parameters (see `browser`, `os`, `country`, `city`, `referrer` parameters below)."
+            "description": "**Method 1: JSON Filters Object**\n\nJSON string containing dimension filters. Format: `{\"dimension\": [\"value1\", \"value2\"]}`\n\n**Available filter dimensions:**\n\n- `browser` - Filter by browser name (e.g., Chrome, Firefox, Safari, Edge)\n- `os` - Filter by operating system (e.g., Windows, macOS, Linux, iOS, Android)\n- `country` - Filter by country name (e.g., United States, Canada, Germany)\n- `city` - Filter by city name (e.g., New York, London, Mumbai)\n- `referrer` - Filter by referrer URL (e.g., https://google.com, https://twitter.com)\n- `short_code` - Filter by URL alias (e.g., mylink, promo2024) - **not allowed** with `scope=anon`\n\n**Value format:** Array of strings for each dimension.\n\n**Important:** Filter values are case-sensitive. Use exact capitalization as stored in the database.\n\n**Examples:**\n\n- `{\"browser\": [\"Chrome\", \"Firefox\"]}` - Chrome OR Firefox clicks\n- `{\"country\": [\"United States\", \"Canada\"], \"browser\": [\"Chrome\"]}` - US/CA clicks from Chrome\n- `{\"short_code\": [\"link1\", \"link2\"]}` - Stats for specific URLs (`scope=all` only)\n\n**Alternative:** You can also pass filters as individual query parameters (see `browser`, `os`, `country`, `city`, `referrer` parameters below)."
           },
           {
             "name": "browser",
@@ -3020,19 +3020,19 @@
                   "type": "string",
                   "format": "binary"
                 },
-                "x-description": "CSV export — ZIP archive containing summary.csv plus one file per dimension"
+                "x-description": "CSV export - ZIP archive containing summary.csv plus one file per dimension"
               },
               "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
                 "schema": {
                   "type": "string",
                   "format": "binary"
                 },
-                "x-description": "XLSX export — Excel workbook with multiple sheets"
+                "x-description": "XLSX export - Excel workbook with multiple sheets"
               }
             }
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -3042,7 +3042,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -3052,7 +3052,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -3082,7 +3082,7 @@
             }
           },
           "500": {
-            "description": "Internal server error — export generation failed",
+            "description": "Internal server error - export generation failed",
             "content": {
               "application/json": {
                 "schema": {
@@ -3119,7 +3119,7 @@
           "API Keys"
         ],
         "summary": "List API Keys",
-        "description": "List all API keys for the authenticated user.\n\nReturns metadata for all API keys (both active and revoked) belonging to the\nauthenticated user. The full token value is **never** returned in this\nendpoint for security reasons — only the `token_prefix` is shown.\n\n**Authentication**: Required — JWT Bearer or API key with appropriate scope.\n\n**Rate Limits**: 60/min",
+        "description": "List all API keys for the authenticated user.\n\nReturns metadata for all API keys (both active and revoked) belonging to the\nauthenticated user. The full token value is **never** returned in this\nendpoint for security reasons - only the `token_prefix` is shown.\n\n**Authentication**: Required - JWT Bearer or API key with appropriate scope.\n\n**Rate Limits**: 60/min",
         "operationId": "listApiKeys",
         "responses": {
           "200": {
@@ -3133,7 +3133,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -3143,7 +3143,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -3153,7 +3153,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -3189,7 +3189,7 @@
           "API Keys"
         ],
         "summary": "Create API Key",
-        "description": "Create a new API key for programmatic access.\n\nGenerate a new API key with the specified name and scopes. The full token\n(prefixed with `spoo_`) is returned **only in this response** and cannot be\nretrieved again.\n\n**Authentication**: Required — JWT Bearer only (API keys cannot create other\nAPI keys). Email must be verified.\n\n**Rate Limits**: 5/hour\n\n**Available Scopes**: `shorten:create`, `urls:manage`, `urls:read`,\n`stats:read`, `admin:all`\n\n**Notes**:\n\n- Store the returned `token` securely — it will not be shown again\n- Set `expires_at` to limit the key's lifetime (ISO 8601 or Unix epoch)\n- Omit `expires_at` for a non-expiring key",
+        "description": "Create a new API key for programmatic access.\n\nGenerate a new API key with the specified name and scopes. The full token\n(prefixed with `spoo_`) is returned **only in this response** and cannot be\nretrieved again.\n\n**Authentication**: Required - JWT Bearer only (API keys cannot create other\nAPI keys). Email must be verified.\n\n**Rate Limits**: 5/hour\n\n**Available Scopes**: `shorten:create`, `urls:manage`, `urls:read`,\n`stats:read`, `admin:all`\n\n**Notes**:\n\n- Store the returned `token` securely - it will not be shown again\n- Set `expires_at` to limit the key's lifetime (ISO 8601 or Unix epoch)\n- Omit `expires_at` for a non-expiring key",
         "operationId": "createApiKey",
         "requestBody": {
           "content": {
@@ -3213,7 +3213,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -3223,7 +3223,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -3233,7 +3233,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -3263,7 +3263,7 @@
             }
           },
           "409": {
-            "description": "Conflict — resource already exists",
+            "description": "Conflict - resource already exists",
             "content": {
               "application/json": {
                 "schema": {
@@ -3291,7 +3291,7 @@
           "API Keys"
         ],
         "summary": "Delete/Revoke API Key",
-        "description": "Delete or revoke an API key.\n\nRemove an API key either permanently (hard delete) or by marking it as\nrevoked (soft delete). Revoked keys stop working immediately but remain\nvisible in the key list for audit purposes.\n\n**Authentication**: Required — JWT Bearer or API key.\n\n**Rate Limits**: 30/min\n\n**Modes**:\n\n- `?revoke=false` (default) — **permanently deletes** the key record\n- `?revoke=true` — marks the key as revoked but preserves the record;\n  the key appears with `revoked: true` in the list endpoint",
+        "description": "Delete or revoke an API key.\n\nRemove an API key either permanently (hard delete) or by marking it as\nrevoked (soft delete). Revoked keys stop working immediately but remain\nvisible in the key list for audit purposes.\n\n**Authentication**: Required - JWT Bearer or API key.\n\n**Rate Limits**: 30/min\n\n**Modes**:\n\n- `?revoke=false` (default) - **permanently deletes** the key record\n- `?revoke=true` - marks the key as revoked but preserves the record;\n  the key appears with `revoked: true` in the list endpoint",
         "operationId": "deleteApiKey",
         "parameters": [
           {
@@ -3329,7 +3329,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -3339,7 +3339,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -3349,7 +3349,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -3421,7 +3421,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -3431,7 +3431,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -3441,7 +3441,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -3471,7 +3471,7 @@
             }
           },
           "409": {
-            "description": "Conflict — resource already exists",
+            "description": "Conflict - resource already exists",
             "content": {
               "application/json": {
                 "schema": {
@@ -3537,7 +3537,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -3547,7 +3547,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -3557,7 +3557,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -3632,7 +3632,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -3642,7 +3642,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -3652,7 +3652,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -3682,7 +3682,7 @@
             }
           },
           "409": {
-            "description": "Conflict — resource already exists",
+            "description": "Conflict - resource already exists",
             "content": {
               "application/json": {
                 "schema": {
@@ -3737,7 +3737,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -3747,7 +3747,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -3757,7 +3757,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -3803,7 +3803,7 @@
           "Custom Domains"
         ],
         "summary": "Update Custom Domain Routing",
-        "description": "Update the per-domain routing config.\n\nPartial update — send only the fields you want to change. Omit a field to\nleave it untouched. Send explicit `null` to clear a stored value. The\nconfig takes effect only when the domain is `ACTIVE`; non-ACTIVE domains\nreturn 422.\n\n**Configurable fields**:\n- `root_redirect` — destination for `GET /` (302).\n- `not_found_redirect` — fallback for any path that doesn't match an alias.\n- `custom_robots_txt` — body served at `/robots.txt` (≤4096 chars).\n\n**Authentication**: Required (JWT or API key with `domains:manage`).\n\n**Rate Limits**: 30/min.\n\n**Responses**:\n- 200 — updated; full domain response returned\n- 403 — caller does not own this domain\n- 404 — domain not found (or invalid id)\n- 422 — domain isn't ACTIVE, or body fails validation",
+        "description": "Update the per-domain routing config.\n\nPartial update - send only the fields you want to change. Omit a field to\nleave it untouched. Send explicit `null` to clear a stored value. The\nconfig takes effect only when the domain is `ACTIVE`; non-ACTIVE domains\nreturn 422.\n\n**Configurable fields**:\n- `root_redirect` - destination for `GET /` (302).\n- `not_found_redirect` - fallback for any path that doesn't match an alias.\n- `custom_robots_txt` - body served at `/robots.txt` (≤4096 chars).\n\n**Authentication**: Required (JWT or API key with `domains:manage`).\n\n**Rate Limits**: 30/min.\n\n**Responses**:\n- 200 - updated; full domain response returned\n- 403 - caller does not own this domain\n- 404 - domain not found (or invalid id)\n- 422 - domain isn't ACTIVE, or body fails validation",
         "operationId": "updateCustomDomain",
         "parameters": [
           {
@@ -3840,7 +3840,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -3850,7 +3850,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -3860,7 +3860,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -3890,7 +3890,7 @@
             }
           },
           "409": {
-            "description": "Conflict — resource already exists",
+            "description": "Conflict - resource already exists",
             "content": {
               "application/json": {
                 "schema": {
@@ -3916,7 +3916,7 @@
           "Custom Domains"
         ],
         "summary": "Revoke Custom Domain",
-        "description": "Revoke a custom domain. `REVOKED` is terminal.\n\nWith `?cascade=true`, all URLs owned by the caller on the domain are\nbulk-deleted. With `?cascade=false` (default), URLs remain in the\ndatabase and the domain stops serving — the URLs effectively become\norphans until the domain is re-registered or garbage-collected.\n\n**Authentication**: Required (JWT or API key with `domains:manage`).\n\n**Rate Limits**: 10/min.",
+        "description": "Revoke a custom domain. `REVOKED` is terminal.\n\nWith `?cascade=true`, all URLs owned by the caller on the domain are\nbulk-deleted. With `?cascade=false` (default), URLs remain in the\ndatabase and the domain stops serving - the URLs effectively become\norphans until the domain is re-registered or garbage-collected.\n\n**Authentication**: Required (JWT or API key with `domains:manage`).\n\n**Rate Limits**: 10/min.",
         "operationId": "deleteCustomDomain",
         "parameters": [
           {
@@ -3955,7 +3955,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -3965,7 +3965,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -3975,7 +3975,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -4005,7 +4005,7 @@
             }
           },
           "409": {
-            "description": "Conflict — resource already exists",
+            "description": "Conflict - resource already exists",
             "content": {
               "application/json": {
                 "schema": {
@@ -4033,7 +4033,7 @@
           "Custom Domains"
         ],
         "summary": "Remove Revoked Custom Domain",
-        "description": "Permanently delete a revoked custom domain to free the account slot.\n\nSoft-deleted (REVOKED) domains continue to occupy the caller's per-account\nquota so revoke is reversible and the audit trail stays intact. To free\nthe slot, the caller explicitly removes the doc via this endpoint. Only\nREVOKED docs are removable — call DELETE first to revoke an active one.\n\n**Authentication**: Required (JWT or API key with `domains:manage`).\n\n**Rate Limits**: 10/min.\n\n**Responses**:\n- 204 — removed\n- 403 — caller does not own this domain\n- 404 — domain not found (or invalid id)\n- 422 — domain isn't REVOKED",
+        "description": "Permanently delete a revoked custom domain to free the account slot.\n\nSoft-deleted (REVOKED) domains continue to occupy the caller's per-account\nquota so revoke is reversible and the audit trail stays intact. To free\nthe slot, the caller explicitly removes the doc via this endpoint. Only\nREVOKED docs are removable - call DELETE first to revoke an active one.\n\n**Authentication**: Required (JWT or API key with `domains:manage`).\n\n**Rate Limits**: 10/min.\n\n**Responses**:\n- 204 - removed\n- 403 - caller does not own this domain\n- 404 - domain not found (or invalid id)\n- 422 - domain isn't REVOKED",
         "operationId": "removeCustomDomain",
         "parameters": [
           {
@@ -4053,7 +4053,7 @@
             "description": "Successful Response"
           },
           "400": {
-            "description": "Bad Request — invalid parameters",
+            "description": "Bad Request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -4063,7 +4063,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized — missing or invalid credentials",
+            "description": "Unauthorized - missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -4073,7 +4073,7 @@
             }
           },
           "403": {
-            "description": "Forbidden — insufficient permissions or scope",
+            "description": "Forbidden - insufficient permissions or scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -4103,7 +4103,7 @@
             }
           },
           "409": {
-            "description": "Conflict — resource already exists",
+            "description": "Conflict - resource already exists",
             "content": {
               "application/json": {
                 "schema": {
@@ -4297,7 +4297,7 @@
           "token"
         ],
         "title": "ApiKeyCreatedResponse",
-        "description": "Response for POST /api/v1/keys (201).\n\nExtends ApiKeyResponse by adding the full ``token``.  This is the ONLY time\nthe token is returned — it is hashed before storage."
+        "description": "Response for POST /api/v1/keys (201).\n\nExtends ApiKeyResponse by adding the full ``token``.  This is the ONLY time\nthe token is returned - it is hashed before storage."
       },
       "ApiKeyResponse": {
         "properties": {
@@ -4405,7 +4405,7 @@
           "revoked"
         ],
         "title": "ApiKeyResponse",
-        "description": "A single API key entry as returned by the list endpoint.\n\nThe full token is never returned here — only the ``token_prefix`` for display."
+        "description": "A single API key entry as returned by the list endpoint.\n\nThe full token is never returned here - only the ``token_prefix`` for display."
       },
       "ApiKeysListResponse": {
         "properties": {
@@ -4751,7 +4751,7 @@
           "long_url"
         ],
         "title": "CreateUrlRequest",
-        "description": "Request body for creating a new shortened URL.\n\nAccepts ``url`` as an alias for ``long_url`` — the existing API supports both."
+        "description": "Request body for creating a new shortened URL.\n\nAccepts ``url`` as an alias for ``long_url`` - the existing API supports both."
       },
       "CustomDomainDeleteResponse": {
         "properties": {
@@ -4947,7 +4947,7 @@
           "created_at"
         ],
         "title": "CustomDomainResponse",
-        "description": "A single custom domain — covers create, get, verify, and list responses."
+        "description": "A single custom domain - covers create, get, verify, and list responses."
       },
       "DeleteUrlResponse": {
         "properties": {
@@ -5828,7 +5828,7 @@
           "timezone"
         ],
         "title": "TimeBucketInfo",
-        "description": "Time bucketing metadata — only present when 'time' is in group_by."
+        "description": "Time bucketing metadata - only present when 'time' is in group_by."
       },
       "UpdateCustomDomainRequest": {
         "properties": {
@@ -5879,7 +5879,7 @@
               }
             ],
             "title": "Custom Robots Txt",
-            "description": "Override the default `User-agent: *\\nDisallow: /` body served at /robots.txt. Capped at 4096 chars. Pass `null` to clear. Note: responses to alias redirects always carry `X-Robots-Tag: noindex, nofollow, noarchive` regardless of this field — short URLs are pure redirects with no indexable content."
+            "description": "Override the default `User-agent: *\\nDisallow: /` body served at /robots.txt. Capped at 4096 chars. Pass `null` to clear. Note: responses to alias redirects always carry `X-Robots-Tag: noindex, nofollow, noarchive` regardless of this field - short URLs are pure redirects with no indexable content."
           }
         },
         "type": "object",
@@ -6390,7 +6390,7 @@
           "sortOrder"
         ],
         "title": "UrlListResponse",
-        "description": "Response body for GET /api/v1/urls.\n\nUses camelCase field names to match the existing Flask endpoint exactly.\nField names are camelCase here (not snake_case + alias) because this is a\nresponse-only model — we build it explicitly in the route handler."
+        "description": "Response body for GET /api/v1/urls.\n\nUses camelCase field names to match the existing Flask endpoint exactly.\nField names are camelCase here (not snake_case + alias) because this is a\nresponse-only model - we build it explicitly in the route handler."
       },
       "UrlResponse": {
         "properties": {
@@ -6470,7 +6470,7 @@
           "status"
         ],
         "title": "UrlResponse",
-        "description": "Response body for a newly created shortened URL (POST /api/v1/shorten).\n\n``created_at`` is a Unix timestamp integer — matching the existing endpoint."
+        "description": "Response body for a newly created shortened URL (POST /api/v1/shorten).\n\n``created_at`` is a Unix timestamp integer - matching the existing endpoint."
       },
       "UrlStatus": {
         "type": "string",
@@ -6606,7 +6606,7 @@
           "auth_providers"
         ],
         "title": "UserProfileResponse",
-        "description": "User profile shape — used in login/register/me responses."
+        "description": "User profile shape - used in login/register/me responses."
       },
       "ValidationError": {
         "properties": {
