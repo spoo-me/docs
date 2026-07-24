@@ -1,0 +1,183 @@
+---
+title: "Configuration"
+description: "Every environment variable your instance reads"
+icon: "settings"
+---
+
+All configuration is environment variables. This page lists what your instance actually reads, grouped by how likely you are to need it. Most deployments only need the first two sections.
+
+## Required
+
+| Variable | Default | What it does |
+|---|---|---|
+| `MONGODB_URI` | none | MongoDB connection string. The app does not boot without it. |
+| `SECRET_KEY` | empty | Master secret for session signing. Generate with `python -c "import os; print(os.urandom(32).hex())"`. Required in practice, and boot fails if webhooks are enabled without it. |
+| `APP_URL` | `https://spoo.me` | The full public URL of your instance, scheme included. The default short-link domain is derived from it. |
+| `ENV` | `development` | Set to `production` on real deployments. Gates several safety checks. |
+
+<Warning>
+`APP_URL` must match the domain you actually serve from. Requests arriving on any other hostname are treated as an unknown custom domain and answered with a 404. This is the single most common broken-deployment cause.
+</Warning>
+
+## Recommended
+
+| Variable | Default | What it does |
+|---|---|---|
+| `REDIS_URI` | unset | Cache Redis for URL lookups and rate limiting. Without it the app works but every redirect hits MongoDB. |
+| `CONTACT_WEBHOOK` | empty | Discord webhook for contact form submissions. Empty disables the contact form. |
+| `URL_REPORT_WEBHOOK` | empty | Discord webhook for URL abuse reports. Empty disables reporting. |
+| `LOG_FORMAT` | `console` | Use `json` in production. |
+| `COOKIE_SECURE` | `true` | Set `false` only for local HTTP development. |
+
+## Authentication
+
+JWT signing prefers an RS256 keypair; it falls back to HS256 with `JWT_SECRET` when the keypair is absent. See [setting up authentication](/self-hosting/setting-up-authentication) for key generation.
+
+| Variable | Default | What it does |
+|---|---|---|
+| `JWT_PRIVATE_KEY` | empty | RS256 private key (preferred). |
+| `JWT_PUBLIC_KEY` | empty | RS256 public key. |
+| `JWT_SECRET` | empty | HS256 fallback secret, used only when the keypair is absent. |
+| `JWT_ISSUER` | `spoo.me` | JWT `iss` claim. |
+| `JWT_AUDIENCE` | `spoo.me.api` | JWT `aud` claim. |
+| `ACCESS_TOKEN_TTL_SECONDS` | `900` | Access token lifetime. |
+| `REFRESH_TOKEN_TTL_SECONDS` | `2592000` | Refresh token lifetime (30 days). |
+
+### OAuth providers
+
+Each provider activates when its client ID and secret are both set.
+
+| Variable | What it does |
+|---|---|
+| `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET` / `GOOGLE_OAUTH_REDIRECT_URI` | Google sign-in |
+| `GITHUB_OAUTH_CLIENT_ID` / `GITHUB_OAUTH_CLIENT_SECRET` / `GITHUB_OAUTH_REDIRECT_URI` | GitHub sign-in |
+| `DISCORD_OAUTH_CLIENT_ID` / `DISCORD_OAUTH_CLIENT_SECRET` / `DISCORD_OAUTH_REDIRECT_URI` | Discord sign-in |
+
+### Email
+
+Transactional email (verification, password reset) uses ZeptoMail and is silently disabled when the token is empty.
+
+| Variable | Default | What it does |
+|---|---|---|
+| `ZEPTO_API_TOKEN` | empty | ZeptoMail Send Mail API token. |
+| `ZEPTO_FROM_EMAIL` | `noreply@spoo.me` | Sender address. |
+| `ZEPTO_FROM_NAME` | `spoo.me` | Sender display name. |
+
+### Captcha
+
+| Variable | What it does |
+|---|---|
+| `HCAPTCHA_SECRET` | hCaptcha server-side secret. Empty disables captcha checks. |
+| `HCAPTCHA_SITEKEY` | hCaptcha public site key rendered in forms. |
+
+## Observability
+
+| Variable | Default | What it does |
+|---|---|---|
+| `LOG_LEVEL` | `INFO` | DEBUG, INFO, WARNING, ERROR, or CRITICAL. |
+| `SENTRY_DSN` | empty | Enables Sentry error tracking. |
+| `SENTRY_SEND_PII` | `false` | Whether Sentry receives user emails and IPs. |
+| `SENTRY_TRACES_SAMPLE_RATE` | `0.1` | Transaction trace sampling. |
+| `CLARITY_ID` | empty | Microsoft Clarity tracking ID. |
+| `SAMPLE_RATE_REDIRECT` | `0.05` | Log sampling for redirects. Similar knobs exist for stats (`SAMPLE_RATE_STATS`), cache (`SAMPLE_RATE_CACHE`), and export (`SAMPLE_RATE_EXPORT`). |
+
+## Feature switches
+
+Some features have an environment master switch, a per-user feature flag in MongoDB, or both. See [feature flags](#feature-flags) below for the flag half.
+
+<AccordionGroup>
+<Accordion title="Custom domains (CUSTOM_DOMAINS_*)">
+
+| Variable | Default | What it does |
+|---|---|---|
+| `CUSTOM_DOMAINS_ENABLED` | `false` | Master switch for the whole feature. |
+| `CUSTOM_DOMAINS_MAX_PER_USER` | `1` | Domains allowed per user. |
+| `CUSTOM_DOMAINS_CF_ZONE_ID` | unset | Cloudflare zone for SaaS custom hostnames. Setting it requires `CUSTOM_DOMAINS_CF_API_TOKEN` too, or the app refuses to boot. |
+| `CUSTOM_DOMAINS_CF_API_TOKEN` | unset | Cloudflare API token. |
+| `CUSTOM_DOMAINS_CF_CNAME_TARGET` | `customers.spoo.me` | The CNAME target shown to users. Point this at your own edge. |
+| `CUSTOM_DOMAINS_MOCK_DCV` | `false` | Development only: verification always succeeds. The app refuses to boot with this on in production. |
+
+Re-verification worker tuning: `CUSTOM_DOMAINS_REVERIFY_INTERVAL_SECONDS` (3600), `CUSTOM_DOMAINS_REVERIFY_BATCH_SIZE` (10), `CUSTOM_DOMAINS_MAX_VERIFY_AGE_SECONDS` (604800), `CUSTOM_DOMAINS_SUSPEND_AFTER_CONSECUTIVE_FAILURES` (3), `CUSTOM_DOMAINS_VERIFY_ATTEMPTS_PER_HOUR` (60).
+</Accordion>
+
+<Accordion title="Webhooks (WEBHOOKS_*)">
+
+| Variable | Default | What it does |
+|---|---|---|
+| `WEBHOOKS_ENABLED` | `false` | Master switch for user-facing webhook deliveries. Requires `SECRET_KEY`, or the app refuses to boot. |
+| `WEBHOOKS_RUNTIME` | `auto` | Where the delivery executor runs: `auto`, `worker`, `embedded`, or `off`. |
+| `WEBHOOKS_MAX_ENDPOINTS` | `5` | Endpoints per user. |
+| `WEBHOOKS_DELIVERY_TIMEOUT_SECONDS` | `15` | Per-delivery HTTP timeout. |
+| `WEBHOOKS_MAX_CONSECUTIVE_FAILURES` | `10` | Failures before an endpoint auto-disables. |
+| `WEBHOOKS_DELIVERY_LOG_TTL_DAYS` | `30` | Retention for events and delivery logs. Changing it rebuilds the TTL indexes on next boot. |
+| `WEBHOOKS_MAX_PENDING_PER_ENDPOINT` | `1000` | Pending deliveries cap per endpoint; overflow is dropped and counted. |
+</Accordion>
+
+<Accordion title="Click events pipeline (CLICK_EVENTS_*)">
+
+By default clicks are tracked inline. Stream mode offloads them to a worker through a dedicated Redis.
+
+| Variable | Default | What it does |
+|---|---|---|
+| `CLICK_EVENTS_SINK` | `inline` | `inline` or `stream`. |
+| `CLICK_EVENTS_QUEUE_REDIS_URI` | empty | Dedicated queue Redis for stream mode. Must be separate from the cache Redis: the queue needs noeviction and AOF persistence, while the cache evicts. |
+| `CLICK_EVENTS_WORKER_GROUPS` | `stats,hotness` | Which consumer groups the worker runs. |
+| `CLICK_EVENTS_HOTNESS_ENABLED` | `false` | Hot-URL detection consumer (required for edge cache). |
+
+The compose file ships this as an opt-in profile: `docker compose --profile click-events up`.
+</Accordion>
+
+<Accordion title="Meta tags and R2 image storage (META_TAGS_*, R2_*)">
+
+Custom link previews can store uploaded og:images in Cloudflare R2. R2 activates only when all five of `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, and `R2_PUBLIC_BASE_URL` are set; without them, https image URLs still work and only data-URI uploads are rejected.
+
+Validation tuning lives under `META_TAGS_*` (fetch timeout, size caps, redirects, user agent). Async og:image validation (`META_TAGS_ASYNC_IMAGE_VALIDATION`, default true) requires the click-events queue Redis; otherwise it silently skips.
+</Accordion>
+
+<Accordion title="Edge cache (EDGE_CACHE_*)">
+
+Serves hot redirects from Cloudflare Workers KV. Activates when `EDGE_CACHE_CF_API_TOKEN` and `EDGE_CACHE_KV_NAMESPACE_ID` are set (plus `EDGE_CACHE_CF_ACCOUNT_ID` or a dev `EDGE_CACHE_API_BASE`). Requires stream-mode click events with the hotness consumer enabled, and a deployed edge worker. Tuning: `EDGE_CACHE_TTL_SECONDS` (300), `EDGE_CACHE_OG_TTL_SECONDS` (86400).
+</Accordion>
+
+<Accordion title="Tuning and limits">
+
+| Variable | Default | What it does |
+|---|---|---|
+| `DB_NAME` | `url-shortener` | Mongo database name. |
+| `MAX_ACTIVE_API_KEYS` | `20` | Active API keys per user. |
+| `MAX_DATE_RANGE_DAYS` | `90` | Max stats query range. |
+| `MAX_CONTENT_LENGTH` | `1048576` | Request body cap in bytes. |
+| `URL_PASSWORD_MIN_LENGTH` | `8` | Minimum URL password length. |
+| `GEO_RULES_MAX_COUNTRIES` | `50` | Countries per geo-targeting rule set. |
+| `MAX_EMOJI_ALIAS_LENGTH` | `15` | Max emoji alias length. |
+| `EMOJI_ACCEPT_MAX_VERSION` | `15.1` | Newest Unicode emoji version accepted. |
+| `ONBOARDING_REDIRECT_ENABLED` | `false` | Redirect new signups to the onboarding wizard. Leave off unless you also run the Next.js frontend. |
+| `EDGE_COMPOSED_ERRORS` | `false` | Empty error bodies for edge-composed error pages. Leave off unless your reverse proxy composes them. |
+</Accordion>
+</AccordionGroup>
+
+## Feature flags
+
+Some features are additionally gated per user by documents in the `feature_flags` MongoDB collection: `custom_domains`, `geo_targeting`, `custom_meta_tags`, and `webhooks`. An unregistered flag is off for everyone. To enable a feature for all users on your instance:
+
+```javascript
+db.feature_flags.updateOne(
+  { name: "custom_domains" },
+  {
+    $set: { enabled: true, rollout_type: "everyone", updated_at: new Date() },
+    $setOnInsert: { created_at: new Date(), name: "custom_domains" }
+  },
+  { upsert: true }
+)
+```
+
+Run it in `mongosh` against your database (`use url-shortener` first), once per flag you want on.
+
+## Boot failures to know about
+
+These combinations stop the app from starting rather than degrading quietly:
+
+- `CUSTOM_DOMAINS_MOCK_DCV=true` together with `ENV=production`
+- `WEBHOOKS_ENABLED=true` with an empty `SECRET_KEY`
+- `CUSTOM_DOMAINS_CF_ZONE_ID` set without `CUSTOM_DOMAINS_CF_API_TOKEN`
+- An `APP_URL` without a valid scheme and host

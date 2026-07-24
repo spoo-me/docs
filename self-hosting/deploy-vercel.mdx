@@ -1,0 +1,66 @@
+---
+title: "Deploy on Vercel"
+description: "One-click Spoo.me deployment on Vercel's free tier"
+icon: "triangle"
+---
+
+Vercel offers a generous free plan and the fastest path from zero to a running instance. This is the recommended platform if you just want your own Spoo.me without managing servers.
+
+<Warning>
+Complete the prerequisites first:
+- [Set up MongoDB](/self-hosting/setting-up-mongo)
+- [Set up authentication](/self-hosting/setting-up-authentication) (for v1 API features)
+- [Create Discord webhooks](/self-hosting/creating-discord-webhooks)
+</Warning>
+
+## Deploy
+
+<Steps>
+<Step title="Click deploy">
+    <a href="https://vercel.com/new/clone?repository-url=https://github.com/spoo-me/spoo&env=MONGODB_URI,SECRET_KEY,APP_URL,CONTACT_WEBHOOK,URL_REPORT_WEBHOOK" target="_blank">
+        <img noZoom src="https://vercel.com/button" alt="Deploy with Vercel" />
+    </a>
+
+    Vercel forks the repository to your GitHub account, creates a project, and prompts for environment variables.
+</Step>
+
+<Step title="Fill in environment variables">
+    Enter the values you prepared during the prerequisites. Every variable is documented in the [configuration reference](/self-hosting/configuration).
+
+    For `APP_URL`, use the URL your project will live at. If you plan to use the default Vercel domain, you can set a placeholder now and correct it in the next step.
+</Step>
+
+<Step title="Set APP_URL to your real URL">
+    After the first deploy, Vercel assigns your project a domain like `https://your-project.vercel.app`. Set `APP_URL` to exactly that URL (scheme included) in **Settings → Environment Variables**, then redeploy.
+
+    <Warning>
+    `APP_URL` must match the domain you serve the app from. Requests on any other hostname are treated as an unknown custom domain and answered with a 404, which makes the deployment look completely broken.
+    </Warning>
+</Step>
+
+<Step title="Verify">
+    1. Open your deployment URL and shorten a test link
+    2. Open the short link and confirm the redirect
+    3. Submit the contact form and check the Discord webhook fires
+</Step>
+</Steps>
+
+## Custom domain
+
+Add your own domain in **Settings → Domains** on the Vercel dashboard, point DNS as instructed, and update `APP_URL` to the new domain. Vercel issues SSL certificates automatically.
+
+## Platform notes
+
+- The deployed code is exactly what is in your fork; pull upstream changes into the fork to update.
+- Vercel's free tier limits serverless execution time; sustained heavy traffic may need a paid plan or a VPS deployment instead.
+
+## Next steps
+
+<CardGroup cols={2}>
+<Card title="Configuration reference" icon="settings" href="/self-hosting/configuration">
+    Every environment variable, explained
+</Card>
+<Card title="Docker deployment" icon="docker" href="/self-hosting/docker-deployment">
+    Full control on your own server
+</Card>
+</CardGroup>

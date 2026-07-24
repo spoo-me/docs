@@ -1,0 +1,60 @@
+---
+title: "Deploy on Render"
+description: "Deploy Spoo.me as a Render blueprint"
+icon: "server"
+---
+
+Render provides 750 free hours per month, enough to keep one Spoo.me instance running continuously.
+
+<Warning>
+Complete the prerequisites first:
+- [Set up MongoDB](/self-hosting/setting-up-mongo)
+- [Set up authentication](/self-hosting/setting-up-authentication) (for v1 API features)
+- [Create Discord webhooks](/self-hosting/creating-discord-webhooks)
+</Warning>
+
+## Deploy
+
+<Steps>
+<Step title="Create an account">
+    Sign up at [render.com](https://render.com/register).
+</Step>
+
+<Step title="Deploy from the blueprint">
+    <a href="https://render.com/deploy?repo=https://github.com/spoo-me/spoo" target="_blank">
+        <img noZoom src="https://render.com/images/deploy-to-render-button.svg" alt="Deploy to Render" />
+    </a>
+
+    Name the blueprint (for example "Spoo.me") and fill in the environment variables. Every variable is documented in the [configuration reference](/self-hosting/configuration).
+</Step>
+
+<Step title="Set APP_URL to your real URL">
+    Your app will be served at `https://your-project.onrender.com`. Set `APP_URL` to exactly that value, scheme included, and redeploy.
+
+    <Warning>
+    Without a matching `APP_URL`, every request is treated as an unknown custom domain and answered with a 404.
+    </Warning>
+</Step>
+
+<Step title="Verify">
+    1. Open your deployment URL and shorten a test link
+    2. Open the short link and confirm the redirect
+    3. Submit the contact form and check the Discord webhook fires
+</Step>
+</Steps>
+
+## Platform notes
+
+- Render free-tier services spin down when idle and cold-start on the next request; the first hit after a quiet period is slow.
+- SSL certificates and scaling are handled automatically.
+
+## Next steps
+
+<CardGroup cols={2}>
+<Card title="Configuration reference" icon="settings" href="/self-hosting/configuration">
+    Every environment variable, explained
+</Card>
+<Card title="Docker deployment" icon="docker" href="/self-hosting/docker-deployment">
+    Full control on your own server
+</Card>
+</CardGroup>

@@ -1,0 +1,62 @@
+---
+title: "Deploy on Railway"
+description: "Deploy Spoo.me from a Railway template"
+icon: "train-front"
+---
+
+Railway gives verified accounts $5 in free credits, which typically covers 5 to 7 months of a small Spoo.me instance.
+
+<Warning>
+Complete the prerequisites first:
+- [Set up MongoDB](/self-hosting/setting-up-mongo)
+- [Set up authentication](/self-hosting/setting-up-authentication) (for v1 API features)
+- [Create Discord webhooks](/self-hosting/creating-discord-webhooks)
+</Warning>
+
+## Deploy
+
+<Steps>
+<Step title="Create and verify your account">
+    Sign up at [railway.app](https://railway.app/login) and verify with your email. Connecting your GitHub account counts as additional verification. Verification is required to receive the free credit.
+</Step>
+
+<Step title="Deploy from the template">
+    <a href="https://railway.com/deploy/_6W-dI?referralCode=C97i2L" target="_blank">
+        <img noZoom src="https://railway.app/button.svg" alt="Deploy on Railway" />
+    </a>
+</Step>
+
+<Step title="Fill in environment variables">
+    Railway prompts for the required variables. Every variable is documented in the [configuration reference](/self-hosting/configuration).
+</Step>
+
+<Step title="Set APP_URL to your real URL">
+    After deploying, copy your URL from the **Deployments** tab (it looks like `https://your-project.up.railway.app`) and set `APP_URL` to exactly that value, scheme included, then redeploy.
+
+    <Warning>
+    Without a matching `APP_URL`, every request is treated as an unknown custom domain and answered with a 404.
+    </Warning>
+</Step>
+
+<Step title="Verify">
+    1. Open your deployment URL and shorten a test link
+    2. Open the short link and confirm the redirect
+    3. Submit the contact form and check the Discord webhook fires
+</Step>
+</Steps>
+
+## Platform notes
+
+- A 502 right after deploy is normal; it resolves within a few minutes as the service starts.
+- Railway bills by usage; watch the credit meter under your account.
+
+## Next steps
+
+<CardGroup cols={2}>
+<Card title="Configuration reference" icon="settings" href="/self-hosting/configuration">
+    Every environment variable, explained
+</Card>
+<Card title="Docker deployment" icon="docker" href="/self-hosting/docker-deployment">
+    Full control on your own server
+</Card>
+</CardGroup>

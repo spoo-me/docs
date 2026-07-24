@@ -1,162 +1,57 @@
 ---
 title: "Introduction"
-description: ""
+description: "Run your own Spoo.me instance"
 icon: "book-open"
 ---
 
-
-Spoo.me offers multiple deployment methods to suit different technical expertise levels and infrastructure preferences. Each method provides varying degrees of control, customization, and complexity.
+Spoo.me is open source and built to be self-hosted. A self-hosted instance has full feature parity with spoo.me: the same API, the same dashboard, the same analytics, on your infrastructure and your domain.
 
 <Info>
-Our support is tailored to individual needs. Should you have any inquiries, we invite you to pose them on our [Discord server](https://spoo.me/discord).
+Stuck at any point? Ask on our [Discord server](https://spoo.me/discord).
 </Info>
-
-## Server Architecture
-
-Understanding how Spoo.me works will help you choose the right deployment method and configuration for your needs.
-
-<Frame>
-```mermaid
-graph TD
-    A[User Request] --> B[Spoo.me Application]
-    B --> C{API Version}
-    
-    C -->|v1 API| D{Authentication}
-    C -->|v0 API| E[Legacy Endpoints]
-    C -->|Web UI| F[Dashboard/SEO]
-    
-    D -->|JWT/API Key| G[Authenticated Requests]
-    D -->|Anonymous| H[Anonymous Requests]
-    
-    G -->|Create URL| I[(MongoDB Database)]
-    G -->|Manage URLs| J[List/Update/Delete]
-    G -->|Advanced Stats| K[Analytics Engine]
-    
-    H -->|Shorten URL| I
-    H -->|Public Stats| K
-    
-    E -->|Legacy Shorten| I
-    E -->|Legacy Stats| K
-    
-    F -->|URL Redirect| L{Check Redis Cache}
-    L -->|Cache Hit| M[Return Cached URL]
-    L -->|Cache Miss| I
-    I --> N[Update Redis Cache]
-    N --> M
-    
-    J --> I
-    K --> I
-    I --> O[Analytics Data]
-    O --> K
-    
-    F -->|Contact Form| P[Discord Webhook<br/>Contact]
-    F -->|Report URL| Q[Discord Webhook<br/>Reports]
-    
-    M --> R[Redirect User]
-    K --> S[Stats Response]
-    R --> T[User]
-    S --> T
-```
-</Frame>
 
 ## Prerequisites
 
-Before deploying Spoo.me, you'll need to set up the following components:
+Every deployment method needs these two things set up first:
 
 <Steps>
-<Step title="Set up MongoDB Database">
-    MongoDB is required to store URLs, analytics, and user data. We recommend using MongoDB Atlas for its free tier and ease of setup.
-    
+<Step title="Set up MongoDB">
+    MongoDB stores URLs, analytics, and user data. MongoDB Atlas has a free tier that works well.
+
     <Card title="MongoDB Setup Guide" icon="database" href="/self-hosting/setting-up-mongo">
-        Complete guide to setting up MongoDB Atlas or self-hosted MongoDB
+        MongoDB Atlas or self-hosted MongoDB
     </Card>
 </Step>
 
 <Step title="Create Discord Webhooks">
-    Webhooks are needed for the contact form and URL reporting functionality.
-    
+    The contact form and URL reporting deliver to Discord webhooks.
+
     <Card title="Webhook Creation Guide" icon="webhook" href="/self-hosting/creating-discord-webhooks">
-        Step-by-step instructions for creating Discord webhooks
+        Step-by-step webhook setup
     </Card>
 </Step>
 </Steps>
 
-## Deployment Methods
-
-Choose the deployment method that best fits your technical expertise and requirements:
+## Pick a deployment method
 
 <CardGroup cols={2}>
-<Card title="Cloud Deployment" icon="cloud" href="/self-hosting/cloud-deployment">
-    **Recommended for beginners**
-    
-    Deploy with one-click using platforms like Vercel, Railway, or Render. Perfect for getting started quickly with minimal configuration.
-    
-    - ✅ Easy setup
-    - ✅ Free hosting options
-    - ✅ Automatic scaling
-    - ❌ Limited customization
+<Card title="Docker Compose" icon="docker" href="/self-hosting/docker-deployment">
+    **Recommended.** One command brings up the app with MongoDB and Redis included. Best for anything you intend to keep running.
 </Card>
 
-<Card title="Docker Deployment" icon="docker" href="/self-hosting/docker-deployment">
-    **For intermediate users**
-    
-    Use Docker containers for consistent deployment across different environments. Ideal for users familiar with containerization.
-    
-    - ✅ Consistent environment
-    - ✅ Easy scaling
-    - ✅ Good customization
-    - ⚠️ Requires Docker knowledge
+<Card title="One-click cloud" icon="cloud" href="/self-hosting/deploy-vercel">
+    Deploy to a free hosting platform in minutes: [Vercel](/self-hosting/deploy-vercel), [Railway](/self-hosting/deploy-railway), [Render](/self-hosting/deploy-render), or [Koyeb](/self-hosting/deploy-koyeb).
 </Card>
 
-<Card title="Local Development" icon="code" href="/self-hosting/local-development">
-    **For advanced users**
-    
-    Manual setup with full control over the environment. Best for development, testing, and maximum customization.
-    
-    - ✅ Full control
-    - ✅ Maximum customization
-    - ✅ Best for development
-    - ❌ Requires technical expertise
+<Card title="Local development" icon="code" href="/self-hosting/local-development">
+    Run from source with hot reload. For contributing or customizing.
 </Card>
 
-<Card title="Redis Setup (Optional)" icon="memory" href="/self-hosting/setting-up-redis">
-    **Performance Enhancement**
-    
-    Optional Redis configuration for improved caching and performance in high-traffic deployments.
-    
-    - ✅ Better performance
-    - ✅ Caching support
-    - ⚠️ Additional complexity
+<Card title="Configuration reference" icon="settings" href="/self-hosting/configuration">
+    Every environment variable, what it does, and which ones are required.
 </Card>
 </CardGroup>
 
-## What You'll Get
-
-After successful deployment, your self-hosted Spoo.me instance will include:
-
-### API v1 Features
-- 🔐 **API Key Authentication**: Create and manage API keys with scoped permissions
-- 🔗 **URL Management**: List, update, and delete shortened URLs programmatically
-- 📊 **Advanced Analytics**: Flexible filtering, grouping, and time-series analysis
-- 🔒 **Private Statistics**: Option to make URL stats private to owner only
-- 🚀 **Higher Rate Limits**: 60 requests/min for authenticated users vs 20/min for anonymous
-- ⏱️ **URL Expiration**: Set expiration dates and click limits
-- 🤖 **Bot Blocking**: Block known bots from accessing URLs
-- 🔑 **Password Protection**: Secure URLs with passwords
-
-### Legacy v0 Features
-- 🔗 **URL Shortening**: Classic URL shortening with form-based API
-- 😄 **Emoji URLs**: Create memorable emoji-based short URLs
-- 📈 **Basic Analytics**: Simple statistics and click tracking
-- 📥 **Data Export**: Export URL data in JSON, CSV, XLSX, XML formats
-
-### Web Dashboard & UI
-- 📱 **Responsive Design**: Works perfectly on all devices
-- 🎨 **Modern Interface**: Clean, intuitive dashboard for URL management
-- 🛡️ **Security Features**: Built-in protection against abuse
-- 📧 **Contact Forms**: Direct communication with webhook integration
-- 🚨 **URL Reporting**: Allow users to report problematic URLs
-
 <Tip>
-For the best experience, ensure you have completed the prerequisite steps (MongoDB and webhooks) before proceeding with any deployment method.
+Whichever method you pick, get MongoDB and the webhooks ready first; every guide asks for them.
 </Tip>

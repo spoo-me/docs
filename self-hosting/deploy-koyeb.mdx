@@ -1,0 +1,61 @@
+---
+title: "Deploy on Koyeb"
+description: "Deploy Spoo.me on Koyeb's free tier"
+icon: "cloud"
+---
+
+Koyeb offers one free deployment. Note that custom domains require a paid plan, so this platform suits testing more than production.
+
+<Warning>
+Complete the prerequisites first:
+- [Set up MongoDB](/self-hosting/setting-up-mongo)
+- [Set up authentication](/self-hosting/setting-up-authentication) (for v1 API features)
+- [Create Discord webhooks](/self-hosting/creating-discord-webhooks)
+</Warning>
+
+## Deploy
+
+<Steps>
+<Step title="Create an account">
+    Sign up at [app.koyeb.com](https://app.koyeb.com/signup).
+</Step>
+
+<Step title="Deploy from GitHub">
+    <a href="https://app.koyeb.com/deploy?type=git&builder=buildpack&repository=github.com/spoo-me/spoo&branch=main&name=spoo&run_command=uvicorn%20main:app%20--host%200.0.0.0%20--port%208000&env[MONGODB_URI]=your-mongo-uri&env[CONTACT_WEBHOOK]=your-webhook-uri&env[URL_REPORT_WEBHOOK]=your-webhook-uri&ports=8000;http;/" target="_blank">
+        <img noZoom src="https://www.koyeb.com/static/images/deploy/button.svg" alt="Deploy to Koyeb" />
+    </a>
+</Step>
+
+<Step title="Fill in environment variables">
+    Scroll to **Environment Variables** in the deployment configuration and add your values. Every variable is documented in the [configuration reference](/self-hosting/configuration).
+</Step>
+
+<Step title="Set APP_URL to your real URL">
+    Your app will be served at `https://your-project.koyeb.app`. Set `APP_URL` to exactly that value, scheme included, and redeploy.
+
+    <Warning>
+    Without a matching `APP_URL`, every request is treated as an unknown custom domain and answered with a 404.
+    </Warning>
+</Step>
+
+<Step title="Verify">
+    1. Open your deployment URL and shorten a test link
+    2. Open the short link and confirm the redirect
+    3. Submit the contact form and check the Discord webhook fires
+</Step>
+</Steps>
+
+## Platform notes
+
+- The free plan does not support custom domains; upgrade or pick another platform if you need one.
+
+## Next steps
+
+<CardGroup cols={2}>
+<Card title="Configuration reference" icon="settings" href="/self-hosting/configuration">
+    Every environment variable, explained
+</Card>
+<Card title="Docker deployment" icon="docker" href="/self-hosting/docker-deployment">
+    Full control on your own server
+</Card>
+</CardGroup>
