@@ -12,30 +12,7 @@ API keys provide programmatic access to the Spoo.me API without requiring intera
   API keys are only available in **API v1**. The legacy v0 API does not support API key authentication.
 </Note>
 
-## Authentication Methods
-
-Spoo.me v1 API supports three authentication methods:
-
-<CardGroup cols={3}>
-  <Card title="Anonymous" icon="user" color="#A855F7">
-    No authentication required
-    - Lower rate limits
-    - Cannot manage URLs later
-    - Limited features
-  </Card>
-  <Card title="JWT Token" icon="shield-check" color="#A855F7">
-    Interactive user sessions
-    - Full dashboard access
-    - Manage URLs via web UI
-    - Highest privileges
-  </Card>
-  <Card title="API Key" icon="key" color="#A855F7">
-    Programmatic access
-    - Scoped permissions
-    - Long-lived tokens
-    - Perfect for automation
-  </Card>
-</CardGroup>
+API keys are one of three ways to call the API: anonymous requests work for basic shortening, JWT sessions power the dashboard, and API keys are the right tool for scripts, servers, and CI. See [Authentication](/api-reference/authentication) for how the three methods compare and when to use each.
 
 ## API Key Scopes
 
@@ -65,6 +42,12 @@ API keys can be granted specific permissions (scopes) to limit their access:
 
 1. Log in to your [Spoo.me Dashboard](https://spoo.me/dashboard)
 2. Open the [API Keys page](https://spoo.me/dashboard/keys)
+
+<Frame>
+  <img className="block dark:hidden" src="/images/account/api-keys-page-light.png" alt="The API Keys page in the dashboard" />
+  <img className="hidden dark:block" src="/images/account/api-keys-page-dark.png" alt="The API Keys page in the dashboard" />
+</Frame>
+
 3. Click **Create New API Key**
 4. Configure your key:
    - **Name**: Human-readable identifier (e.g., "Production Server")
@@ -72,6 +55,12 @@ API keys can be granted specific permissions (scopes) to limit their access:
    - **Scopes**: Select required permissions
    - **Expiration**: Optional expiration date
 5. Click **Create**
+
+<Frame>
+  <img className="block dark:hidden" src="/images/account/api-keys-create-light.png" alt="Creating an API key with name, scopes, and expiration" />
+  <img className="hidden dark:block" src="/images/account/api-keys-create-dark.png" alt="Creating an API key with name, scopes, and expiration" />
+</Frame>
+
 6. **Copy the key immediately** - it won't be shown again!
 
 <Warning>
@@ -116,24 +105,9 @@ curl -X GET "https://spoo.me/api/v1/urls?page=1&pageSize=20" \
   -H "Authorization: Bearer spoo_AbCdEfGhIjKlMnOpQrStUvWxYz"
 ```
 
-## Rate Limits with API Keys
+## Rate Limits
 
-API keys grant **authenticated rate limits**, which are significantly higher than anonymous limits:
-
-<CardGroup cols={2}>
-  <Card title="With API Key" icon="bolt" color="#10B981">
-    - **60 requests/minute**
-    - **5000 requests/day**
-    - Access to management endpoints
-    - Private stats support
-  </Card>
-  <Card title="Without API Key" icon="turtle" color="#EF4444">
-    - **20 requests/minute**
-    - **1000 requests/day**
-    - Cannot manage URLs
-    - Public URLs only
-  </Card>
-</CardGroup>
+API keys get the authenticated tiers, which are substantially higher than anonymous limits and unlock endpoints anonymous callers cannot use at all. Every endpoint's budget is listed on the [rate limits page](/rate-limits).
 
 ## Security Best Practices
 

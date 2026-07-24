@@ -23,9 +23,62 @@
             ]
           },
           {
-            "group": "Features",
+            "group": "Links",
             "pages": [
-              "custom-domains"
+              "links/creating-links",
+              "links/custom-aliases",
+              "links/emoji-links",
+              "links/password-protection",
+              "links/link-expiration",
+              "links/bulk-operations",
+              "links/geo-targeting",
+              "links/custom-link-previews"
+            ]
+          },
+          {
+            "group": "Custom Domains",
+            "pages": [
+              "custom-domains",
+              "custom-domains/add-a-domain",
+              "custom-domains/dns-and-verification",
+              "custom-domains/create-links",
+              "custom-domains/routing",
+              "custom-domains/removing-a-domain",
+              "custom-domains/api"
+            ]
+          },
+          {
+            "group": "Analytics",
+            "pages": [
+              "analytics/overview",
+              "analytics/dimensions",
+              "analytics/public-stats",
+              "analytics/link-previews",
+              "analytics/exports"
+            ]
+          },
+          {
+            "group": "Webhooks",
+            "pages": [
+              "webhooks/overview",
+              "webhooks/event-types",
+              "webhooks/verifying-deliveries",
+              "webhooks/discord-and-slack",
+              "webhooks/managing-deliveries"
+            ]
+          },
+          {
+            "group": "Trust & Safety",
+            "pages": [
+              "trust/reporting-links",
+              "trust/link-safety"
+            ]
+          },
+          {
+            "group": "Account",
+            "pages": [
+              "account/profile",
+              "account/connected-apps"
             ]
           },
           {
@@ -35,12 +88,24 @@
               "tools/github-action",
               "tools/spoobot"
             ]
+          },
+          {
+            "group": "Help",
+            "pages": [
+              "help/troubleshooting"
+            ]
           }
         ]
       },
       {
         "tab": "API Reference",
         "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "api-reference/authentication"
+            ]
+          },
           {
             "group": "API v1",
             "openapi": "openapi-v1.json",
@@ -50,7 +115,8 @@
                 "icon": "link",
                 "pages": [
                   "POST /api/v1/shorten",
-                  "GET /api/v1/shorten/check-alias"
+                  "GET /api/v1/shorten/check-alias",
+                  "GET /api/v1/emoji-set"
                 ]
               },
               {
@@ -58,10 +124,22 @@
                 "icon": "list-check",
                 "pages": [
                   "GET /api/v1/urls",
+                  "GET /api/v1/urls/{url_id}",
+                  "GET /api/v1/urls/{domain}/{alias}",
                   "PATCH /api/v1/urls/{url_id}",
                   "PATCH /api/v1/urls/{url_id}/status",
                   "DELETE /api/v1/urls/{url_id}",
                   "DELETE /api/v1/urls"
+                ]
+              },
+              {
+                "group": "Bulk Operations",
+                "icon": "layers",
+                "pages": [
+                  "POST /api/v1/urls/bulk/status",
+                  "POST /api/v1/urls/bulk/expiry",
+                  "POST /api/v1/urls/bulk/domain",
+                  "POST /api/v1/urls/bulk/delete"
                 ]
               },
               {
@@ -70,6 +148,22 @@
                 "pages": [
                   "GET /api/v1/stats",
                   "GET /api/v1/export"
+                ]
+              },
+              {
+                "group": "Public Stats & Preview",
+                "icon": "eye",
+                "pages": [
+                  "GET /api/v1/public/stats/{short_code}",
+                  "POST /api/v1/public/stats/{short_code}",
+                  "GET /api/v1/public/preview/{short_code}"
+                ]
+              },
+              {
+                "group": "Metadata",
+                "icon": "file-search",
+                "pages": [
+                  "GET /api/v1/metadata"
                 ]
               },
               {
@@ -83,6 +177,30 @@
                   "PATCH /api/v1/custom-domains/{domain_id}",
                   "DELETE /api/v1/custom-domains/{domain_id}",
                   "DELETE /api/v1/custom-domains/{domain_id}/permanent"
+                ]
+              },
+              {
+                "group": "Webhooks",
+                "icon": "webhook",
+                "pages": [
+                  "GET /api/v1/webhooks/event-types",
+                  "POST /api/v1/webhooks",
+                  "GET /api/v1/webhooks",
+                  "GET /api/v1/webhooks/{endpoint_id}",
+                  "PATCH /api/v1/webhooks/{endpoint_id}",
+                  "DELETE /api/v1/webhooks/{endpoint_id}",
+                  "GET /api/v1/webhooks/{endpoint_id}/secret",
+                  "POST /api/v1/webhooks/{endpoint_id}/test",
+                  "GET /api/v1/webhooks/{endpoint_id}/deliveries",
+                  "POST /api/v1/webhooks/{endpoint_id}/deliveries/{delivery_id}/retry"
+                ]
+              },
+              {
+                "group": "Reports & Contact",
+                "icon": "flag",
+                "pages": [
+                  "POST /api/v1/reports",
+                  "POST /api/v1/contact"
                 ]
               }
             ]
@@ -128,23 +246,23 @@
             ]
           },
           {
-            "group": "Deploy",
-            "pages": [
-              "self-hosting/docker-deployment",
-              "self-hosting/deploy-vercel",
-              "self-hosting/deploy-railway",
-              "self-hosting/deploy-render",
-              "self-hosting/deploy-koyeb",
-              "self-hosting/local-development"
-            ]
-          },
-          {
             "group": "Setting Up",
             "pages": [
               "self-hosting/setting-up-mongo",
               "self-hosting/setting-up-redis",
               "self-hosting/setting-up-authentication",
               "self-hosting/creating-discord-webhooks"
+            ]
+          },
+          {
+            "group": "Deploy",
+            "pages": [
+              "self-hosting/deploy-vercel",
+              "self-hosting/deploy-railway",
+              "self-hosting/deploy-render",
+              "self-hosting/deploy-koyeb",
+              "self-hosting/docker-deployment",
+              "self-hosting/local-development"
             ]
           }
         ]
@@ -195,6 +313,14 @@
     {
       "source": "/self-hosting/cloud-deployment",
       "destination": "/self-hosting/deploy-vercel"
+    },
+    {
+      "source": "/emoji-urls",
+      "destination": "/links/emoji-links"
+    },
+    {
+      "source": "/getting-started/introduction",
+      "destination": "/introduction"
     }
   ],
   "logo": {

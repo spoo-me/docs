@@ -4,7 +4,7 @@ description: "Understanding Spoo.me API rate limits and best practices"
 icon: "clock"
 ---
 
-Spoo.me API implements rate limiting to ensure fair usage and maintain service quality for all users. Rate limits vary based on authentication method and API version.
+Spoo.me API implements rate limiting to ensure fair usage and maintain service quality for all users. Rate limits vary based on authentication method and endpoint.
 
 ## How limits are counted
 
@@ -55,7 +55,7 @@ The core v1 endpoints (shorten, stats, list URLs) use two tiers:
 </CardGroup>
 
 <Tip>
-  Authenticating with an [API key](/api-keys) or JWT gives you 3x the per-minute limit and 5x the daily limit on the core endpoints, plus access to endpoints that anonymous users cannot call at all.
+  Authenticating with an [API key](/api-keys) or JWT gives you 3x the per-minute limit and 5x the daily limit on the core endpoints, plus access to endpoints that anonymous users cannot call at all. See [Authentication](/api-reference/authentication) for how the three methods work.
 </Tip>
 
 ## Rate Limits by Endpoint
@@ -66,9 +66,10 @@ The core v1 endpoints (shorten, stats, list URLs) use two tiers:
 |----------|--------------|-----------|
 | `POST /api/v1/shorten` | 60/min, 5,000/day | 20/min, 1,000/day |
 | `GET /api/v1/shorten/check-alias` | 180/min, 10,000/day | 60/min, 2,000/day |
+| `GET /api/v1/emoji-set` | 60/min, 2,000/day | 60/min, 2,000/day |
 
 <Note>
-`check-alias` has a higher tier because interfaces typically call it on every keystroke.
+`check-alias` has a higher tier because interfaces typically call it on every keystroke. `emoji-set` returns the accepted emoji catalog and serves the same response to everyone, so both tiers match.
 </Note>
 
 ### Link Management
@@ -76,10 +77,23 @@ The core v1 endpoints (shorten, stats, list URLs) use two tiers:
 | Endpoint | Authenticated | Anonymous |
 |----------|--------------|-----------|
 | `GET /api/v1/urls` | 60/min, 5,000/day | Not allowed |
-| `PATCH /api/v1/urls/{id}` | 120/min, 2,000/day | Not allowed |
-| `PATCH /api/v1/urls/{id}/status` | 120/min, 2,000/day | Not allowed |
-| `DELETE /api/v1/urls/{id}` | 60/min, 1,000/day | Not allowed |
+| `GET /api/v1/urls/{url_id}` | 60/min, 5,000/day | Not allowed |
+| `GET /api/v1/urls/{domain}/{alias}` | 60/min, 5,000/day | Not allowed |
+| `PATCH /api/v1/urls/{url_id}` | 120/min, 2,000/day | Not allowed |
+| `PATCH /api/v1/urls/{url_id}/status` | 120/min, 2,000/day | Not allowed |
+| `DELETE /api/v1/urls/{url_id}` | 60/min, 1,000/day | Not allowed |
 | `DELETE /api/v1/urls` (bulk, by domain) | 5/min, 50/day | Not allowed |
+
+### Bulk Operations
+
+Bulk endpoints accept up to 100 link ids per request, and limits count **requests, not items**. One call updating 100 links spends one unit of your budget.
+
+| Endpoint | Authenticated | Anonymous |
+|----------|--------------|-----------|
+| `POST /api/v1/urls/bulk/status` | 60/min, 200/day | Not allowed |
+| `POST /api/v1/urls/bulk/expiry` | 60/min, 200/day | Not allowed |
+| `POST /api/v1/urls/bulk/domain` | 60/min, 200/day | Not allowed |
+| `POST /api/v1/urls/bulk/delete` | 30/min, 100/day | Not allowed |
 
 ### Statistics & Export
 
@@ -87,6 +101,38 @@ The core v1 endpoints (shorten, stats, list URLs) use two tiers:
 |----------|--------------|-----------|
 | `GET /api/v1/stats` | 60/min, 5,000/day | 20/min, 1,000/day |
 | `GET /api/v1/export` | 30/min, 1,000/day | 10/min, 200/day |
+
+### Public Stats & Preview
+
+Per-link stats pages and link previews work without an account, so they carry their own budgets.
+
+| Endpoint | Authenticated | Anonymous |
+|----------|--------------|-----------|
+| `GET /api/v1/public/stats/{short_code}` | 60/min, 2,000/day | 20/min, 500/day |
+| `POST /api/v1/public/stats/{short_code}` (password unlock) | 60/min, 2,000/day | 20/min, 500/day |
+| `GET /api/v1/public/preview/{short_code}` | 30/min, 2,000/day | 30/min, 2,000/day |
+| `POST /{short_code}/password` (password page) | 10/min, 30/hour | 10/min, 30/hour |
+
+### Metadata
+
+| Endpoint | Authenticated | Anonymous |
+|----------|--------------|-----------|
+| `GET /api/v1/metadata` | 20/min, 500/day | Not allowed |
+
+<Note>
+Each metadata call triggers an outbound fetch of the destination page from Spoo.me servers, so this budget is deliberately tight.
+</Note>
+
+### Reports & Contact
+
+| Endpoint | Authenticated | Anonymous |
+|----------|--------------|-----------|
+| `POST /api/v1/reports` | 30/min, 500/day | 5/min, 40/day |
+| `POST /api/v1/contact` | 5/min, 20/hour, 50/day | 5/min, 20/hour, 50/day |
+
+<Note>
+Report limits count submissions, not reported items. Authenticated reporters may batch up to 100 items per request; anonymous reporters are captcha-gated and capped at 25 items per request.
+</Note>
 
 ### API Keys
 
@@ -100,11 +146,44 @@ The core v1 endpoints (shorten, stats, list URLs) use two tiers:
 
 | Endpoint | Limit |
 |----------|-------|
-| `POST /api/v1/custom-domains` | 5/hour |
+| `POST /api/v1/custom-domains` | 10/hour |
 | `POST /api/v1/custom-domains/{id}/verify` | 10/min |
 | `GET /api/v1/custom-domains` (list and get) | 60/min |
 | `PATCH /api/v1/custom-domains/{id}` | 30/min |
 | `DELETE /api/v1/custom-domains/{id}` | 10/min |
+| `DELETE /api/v1/custom-domains/{id}/permanent` | 10/min |
+
+### Webhooks
+
+| Endpoint | Limit |
+|----------|-------|
+| `GET /api/v1/webhooks/event-types` (public catalog) | 60/min |
+| `POST /api/v1/webhooks` | 10/hour |
+| `GET /api/v1/webhooks` (list, get, secret, deliveries) | 60/min |
+| `PATCH /api/v1/webhooks/{id}` | 30/min |
+| `DELETE /api/v1/webhooks/{id}` | 30/min |
+| `POST /api/v1/webhooks/{id}/test` | 10/min |
+| `POST /api/v1/webhooks/{id}/deliveries/{delivery_id}/retry` | 30/min |
+
+<Note>
+Webhook creation and test sends are tight because each one authorizes or triggers real outbound requests from Spoo.me servers.
+</Note>
+
+### Account
+
+These endpoints require an interactive dashboard session.
+
+| Endpoint | Limit |
+|----------|-------|
+| `GET /api/v1/me/features` | 60/min |
+| `GET /api/v1/me/layouts/{page}` | 120/min |
+| `PUT /api/v1/me/layouts/{page}` | 60/min |
+| `DELETE /api/v1/me/layouts/{page}` | 30/min |
+| `GET /api/v1/me/profile-pictures` | 60/min |
+| `POST /api/v1/me/profile-pictures` | 10/min |
+| `POST /api/v1/me/profile-pictures/upload` | 5/min |
+| `DELETE /api/v1/me/profile-pictures` | 10/min |
+| `GET /api/v1/apps` | 60/min |
 
 ### API v0 Endpoints (Legacy)
 
@@ -197,18 +276,18 @@ If you need higher rate limits for your application:
 
 <CardGroup cols={2}>
   <Card
+    title="Authentication"
+    icon="key-round"
+    href="/api-reference/authentication"
+  >
+    The three ways to authenticate, and what each unlocks
+  </Card>
+  <Card
     title="Create API Keys"
     icon="key"
     href="/api-keys"
   >
     Get started with API key authentication
-  </Card>
-  <Card
-    title="API Reference"
-    icon="code"
-    href="/api-reference"
-  >
-    Explore all available endpoints
   </Card>
   <Card
     title="Quick Start"
