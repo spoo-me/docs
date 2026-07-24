@@ -6,13 +6,19 @@ icon: "clock"
 
 Spoo.me API implements rate limiting to ensure fair usage and maintain service quality for all users. Rate limits vary based on authentication method and API version.
 
+## How limits are counted
+
+Rate limits are tracked per API key, per JWT session, or per IP address, in that order. If you authenticate with an API key, your limit bucket follows the key. If you use a JWT (header or session cookie), it follows the token. Anonymous requests are bucketed by client IP.
+
+Unless an endpoint lists its own limits below, it falls under the global default of **10 requests/minute, 100/hour and 500/day**.
+
 ## API v1 Rate Limits (Recommended)
 
-The new v1 API offers **significantly higher rate limits** with authentication:
+The core v1 endpoints (shorten, stats, list URLs) use two tiers:
 
 ### With Authentication (JWT or API Key)
 
-<CardGroup cols={3}>
+<CardGroup cols={2}>
   <Card
     title="Per Minute"
     icon="clock"
@@ -27,18 +33,11 @@ The new v1 API offers **significantly higher rate limits** with authentication:
   >
     **5,000 requests**
   </Card>
-  <Card
-    title="Endpoints"
-    icon="code"
-    color="#10B981"
-  >
-    All v1 endpoints
-  </Card>
 </CardGroup>
 
 ### Without Authentication (Anonymous)
 
-<CardGroup cols={3}>
+<CardGroup cols={2}>
   <Card
     title="Per Minute"
     icon="clock"
@@ -53,87 +52,72 @@ The new v1 API offers **significantly higher rate limits** with authentication:
   >
     **1,000 requests**
   </Card>
-  <Card
-    title="Endpoints"
-    icon="code"
-    color="#F59E0B"
-  >
-    Limited endpoints
-  </Card>
 </CardGroup>
 
 <Tip>
-  **Get 3x more requests** by using [API keys](/api-keys) or JWT authentication! Anonymous users are limited to 20 requests/minute vs 60 requests/minute for authenticated users.
+  Authenticating with an [API key](/api-keys) or JWT gives you 3x the per-minute limit and 5x the daily limit on the core endpoints, plus access to endpoints that anonymous users cannot call at all.
 </Tip>
-
-## API v0 Rate Limits (Legacy)
-
-The legacy v0 API has lower rate limits:
-
-<CardGroup cols={3}>
-  <Card
-    title="Per Minute"
-    icon="clock"
-    color="#EF4444"
-  >
-    **10 short URLs** per IP
-  </Card>
-  <Card
-    title="Per Hour"
-    icon="hourglass"
-    color="#EF4444"
-  >
-    **100 short URLs** per IP
-  </Card>
-  <Card
-    title="Per Day"
-    icon="calendar-days"
-    color="#EF4444"
-  >
-    **500 short URLs** per IP
-  </Card>
-</CardGroup>
-
-<Warning>
-  The v0 API is **legacy** and does not support authentication. We recommend migrating to the v1 API for better rate limits and features.
-</Warning>
 
 ## Rate Limits by Endpoint
 
 ### URL Shortening
 
-#### v1 API Endpoints
-| Endpoint | Authenticated | Anonymous | Notes |
-|----------|--------------|-----------|-------|
-| `POST /api/v1/shorten` | 60/min, 5000/day | 20/min, 1000/day | v1 API |
-
-#### v0 API Endpoints (Legacy)
+| Endpoint | Authenticated | Anonymous |
+|----------|--------------|-----------|
+| `POST /api/v1/shorten` | 60/min, 5,000/day | 20/min, 1,000/day |
+| `GET /api/v1/shorten/check-alias` | 180/min, 10,000/day | 60/min, 2,000/day |
 
 <Note>
-The following endpoints are part of the legacy v0 API. They do not support authentication and have lower rate limits.
+`check-alias` has a higher tier because interfaces typically call it on every keystroke.
 </Note>
 
-| Endpoint | Authenticated | Anonymous | Notes |
-|----------|--------------|-----------|-------|
-| `POST /` | - | 10/min, 100/hr, 500/day | v0 API (legacy) |
-| `POST /emoji` | - | 10/min, 100/hr, 500/day | v0 API (legacy) |
+### Link Management
 
-### URL Management
+| Endpoint | Authenticated | Anonymous |
+|----------|--------------|-----------|
+| `GET /api/v1/urls` | 60/min, 5,000/day | Not allowed |
+| `PATCH /api/v1/urls/{id}` | 120/min, 2,000/day | Not allowed |
+| `PATCH /api/v1/urls/{id}/status` | 120/min, 2,000/day | Not allowed |
+| `DELETE /api/v1/urls/{id}` | 60/min, 1,000/day | Not allowed |
+| `DELETE /api/v1/urls` (bulk, by domain) | 5/min, 50/day | Not allowed |
 
-| Endpoint | Authenticated | Anonymous | Notes |
-|----------|--------------|-----------|-------|
-| `GET /api/v1/urls` | 60/min, 5000/day | Not allowed | Requires auth |
-| `PATCH /api/v1/urls/{id}` | 60/min, 5000/day | Not allowed | Requires auth |
-| `PATCH /api/v1/urls/{id}/status` | 60/min, 5000/day | Not allowed | Requires auth |
-| `DELETE /api/v1/urls/{id}` | 60/min, 5000/day | Not allowed | Requires auth |
+### Statistics & Export
 
-### Analytics
+| Endpoint | Authenticated | Anonymous |
+|----------|--------------|-----------|
+| `GET /api/v1/stats` | 60/min, 5,000/day | 20/min, 1,000/day |
+| `GET /api/v1/export` | 30/min, 1,000/day | 10/min, 200/day |
 
-| Endpoint | Authenticated | Anonymous | Notes |
-|----------|--------------|-----------|-------|
-| `GET /api/v1/stats` | 60/min, 5000/day | 20/min, 1000/day | Public URLs only for anon |
-| `POST /stats/{code}` | - | - | v0 API (legacy) |
-| `POST /export/{code}/{format}` | - | - | v0 API (legacy) |
+### API Keys
+
+| Endpoint | Limit |
+|----------|-------|
+| `POST /api/v1/keys` | 5/hour |
+| `GET /api/v1/keys` | 60/min |
+| `DELETE /api/v1/keys/{key_id}` | 30/min |
+
+### Custom Domains
+
+| Endpoint | Limit |
+|----------|-------|
+| `POST /api/v1/custom-domains` | 5/hour |
+| `POST /api/v1/custom-domains/{id}/verify` | 10/min |
+| `GET /api/v1/custom-domains` (list and get) | 60/min |
+| `PATCH /api/v1/custom-domains/{id}` | 30/min |
+| `DELETE /api/v1/custom-domains/{id}` | 10/min |
+
+### API v0 Endpoints (Legacy)
+
+<Note>
+The following endpoints are part of the legacy v0 API. They do not support authentication, so all limits apply per IP.
+</Note>
+
+| Endpoint | Limit |
+|----------|-------|
+| `POST /` | 100/min |
+| `POST /emoji` | 100/min |
+| `POST /stats/{code}` | 20/min, 1,000/day |
+| `POST /export/{code}/{format}` | 10/min, 200/day |
 
 ## Authentication & Rate Limits
 
@@ -141,58 +125,47 @@ How you authenticate directly affects your rate limits:
 
 <AccordionGroup>
   <Accordion title="API Key Authentication (Recommended)" icon="key">
-    **Rate Limits**: 60/min, 5000/day
-    
+    **Rate Limits**: 60/min, 5,000/day on core endpoints
+
     **Benefits**:
-    - 3x higher rate limits vs anonymous
+    - Higher rate limits vs anonymous
     - Access to URL management endpoints
     - Private stats support
     - Long-lived tokens for automation
-    
+
     **How to use**: [Create an API key](/api-keys) and include it in the `Authorization` header:
     ```bash
     Authorization: Bearer spoo_YOUR_API_KEY
     ```
   </Accordion>
-  
+
   <Accordion title="JWT Token Authentication" icon="shield-check">
-    **Rate Limits**: 60/min, 5000/day
-    
+    **Rate Limits**: 60/min, 5,000/day on core endpoints
+
     **Benefits**:
     - Same rate limits as API keys
     - Full dashboard access
     - Can create/manage API keys
     - Manage URLs via web UI
-    
+
     **How to use**: Obtain JWT via OAuth/login and include in header:
     ```bash
     Authorization: Bearer YOUR_JWT_TOKEN
     ```
   </Accordion>
-  
+
   <Accordion title="Anonymous (No Authentication)" icon="user">
-    **Rate Limits**: 20/min, 1000/day
-    
+    **Rate Limits**: 20/min, 1,000/day on core endpoints
+
     **Limitations**:
-    - 3x lower rate limits
+    - Lower rate limits
     - Cannot manage URLs later
     - No access to private stats
     - Cannot use URL management endpoints
-    
+
     **How to use**: Simply make requests without authentication header.
   </Accordion>
 </AccordionGroup>
-
-## Rate Limit Headers
-
-When you make requests to rate-limited endpoints, the response will include headers indicating your current usage:
-
-```http
-X-RateLimit-Limit: 60
-X-RateLimit-Remaining: 45
-X-RateLimit-Reset: 1640995200
-Retry-After: 30
-```
 
 ## Handling Rate Limits
 
@@ -200,9 +173,12 @@ When you exceed the rate limit, you'll receive a `429 Too Many Requests` respons
 
 ```json
 {
-  "error": "Rate limit exceeded"
+  "error": "Too many requests",
+  "code": "rate_limit_exceeded"
 }
 ```
+
+The API does not currently send `X-RateLimit-*` headers, so build your own client-side pacing against the documented limits and back off when you receive a 429.
 
 ## Need Higher Limits?
 
@@ -248,4 +224,4 @@ If you need higher rate limits for your application:
   >
     Use our official SDK
   </Card>
-</CardGroup> 
+</CardGroup>
