@@ -75,13 +75,6 @@
             ]
           },
           {
-            "group": "Account",
-            "pages": [
-              "account/profile",
-              "account/connected-apps"
-            ]
-          },
-          {
             "group": "Tools & Libraries",
             "pages": [
               "tools/python-library",
