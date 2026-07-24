@@ -1,0 +1,144 @@
+---
+title: "Custom Dashboards"
+description: "Compose the Analytics board: add, resize, and build your own widgets"
+icon: "layout-grid"
+---
+
+The Analytics page (`/dashboard/analytics`) is a widget grid you compose yourself. Rearrange the defaults, build custom charts against any dimension, and pin individual links to it. The layout is saved to your account, so it follows you across devices, and you can export, import, or reset it at any time.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/dashboard/analytics-light.png" alt="Analytics board with stat tiles, clicks over time, world map, and dimension widgets" />
+  <img className="hidden dark:block" src="/images/dashboard/analytics-dark.png" alt="Analytics board with stat tiles, clicks over time, world map, and dimension widgets" />
+</Frame>
+
+## The board
+
+The toolbar holds the date-range picker (the same one as the [Links page](/links/managing-links#date-ranges), including natural-language ranges), dimension filter chips, **Edit layout**, and refresh with auto-refresh.
+
+The default layout:
+
+| Widget | Shows |
+|---|---|
+| Stat tiles | Total clicks, unique visitors, unique rate, clicks per visitor, each with an explainer tooltip |
+| Clicks over time | Time series with a total, unique, or both toggle |
+| Countries | A world map of click origins |
+| Cities | Ranked city bars |
+| Top links | Your most-clicked links |
+| Referrers | Where clicks came from, with favicons |
+| Browsers and Operating systems | Client breakdowns |
+
+Every widget has a chart or table view toggle and an expand button that opens it fullscreen.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/dashboard/analytics-widget-expanded-light.png" alt="A widget expanded to fullscreen with chart and table toggles" />
+  <img className="hidden dark:block" src="/images/dashboard/analytics-widget-expanded-dark.png" alt="A widget expanded to fullscreen with chart and table toggles" />
+</Frame>
+
+## Cross-filtering
+
+Click any value in any widget to filter the whole board by it. Clicking a referrer bar, a country on the map, or a browser slice adds a filter chip to the toolbar, such as `Referrer: twitter.com`, and every widget refilters to that slice. Stack filters across dimensions (Links, Referrer, Country, Browser, OS, City), and clear them from the chips.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/dashboard/analytics-filtered-light.png" alt="Board filtered by a referrer, with a clear-filter chip in the toolbar" />
+  <img className="hidden dark:block" src="/images/dashboard/analytics-filtered-dark.png" alt="Board filtered by a referrer, with a clear-filter chip in the toolbar" />
+</Frame>
+
+## Edit the layout
+
+<Steps>
+  <Step title="Enter edit mode">
+    Click **Edit layout** in the toolbar. The board switches to a dotted grid; widgets get drag handles, resize corners, and a remove button.
+
+    <Frame>
+      <img className="block dark:hidden" src="/images/dashboard/analytics-edit-mode-light.png" alt="Analytics board in edit mode with a dotted grid and per-widget controls" />
+      <img className="hidden dark:block" src="/images/dashboard/analytics-edit-mode-dark.png" alt="Analytics board in edit mode with a dotted grid and per-widget controls" />
+    </Frame>
+  </Step>
+  <Step title="Add or remove widgets">
+    **Add widget** lists every widget type with a checkbox; removed defaults can be re-added the same way.
+
+    <Frame>
+      <img className="block dark:hidden" src="/images/dashboard/analytics-add-widget-light.png" alt="Add widget menu listing widget types with checkboxes" />
+      <img className="hidden dark:block" src="/images/dashboard/analytics-add-widget-dark.png" alt="Add widget menu listing widget types with checkboxes" />
+    </Frame>
+  </Step>
+  <Step title="Drag and resize">
+    Drag widgets anywhere on the grid and resize from the corners. Widgets adapt their density to their size, so a small tile and a full-width chart of the same data both stay readable.
+
+    <Frame>
+      <img className="block dark:hidden" src="/images/dashboard/analytics-widget-resized-light.png" alt="A widget being resized on the edit-mode grid" />
+      <img className="hidden dark:block" src="/images/dashboard/analytics-widget-resized-dark.png" alt="A widget being resized on the edit-mode grid" />
+    </Frame>
+  </Step>
+  <Step title="Done">
+    Click **Done** to save. The layout is stored on your account and applied on every device you sign in from.
+  </Step>
+</Steps>
+
+Edit mode has full undo and redo: `⌘Z` and `⌘⇧Z` step through every add, move, resize, and delete in the session.
+
+## Custom charts
+
+**Add widget** also offers a custom chart: pick what to plot, how to draw it, and what slice of your traffic it covers, with a live preview as you configure.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/dashboard/analytics-custom-chart-light.png" alt="Custom chart builder with axis, chart type, and scope controls" />
+  <img className="hidden dark:block" src="/images/dashboard/analytics-custom-chart-dark.png" alt="Custom chart builder with axis, chart type, and scope controls" />
+</Frame>
+
+| Setting | Options |
+|---|---|
+| Title | Anything you like |
+| X axis | None, Time, Links, Referrers, Countries, Cities, Browsers, OS |
+| Y axis | Total clicks, unique clicks, or both |
+| Chart type | Area for time series; Bars, Columns, Donut, Pie, Treemap, Radial, Radar, Bubbles, Scatter, or Table for dimensions |
+| Scope | Filter the widget to specific links, referrers, countries, cities, browsers, or OSes |
+| Ink | 12 accent colors |
+
+<Frame>
+  <img className="block dark:hidden" src="/images/dashboard/analytics-custom-chart-configured-light.png" alt="Custom chart builder with a configured donut chart in the live preview" />
+  <img className="hidden dark:block" src="/images/dashboard/analytics-custom-chart-configured-dark.png" alt="Custom chart builder with a configured donut chart in the live preview" />
+</Frame>
+
+<Tip>
+  Scope is what makes custom charts composable: a board can hold "campaign links only, by country" next to "all traffic, by referrer" and both respect the global date range and filter chips.
+</Tip>
+
+### The widget inspector
+
+Selecting a custom widget in edit mode brings up a floating inspector: rename it, switch chart type, toggle total or unique, change the ink, adjust the scope, **Duplicate**, **Reset chart**, or **Delete**, all without reopening the builder.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/dashboard/analytics-custom-widget-added-light.png" alt="Custom widget selected on the grid with the floating inspector bar" />
+  <img className="hidden dark:block" src="/images/dashboard/analytics-custom-widget-added-dark.png" alt="Custom widget selected on the grid with the floating inspector bar" />
+</Frame>
+
+Duplicate is the fast way to build variants: copy a configured widget, then change one setting on the copy.
+
+## Pin a link to the board
+
+From the Links page, **Pin to dashboard** in a row's actions menu adds that link's clicks-over-time widget to the board. The widget carries a scope chip with the link's alias and behaves like any other widget from there: move it, resize it, or remove it in edit mode.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/dashboard/analytics-pinned-widget-light.png" alt="Pinned per-link widget on the board with an alias scope chip" />
+  <img className="hidden dark:block" src="/images/dashboard/analytics-pinned-widget-dark.png" alt="Pinned per-link widget on the board with an alias scope chip" />
+</Frame>
+
+For a deep dive on a single link, its [stats page](/analytics/link-stats) goes further than a pinned widget.
+
+## Export, import, and reset
+
+The overflow menu in edit mode manages the layout as a document:
+
+| Action | Does |
+|---|---|
+| Export layout | Downloads the layout as a file |
+| Import layout | Restores a layout from a file, replacing the current one |
+| Reset layout | Discards your customizations and returns to the default board |
+
+<Frame>
+  <img className="block dark:hidden" src="/images/dashboard/analytics-layout-menu-light.png" alt="Layout overflow menu with export, import, and reset options" />
+  <img className="hidden dark:block" src="/images/dashboard/analytics-layout-menu-dark.png" alt="Layout overflow menu with export, import, and reset options" />
+</Frame>
+
+Export and import make layouts portable: keep a backup before a big rearrangement, or hand a colleague your board. Reset is safe to reach for; the default layout is always one click away.

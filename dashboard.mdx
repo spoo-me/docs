@@ -1,0 +1,105 @@
+---
+title: "Dashboard Tour"
+description: "Find your way around the spoo.me dashboard: Overview, command palette, and keyboard shortcuts"
+icon: "layout-dashboard"
+---
+
+The dashboard is where you create, manage, and measure everything on your account. This page is a quick orientation: what the Overview surfaces, how to move around with the keyboard, and where each feature lives in the docs.
+
+<Note>
+  Shortcuts on this page use macOS notation. On Windows and Linux, use `Ctrl` in place of `⌘`.
+</Note>
+
+## The Overview page
+
+`/dashboard` opens on **Overview**, a daily briefing across your account: clicks today (with a sparkline), unique visitors today, your last click, and total links, followed by anything that needs your attention.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/dashboard/overview-light.png" alt="Dashboard Overview with stat tiles, needs-attention band, hot links, and recent links" />
+  <img className="hidden dark:block" src="/images/dashboard/overview-dark.png" alt="Dashboard Overview with stat tiles, needs-attention band, hot links, and recent links" />
+</Frame>
+
+| Block | What it shows |
+|---|---|
+| Stat tiles | Clicks today, unique visitors today, last click (relative time), total links |
+| Needs attention | Links that need action, such as a link expiring soon, each with a one-click fix like **Extend** |
+| Hot right now | Your most-clicked links as ranked mini bars, linking through to Analytics |
+| Recent links | Your latest links with destination, age, click count, and a copy button |
+| Workspace | Domain status, connected apps, and API keys at a glance, with shortcuts to manage each |
+
+<Frame>
+  <img className="block dark:hidden" src="/images/dashboard/overview-needs-attention-light.png" alt="Needs-attention band showing a link expiring in 7 days with an Extend action" />
+  <img className="hidden dark:block" src="/images/dashboard/overview-needs-attention-dark.png" alt="Needs-attention band showing a link expiring in 7 days with an Extend action" />
+</Frame>
+
+New accounts also get a floating **Finish setting up** checklist with four tasks: create your first link, connect a custom domain, create an API key, and install an app. Completed items strike through as you go, and the card collapses out of the way.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/dashboard/setup-checklist-light.png" alt="Finish setting up checklist with progress bar and four setup tasks" />
+  <img className="hidden dark:block" src="/images/dashboard/setup-checklist-dark.png" alt="Finish setting up checklist with progress bar and four setup tasks" />
+</Frame>
+
+## Command palette
+
+Press `⌘K` anywhere (or click the search button) to open the command palette. It is the fastest route to everything: run commands like **New link** or **Edit dashboard layout**, jump to any page, switch the theme between Light, Dark, and System, or open the API docs.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/dashboard/global-search-light.png" alt="Command palette with commands, page navigation, and theme options" />
+  <img className="hidden dark:block" src="/images/dashboard/global-search-dark.png" alt="Command palette with commands, page navigation, and theme options" />
+</Frame>
+
+Typing searches your links by alias, so the palette doubles as a link finder: type a few characters and jump straight to that link's page.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/dashboard/global-search-results-light.png" alt="Command palette showing live link search results for a typed alias" />
+  <img className="hidden dark:block" src="/images/dashboard/global-search-results-dark.png" alt="Command palette showing live link search results for a typed alias" />
+</Frame>
+
+## Keyboard shortcuts
+
+Press `?` on any dashboard page to open the shortcuts overlay.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/dashboard/keyboard-shortcuts-light.png" alt="Keyboard shortcuts overlay listing global, navigation, and page shortcuts" />
+  <img className="hidden dark:block" src="/images/dashboard/keyboard-shortcuts-dark.png" alt="Keyboard shortcuts overlay listing global, navigation, and page shortcuts" />
+</Frame>
+
+Navigation uses G-chords: press `G`, then a letter.
+
+| Chord | Goes to |
+|---|---|
+| `G` `O` | Overview |
+| `G` `L` | Links |
+| `G` `A` | Analytics |
+| `G` `D` | Domains |
+| `G` `P` | Apps |
+| `G` `K` | API Keys |
+
+The rest of the global set:
+
+| Shortcut | Does |
+|---|---|
+| `⌘K` | Open the command palette |
+| `⌘B` | Collapse or expand the sidebar |
+| `N` | New link (works on every dashboard page) |
+| `/` | Focus search |
+| `Esc` | Close dialogs and sheets |
+| `?` | This overlay |
+
+Some pages add their own: on Links, `←` and `→` paginate and `⌘A` selects the page; in the link composer, `⌘1` through `⌘4` switch tabs and `⌘↵` creates the link.
+
+## Where everything lives
+
+| Sidebar item | What it is | Docs |
+|---|---|---|
+| Overview | Daily briefing and setup checklist | This page |
+| Links | Your link list: search, filters, bulk actions | [Managing Links](/links/managing-links) |
+| Analytics | Composable widget grid across your account | [Custom Dashboards](/analytics/custom-dashboards) |
+| Domains | Connect and route custom domains | [Custom Domains](/custom-domains) |
+| Apps | Official apps, integrations, and SDKs | [Tools & Libraries](/tools/python-library) |
+| Webhooks | Signed event deliveries | [Webhooks](/webhooks/overview) |
+| API Keys | Scoped keys for the API | [API Keys](/api-keys) |
+
+<Tip>
+  The **New link** button in the top-right corner (shortcut `N`) is available on every dashboard page. See [Creating Links](/links/creating-links) for the composer walkthrough.
+</Tip>

@@ -1,0 +1,80 @@
+---
+title: "Link Stats"
+description: "The per-link page: full analytics plus every setting, editable after creation"
+icon: "activity"
+---
+
+Every link has its own page at `/dashboard/links/{domain}/{alias}`: full analytics for that one link, and an editor for every setting the composer offers, including targeting and metadata. Open it from the Links page via **Full page** in a row's actions menu, or search the alias in the command palette (`⌘K`).
+
+<Frame>
+  <img className="block dark:hidden" src="/images/dashboard/link-detail-light.png" alt="Link detail page with stat tiles, clicks over time, referrers, and countries" />
+  <img className="hidden dark:block" src="/images/dashboard/link-detail-dark.png" alt="Link detail page with stat tiles, clicks over time, referrers, and countries" />
+</Frame>
+
+The header carries the short URL with a copy button, the status chip, the destination, and the same actions menu as the list row.
+
+## Analytics
+
+Four tiles summarize the link:
+
+| Tile | What it measures |
+|---|---|
+| Total clicks | Every recorded click |
+| Unique visitors | Clicks deduplicated by visitor |
+| Unique rate | Share of clicks that were first-time visitors |
+| Avg redirect | Mean redirect latency in milliseconds |
+
+Below them, **Clicks over time** plots the click history with a total, unique, or both toggle and 24h, 7d, 30d, and 90d ranges. **Referrers** and **Countries** panels rank where the traffic came from, with favicons and flags. The full dimension set, including browser, OS, device, and UTM tags, is documented in [Dimensions](/analytics/dimensions) and queryable through the [stats API](/analytics/overview#link-level-vs-account-level).
+
+## Settings
+
+Everything set at creation is editable here, in place. Change a field and **Save changes**.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/dashboard/link-detail-settings-light.png" alt="Link settings editor with destination, short link, password, expiry, and toggles" />
+  <img className="hidden dark:block" src="/images/dashboard/link-detail-settings-dark.png" alt="Link settings editor with destination, short link, password, expiry, and toggles" />
+</Frame>
+
+| Setting | Notes |
+|---|---|
+| Destination | Point the short link somewhere new; existing clicks and stats stay attached |
+| Short link | Domain dropdown plus alias field. Moving domains or renaming works, but the old address stops resolving |
+| Password | Add, change, or remove. See [Password Protection](/links/password-protection) |
+| Expires / Max clicks | Set, extend, or clear either budget. See [Link Expiration](/links/link-expiration) |
+| Block bots | Keep crawlers and preview bots out of the redirect |
+| Private stats | Turn the [public stats page](/analytics/public-stats) off or on |
+
+<Note>
+  Changing the alias breaks the old address immediately; anything already sharing the old short link will 404. The editor warns you before you save.
+</Note>
+
+### Targeting
+
+The targeting section edits the link's [geo rules](/links/geo-targeting) after creation: pick a country from the searchable list of 250, give it a destination, and add or remove rules freely. Visitors from unlisted countries get the default destination.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/dashboard/new-link-targeting-light.png" alt="Geo targeting editor with per-country destination rules and a searchable country picker" />
+  <img className="hidden dark:block" src="/images/dashboard/new-link-targeting-dark.png" alt="Geo targeting editor with per-country destination rules and a searchable country picker" />
+</Frame>
+
+### Metadata
+
+The metadata section edits the link's [custom social preview](/links/custom-link-previews): title, description, an image by URL or upload, and a theme color (hex input plus swatches) that tints the embed accent on Discord. The live preview renders the card as X, WhatsApp, Discord, Slack, or LinkedIn would show it, and **Reset to destination** drops the overrides so previews come from the destination page again.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/dashboard/link-detail-settings-meta-light.png" alt="Metadata editor with social title, description, image, theme color, and per-platform preview" />
+  <img className="hidden dark:block" src="/images/dashboard/link-detail-settings-meta-dark.png" alt="Metadata editor with social title, description, image, theme color, and per-platform preview" />
+</Frame>
+
+## Link stats or the Analytics board?
+
+Both views are backed by the same data. Pick by the question you are asking:
+
+| You want to | Use |
+|---|---|
+| Inspect one link's performance and edit it in the same breath | This page |
+| Compare links, compose custom charts, cross-filter by dimension | The [Analytics board](/analytics/custom-dashboards) |
+| Watch one link alongside account-wide widgets | [Pin the link](/links/managing-links#pin-a-links-chart-to-analytics) to the board |
+| Share a link's numbers with someone who has no account | Its [public stats page](/analytics/public-stats) |
+
+The rule of thumb: this page answers "how is this link doing, and should I change it," while the board answers "what is happening across my traffic."

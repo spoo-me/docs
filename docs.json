@@ -17,6 +17,7 @@
             "group": "Getting Started",
             "pages": [
               "introduction",
+              "dashboard",
               "quickstart",
               "api-keys",
               "rate-limits"
@@ -26,6 +27,7 @@
             "group": "Links",
             "pages": [
               "links/creating-links",
+              "links/managing-links",
               "links/custom-aliases",
               "links/emoji-links",
               "links/password-protection",
@@ -51,6 +53,8 @@
             "group": "Analytics",
             "pages": [
               "analytics/overview",
+              "analytics/link-stats",
+              "analytics/custom-dashboards",
               "analytics/dimensions",
               "analytics/public-stats",
               "analytics/link-previews",

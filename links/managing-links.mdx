@@ -1,0 +1,118 @@
+---
+title: "Managing Links"
+description: "Search, filter, edit, and bulk-manage every link you own from the Links page"
+icon: "table-properties"
+---
+
+The Links page (`/dashboard/links`) is the working view of every link on your account: a live table with search, filters, inline editing, and bulk actions. Everything here is backed by the same API that powers [bulk operations](/links/bulk-operations) and the management endpoints.
+
+## The table
+
+Each row shows the link with its destination favicon, a one-click copy button, a status chip, and sortable **Clicks**, **Last click**, and **Created** columns.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/dashboard/links-list-light.png" alt="Links table with short URLs, destinations, status chips, and click counts" />
+  <img className="hidden dark:block" src="/images/dashboard/links-list-dark.png" alt="Links table with short URLs, destinations, status chips, and click counts" />
+</Frame>
+
+Protection settings show up as inline glyphs next to the short link: one each for [password protection](/links/password-protection), bot blocking, and [private stats](/analytics/public-stats). You can tell how a link is configured without opening it.
+
+The table refreshes on an interval (1 minute by default). Change the interval or refresh manually from the refresh control in the toolbar.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/dashboard/links-refresh-menu-light.png" alt="Refresh control with the auto-refresh interval menu open" />
+  <img className="hidden dark:block" src="/images/dashboard/links-refresh-menu-dark.png" alt="Refresh control with the auto-refresh interval menu open" />
+</Frame>
+
+## Search and filters
+
+The search box matches free text across your links. The filters popover narrows by status (**Active**, **Inactive**, **Expired**, **Blocked**) and by protection (**Password protected**, **Click-limited**).
+
+<Frame>
+  <img className="block dark:hidden" src="/images/dashboard/links-filters-light.png" alt="Filters popover with status and protection checkboxes" />
+  <img className="hidden dark:block" src="/images/dashboard/links-filters-dark.png" alt="Filters popover with status and protection checkboxes" />
+</Frame>
+
+### Date ranges
+
+The date-range picker takes presets, a calendar, or a plain-language range typed directly into the input:
+
+| You type | You get |
+|---|---|
+| `3h` | The last 3 hours |
+| `last 7 days` | The last 7 days |
+| `now-3d to now-1d` | A window from 3 days ago to 1 day ago |
+
+<Frame>
+  <img className="block dark:hidden" src="/images/dashboard/links-daterange-light.png" alt="Date-range picker with presets, natural-language input, and calendar" />
+  <img className="hidden dark:block" src="/images/dashboard/links-daterange-dark.png" alt="Date-range picker with presets, natural-language input, and calendar" />
+</Frame>
+
+<Tip>
+  The `now-3d to now-1d` form is the one to reach for when you want a window that excludes today, for example to compare a campaign day without partial-day noise. The same picker appears on the Analytics board.
+</Tip>
+
+## Row actions
+
+The actions menu on each row covers the quick moves: **Copy link**, **Open**, **Full page**, **Pin to dashboard**, **Deactivate**, and **Delete**.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/dashboard/links-row-actions-light.png" alt="Row actions menu with copy, open, full page, pin, deactivate, and delete" />
+  <img className="hidden dark:block" src="/images/dashboard/links-row-actions-dark.png" alt="Row actions menu with copy, open, full page, pin, deactivate, and delete" />
+</Frame>
+
+- **Deactivate** stops the link redirecting without deleting it; reactivate any time.
+- **Delete** is permanent.
+- **Pin to dashboard** puts this link's clicks-over-time chart on your Analytics board. See [pinned widgets](/analytics/custom-dashboards#pin-a-link-to-the-board).
+- **Full page** opens the link's [stats and settings page](/analytics/link-stats).
+
+## Edit in place
+
+Click a row to open the edit sheet: the full edit form in a side panel, without leaving the list. It covers the destination, the domain and alias (this is also where you move a single link to another domain), password, expiry, max clicks, block bots, and private stats, plus a shortcut to the full page.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/dashboard/link-peek-light.png" alt="Edit sheet open over the links table with the full link edit form" />
+  <img className="hidden dark:block" src="/images/dashboard/link-peek-dark.png" alt="Edit sheet open over the links table with the full link edit form" />
+</Frame>
+
+## Bulk actions
+
+<Steps>
+  <Step title="Select links">
+    Use the row checkboxes, or select the whole page with the header checkbox or `⌘A`.
+
+    <Frame>
+      <img className="block dark:hidden" src="/images/dashboard/links-bulk-select-light.png" alt="Several links selected with checkboxes in the links table" />
+      <img className="hidden dark:block" src="/images/dashboard/links-bulk-select-dark.png" alt="Several links selected with checkboxes in the links table" />
+    </Frame>
+  </Step>
+  <Step title="Pick an action">
+    A bar appears with **Deactivate** and **Delete** up front, and **Move to domain**, **Set expiry**, and **Export CSV** under the overflow menu.
+
+    <Frame>
+      <img className="block dark:hidden" src="/images/dashboard/links-bulk-actions-light.png" alt="Bulk action bar with deactivate, delete, and the overflow menu open" />
+      <img className="hidden dark:block" src="/images/dashboard/links-bulk-actions-dark.png" alt="Bulk action bar with deactivate, delete, and the overflow menu open" />
+    </Frame>
+  </Step>
+  <Step title="Confirm">
+    Destructive and cross-domain actions confirm before running. **Move to domain** asks for the target domain; **Set expiry** takes one expiration for the whole selection; **Export CSV** downloads the selected links.
+
+    <Frame>
+      <img className="block dark:hidden" src="/images/dashboard/links-move-domain-light.png" alt="Move to domain dialog with a target domain selected" />
+      <img className="hidden dark:block" src="/images/dashboard/links-move-domain-dark.png" alt="Move to domain dialog with a target domain selected" />
+    </Frame>
+  </Step>
+</Steps>
+
+The bar is backed by the [bulk endpoints](/links/bulk-operations), so the same operations are scriptable, with a per-link verdict on partial success.
+
+## Pin a link's chart to Analytics
+
+**Pin to dashboard** (in the row actions menu) adds a clicks-over-time widget for that link to your Analytics board and confirms with a toast. The widget carries a scope chip with the link's alias, so it always reads as that one link's traffic no matter what the rest of the board is showing.
+
+<Frame>
+  <img className="block dark:hidden" src="/images/dashboard/analytics-pinned-widget-light.png" alt="Analytics board with a pinned per-link clicks widget carrying an alias scope chip" />
+  <img className="hidden dark:block" src="/images/dashboard/analytics-pinned-widget-dark.png" alt="Analytics board with a pinned per-link clicks widget carrying an alias scope chip" />
+</Frame>
+
+Pinned widgets are regular board widgets: move, resize, or remove them in [edit mode](/analytics/custom-dashboards).
