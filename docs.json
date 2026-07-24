@@ -19,7 +19,9 @@
               "introduction",
               "quickstart",
               "api-keys",
-              "rate-limits"
+              "rate-limits",
+              "custom-domains",
+              "device-auth"
             ]
           },
           {
@@ -30,7 +32,8 @@
                 "group": "URL Shortening",
                 "icon": "link",
                 "pages": [
-                  "POST /api/v1/shorten"
+                  "POST /api/v1/shorten",
+                  "GET /api/v1/shorten/check-alias"
                 ]
               },
               {
@@ -40,7 +43,8 @@
                   "GET /api/v1/urls",
                   "PATCH /api/v1/urls/{url_id}",
                   "PATCH /api/v1/urls/{url_id}/status",
-                  "DELETE /api/v1/urls/{url_id}"
+                  "DELETE /api/v1/urls/{url_id}",
+                  "DELETE /api/v1/urls"
                 ]
               },
               {
@@ -49,6 +53,36 @@
                 "pages": [
                   "GET /api/v1/stats",
                   "GET /api/v1/export"
+                ]
+              },
+              {
+                "group": "Custom Domains",
+                "icon": "globe",
+                "pages": [
+                  "POST /api/v1/custom-domains",
+                  "GET /api/v1/custom-domains",
+                  "GET /api/v1/custom-domains/{domain_id}",
+                  "POST /api/v1/custom-domains/{domain_id}/verify",
+                  "PATCH /api/v1/custom-domains/{domain_id}",
+                  "DELETE /api/v1/custom-domains/{domain_id}",
+                  "DELETE /api/v1/custom-domains/{domain_id}/permanent"
+                ]
+              },
+              {
+                "group": "API Keys",
+                "icon": "key",
+                "pages": [
+                  "POST /api/v1/keys",
+                  "GET /api/v1/keys",
+                  "DELETE /api/v1/keys/{key_id}"
+                ]
+              },
+              {
+                "group": "Device Authentication",
+                "icon": "monitor-smartphone",
+                "pages": [
+                  "POST /auth/device/token",
+                  "POST /auth/device/refresh"
                 ]
               }
             ]
