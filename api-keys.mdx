@@ -43,11 +43,17 @@ API keys can be granted specific permissions (scopes) to limit their access:
 
 | Scope | Description | Endpoints |
 |-------|-------------|-----------|
-| `shorten:create` | Create new shortened URLs | `POST /api/v1/shorten` |
-| `urls:read` | View URL details and list | `GET /api/v1/urls` |
-| `urls:manage` | Update and delete URLs | `PATCH/DELETE /api/v1/urls/*` |
-| `stats:read` | Access analytics data | `GET /api/v1/stats` |
-| `admin:all` | Full administrative access | All endpoints |
+| `shorten:create` | Create new shortened URLs | `POST /api/v1/shorten`, `GET /api/v1/shorten/check-alias` |
+| `urls:read` | View URLs and their analytics | `GET /api/v1/urls`, `GET /api/v1/stats`, `GET /api/v1/export` |
+| `urls:manage` | Update and delete URLs (includes read access) | `PATCH/DELETE /api/v1/urls/*` plus everything `urls:read` grants |
+| `stats:read` | Access analytics data only | `GET /api/v1/stats`, `GET /api/v1/export` |
+| `domains:read` | View custom domains | `GET /api/v1/custom-domains*` |
+| `domains:manage` | Register, verify, configure, and remove custom domains (includes read access) | All `/api/v1/custom-domains*` endpoints |
+| `admin:all` | Everything above | All endpoints except API key management |
+
+<Note>
+  API keys can never manage other API keys. The `/api/v1/keys` endpoints require an interactive JWT session, and `admin:all` does not include them. This is deliberate: a leaked key cannot be used to mint new keys.
+</Note>
 
 <Tip>
   **Principle of Least Privilege**: Only grant the minimum scopes needed for your use case. For example, if you only need to shorten URLs, use `shorten:create` instead of `admin:all`.
@@ -58,7 +64,7 @@ API keys can be granted specific permissions (scopes) to limit their access:
 ### Via Web Dashboard
 
 1. Log in to your [Spoo.me Dashboard](https://spoo.me/dashboard)
-2. Navigate to **Settings** → **API Keys**
+2. Open the [API Keys page](https://spoo.me/dashboard/keys)
 3. Click **Create New API Key**
 4. Configure your key:
    - **Name**: Human-readable identifier (e.g., "Production Server")
@@ -71,6 +77,10 @@ API keys can be granted specific permissions (scopes) to limit their access:
 <Warning>
   **One-Time Display**: The full API key is shown **only once** at creation. Store it securely immediately. If you lose it, you'll need to create a new key.
 </Warning>
+
+<Note>
+  Creating API keys requires a **verified email address**. If your email is unverified, key creation is rejected until you complete verification from the dashboard.
+</Note>
 
 ## Using API Keys
 

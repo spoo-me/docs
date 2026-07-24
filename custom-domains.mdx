@@ -1,0 +1,94 @@
+---
+title: "Custom Domains"
+description: "Serve branded short links from your own domain"
+icon: "globe"
+---
+
+Custom domains let you serve short links from a domain you own (for example `links.acme.com`) instead of `spoo.me`. Once a domain is active, you can scope new short links to it and manage its routing behavior.
+
+<Note>
+  Custom domain **registration** is being rolled out gradually. If it is not enabled for your account yet, `POST /api/v1/custom-domains` responds with a 404. Management of already-registered domains is not restricted.
+</Note>
+
+## Requirements
+
+- A **verified email address** on your Spoo.me account
+- A JWT session or an API key with the `domains:manage` scope
+- Access to your domain's DNS settings
+
+## Domain Lifecycle
+
+<Steps>
+<Step title="Register the domain">
+    Call `POST /api/v1/custom-domains` with the fully-qualified domain name:
+
+    ```bash
+    curl -X POST https://spoo.me/api/v1/custom-domains \
+      -H "Authorization: Bearer spoo_YOUR_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{"fqdn": "links.acme.com"}'
+    ```
+
+    The domain is created in `PENDING` state. The response contains a `dns_records` list, where each entry has a `type` (`CNAME`, `TXT`, or `A`), `name`, `value`, and a human-readable `purpose`, plus `setup_notes` with any domain-specific instructions.
+
+    <Info>
+    Registration is limited to 5 domains per hour.
+    </Info>
+</Step>
+
+<Step title="Publish the DNS records">
+    Create the records from `dns_records` at your DNS provider exactly as returned. DNS propagation usually takes a few minutes but can take longer depending on your provider and TTLs.
+</Step>
+
+<Step title="Verify">
+    Trigger a verification check:
+
+    ```bash
+    curl -X POST https://spoo.me/api/v1/custom-domains/{domain_id}/verify \
+      -H "Authorization: Bearer spoo_YOUR_API_KEY"
+    ```
+
+    On the hosted spoo.me service, verification also completes automatically once the CNAME is live and propagated. On success the domain transitions to `ACTIVE` and short links on it start resolving. If verification fails, the response and `last_verification_error` on the domain explain why.
+</Step>
+
+<Step title="Create links on your domain">
+    Pass the `domain` field when shortening:
+
+    ```bash
+    curl -X POST https://spoo.me/api/v1/shorten \
+      -H "Authorization: Bearer spoo_YOUR_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{"long_url": "https://example.com/launch", "alias": "launch", "domain": "links.acme.com"}'
+    ```
+
+    The `domain` field also works on `PATCH /api/v1/urls/{id}` (to move a link between domains) and as a filter on `GET /api/v1/urls`.
+</Step>
+</Steps>
+
+## Routing Configuration
+
+`PATCH /api/v1/custom-domains/{domain_id}` controls how your domain behaves outside of short-link redirects:
+
+| Field | Behavior |
+|-------|----------|
+| `root_redirect` | Where visits to the bare domain root go |
+| `not_found_redirect` | Where visits to unknown short codes go |
+| `custom_robots_txt` | Custom `robots.txt` content served on your domain |
+
+Fields you omit stay unchanged; fields you explicitly set to `null` are cleared.
+
+## Removing a Domain
+
+- `DELETE /api/v1/custom-domains/{domain_id}` revokes the domain. Short links on it stop resolving. Add `?cascade=true` to also delete the URLs scoped to it.
+- `DELETE /api/v1/custom-domains/{domain_id}/permanent` permanently removes a revoked domain from your account.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="API Reference" icon="code" href="/api-reference">
+    Full request and response schemas for every custom domain endpoint
+  </Card>
+  <Card title="Rate Limits" icon="gauge" href="/rate-limits">
+    Per-endpoint limits for domain operations
+  </Card>
+</CardGroup>
