@@ -46,7 +46,7 @@ API keys can be granted specific permissions (scopes) to limit their access:
 | `shorten:create` | Create new shortened URLs | `POST /api/v1/shorten` |
 | `urls:read` | View URL details and list | `GET /api/v1/urls` |
 | `urls:manage` | Update and delete URLs | `PATCH/DELETE /api/v1/urls/*` |
-| `stats:read` | Access analytics data | `GET /api/v1/stats` |
+| `stats:read` | Access analytics data | `GET /api/v1/stats*`, `GET /api/v1/export*` |
 | `admin:all` | Full administrative access | All endpoints |
 
 <Tip>
@@ -95,7 +95,7 @@ curl -X POST https://spoo.me/api/v1/shorten \
 ### Example: Get Statistics
 
 ```bash
-curl -X GET "https://spoo.me/api/v1/stats?scope=all" \
+curl -X GET "https://spoo.me/api/v1/stats" \
   -H "Authorization: Bearer spoo_AbCdEfGhIjKlMnOpQrStUvWxYz"
 ```
 
@@ -115,13 +115,13 @@ API keys grant **authenticated rate limits**, which are significantly higher tha
     - **60 requests/minute**
     - **5000 requests/day**
     - Access to management endpoints
-    - Private stats support
+    - Full analytics and export for your links
   </Card>
   <Card title="Without API Key" icon="turtle" color="#EF4444">
     - **20 requests/minute**
     - **200 requests/day**
     - Cannot manage URLs
-    - Public URLs only
+    - Stats via the public per-link endpoint only
   </Card>
 </CardGroup>
 
