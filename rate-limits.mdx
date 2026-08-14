@@ -51,7 +51,7 @@ The new v1 API offers **significantly higher rate limits** with authentication:
     icon="calendar-days"
     color="#F59E0B"
   >
-    **1,000 requests**
+    **200 requests**
   </Card>
   <Card
     title="Endpoints"
@@ -63,39 +63,32 @@ The new v1 API offers **significantly higher rate limits** with authentication:
 </CardGroup>
 
 <Tip>
-  **Get 3x more requests** by using [API keys](/api-keys) or JWT authentication! Anonymous users are limited to 20 requests/minute vs 60 requests/minute for authenticated users.
+  **Get far higher limits** by using [API keys](/api-keys) or JWT authentication: 60 vs 20 requests per minute, and 5,000 vs 200 requests per day.
 </Tip>
 
 ## API v0 Rate Limits (Legacy)
 
 The legacy v0 API has lower rate limits:
 
-<CardGroup cols={3}>
+<CardGroup cols={2}>
   <Card
     title="Per Minute"
     icon="clock"
     color="#EF4444"
   >
-    **10 short URLs** per IP
-  </Card>
-  <Card
-    title="Per Hour"
-    icon="hourglass"
-    color="#EF4444"
-  >
-    **100 short URLs** per IP
+    **5 short URLs** per IP
   </Card>
   <Card
     title="Per Day"
     icon="calendar-days"
     color="#EF4444"
   >
-    **500 short URLs** per IP
+    **50 short URLs** per IP
   </Card>
 </CardGroup>
 
 <Warning>
-  The v0 API is **legacy** and does not support authentication. We recommend migrating to the v1 API for better rate limits and features.
+  The v0 API is **legacy**, does not support authentication, and is strictly rate limited. Migrate to the v1 API for dramatically higher limits and features. Rate-limited v0 responses include a `hint` field with the migration path.
 </Warning>
 
 ## Rate Limits by Endpoint
@@ -105,7 +98,7 @@ The legacy v0 API has lower rate limits:
 #### v1 API Endpoints
 | Endpoint | Authenticated | Anonymous | Notes |
 |----------|--------------|-----------|-------|
-| `POST /api/v1/shorten` | 60/min, 5000/day | 20/min, 1000/day | v1 API |
+| `POST /api/v1/shorten` | 60/min, 5000/day | 20/min, 200/day | v1 API |
 
 #### v0 API Endpoints (Legacy)
 
@@ -115,8 +108,8 @@ The following endpoints are part of the legacy v0 API. They do not support authe
 
 | Endpoint | Authenticated | Anonymous | Notes |
 |----------|--------------|-----------|-------|
-| `POST /` | - | 10/min, 100/hr, 500/day | v0 API (legacy) |
-| `POST /emoji` | - | 10/min, 100/hr, 500/day | v0 API (legacy) |
+| `POST /` | - | 5/min, 50/day | v0 API (legacy) |
+| `POST /emoji` | - | 5/min, 50/day | v0 API (legacy) |
 
 ### URL Management
 
@@ -131,9 +124,9 @@ The following endpoints are part of the legacy v0 API. They do not support authe
 
 | Endpoint | Authenticated | Anonymous | Notes |
 |----------|--------------|-----------|-------|
-| `GET /api/v1/stats` | 60/min, 5000/day | 20/min, 1000/day | Public URLs only for anon |
-| `POST /stats/{code}` | - | - | v0 API (legacy) |
-| `POST /export/{code}/{format}` | - | - | v0 API (legacy) |
+| `GET /api/v1/stats` | 60/min, 5000/day | 20/min, 200/day | Public URLs only for anon |
+| `POST /stats/{code}` | - | 20/min, 1000/day | v0 API (legacy) |
+| `POST /export/{code}/{format}` | - | 10/min, 200/day | v0 API (legacy) |
 
 ## Authentication & Rate Limits
 
@@ -144,7 +137,7 @@ How you authenticate directly affects your rate limits:
     **Rate Limits**: 60/min, 5000/day
     
     **Benefits**:
-    - 3x higher rate limits vs anonymous
+    - Far higher rate limits than anonymous
     - Access to URL management endpoints
     - Private stats support
     - Long-lived tokens for automation
@@ -171,10 +164,10 @@ How you authenticate directly affects your rate limits:
   </Accordion>
   
   <Accordion title="Anonymous (No Authentication)" icon="user">
-    **Rate Limits**: 20/min, 1000/day
+    **Rate Limits**: 20/min, 200/day
     
     **Limitations**:
-    - 3x lower rate limits
+    - Far lower rate limits
     - Cannot manage URLs later
     - No access to private stats
     - Cannot use URL management endpoints
@@ -194,15 +187,21 @@ X-RateLimit-Reset: 1640995200
 Retry-After: 30
 ```
 
+Most endpoints enforce a per-minute and a per-day window at once; the headers describe the shortest window. `Retry-After` is only sent on `429` responses.
+
 ## Handling Rate Limits
 
 When you exceed the rate limit, you'll receive a `429 Too Many Requests` response:
 
 ```json
 {
-  "error": "Rate limit exceeded"
+  "error": "Too many requests",
+  "code": "rate_limit_exceeded",
+  "hint": "Anonymous requests get the lowest limits. Authenticate with a free account or an API key for 60 per minute and 5000 per day."
 }
 ```
+
+The `hint` field appears on anonymous and legacy v0 responses and names the tier with higher limits.
 
 ## Need Higher Limits?
 
