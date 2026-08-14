@@ -121,10 +121,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/RateLimitResponse'
               example:
-                error: RateLimitError
-                message: Rate limit exceeded. Please try again later.
+                error: Too many requests
+                code: rate_limit_exceeded
+                hint: 'The legacy API is strictly rate limited. Use POST /api/v1/shorten for higher limits: https://docs.spoo.me/rate-limits'
   /emoji:
     post:
       summary: Create Emoji URLs
@@ -231,10 +232,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/RateLimitResponse'
               example:
-                error: RateLimitError
-                message: Rate limit exceeded. Please try again later.
+                error: Too many requests
+                code: rate_limit_exceeded
+                hint: 'The legacy API is strictly rate limited. Use POST /api/v1/shorten for higher limits: https://docs.spoo.me/rate-limits'
   /stats/{shortCode}:
     post:
       summary: Get URL Statistics
@@ -380,6 +382,21 @@ components:
       required:
         - error
         - message
+    RateLimitResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
+        code:
+          type: string
+          description: Machine-readable error code
+        hint:
+          type: string
+          description: Migration hint naming the tier with higher limits, also sent as the X-Spoo-Hint response header
+      required:
+        - error
+        - code
     UrlStatistics:
       type: object
       properties:

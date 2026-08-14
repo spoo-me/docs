@@ -184,15 +184,15 @@ The `/get-code` command provides:
 
 ## Rate Limits
 
-SpooBot respects the same rate limits as the Spoo.me API:
+SpooBot applies its own per-user cooldowns on top of the Spoo.me API limits:
 
 <Warning>
-**Rate Limits:**
+**Cooldowns:**
+- 1 request per 10 seconds
 - 5 requests per minute
-- 50 requests per hour  
-- 500 requests per day
+- 200 requests per day
 
-Rate limits are applied per Discord user, not per server.
+Cooldowns are applied per Discord user, not per server.
 </Warning>
 
 ## Support and Community

@@ -88,7 +88,7 @@ The legacy v0 API has lower rate limits:
 </CardGroup>
 
 <Warning>
-  The v0 API is **legacy**, does not support authentication, and is strictly rate limited. Migrate to the v1 API for dramatically higher limits and features. Rate-limited v0 responses include a `hint` field with the migration path.
+  The v0 API is **legacy**, does not support authentication, and is strictly rate limited. Migrate to the v1 API for dramatically higher limits and features. Rate-limited responses from the legacy shorten endpoints carry an `X-Spoo-Hint` header (and a `hint` field on JSON responses) with the migration path.
 </Warning>
 
 ## Rate Limits by Endpoint
@@ -124,7 +124,7 @@ The following endpoints are part of the legacy v0 API. They do not support authe
 
 | Endpoint | Authenticated | Anonymous | Notes |
 |----------|--------------|-----------|-------|
-| `GET /api/v1/stats` | 60/min, 5000/day | 20/min, 200/day | Public URLs only for anon |
+| `GET /api/v1/stats` | 60/min, 5000/day | 20/min, 1000/day | Anonymous read tier; public URLs only |
 | `POST /stats/{code}` | - | 20/min, 1000/day | v0 API (legacy) |
 | `POST /export/{code}/{format}` | - | 10/min, 200/day | v0 API (legacy) |
 
@@ -164,7 +164,7 @@ How you authenticate directly affects your rate limits:
   </Accordion>
   
   <Accordion title="Anonymous (No Authentication)" icon="user">
-    **Rate Limits**: 20/min, 200/day
+    **Rate Limits**: 20/min, 200/day (public stats reads: 1,000/day)
     
     **Limitations**:
     - Far lower rate limits
@@ -184,10 +184,9 @@ When you make requests to rate-limited endpoints, the response will include head
 X-RateLimit-Limit: 60
 X-RateLimit-Remaining: 45
 X-RateLimit-Reset: 1640995200
-Retry-After: 30
 ```
 
-Most endpoints enforce a per-minute and a per-day window at once; the headers describe the shortest window. `Retry-After` is only sent on `429` responses.
+Most endpoints enforce a per-minute and a per-day window at once; the headers describe the shortest window. `429` responses additionally carry a `Retry-After` header.
 
 ## Handling Rate Limits
 
@@ -201,7 +200,7 @@ When you exceed the rate limit, you'll receive a `429 Too Many Requests` respons
 }
 ```
 
-The `hint` field appears on anonymous and legacy v0 responses and names the tier with higher limits.
+The hint names the tier with higher limits. It appears on anonymous v1 requests and the legacy mint endpoints (`POST /`, `POST /emoji`), and is also sent as an `X-Spoo-Hint` response header so it reaches callers that receive the HTML error page or ignore the body.
 
 ## Need Higher Limits?
 
