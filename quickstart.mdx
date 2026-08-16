@@ -152,7 +152,7 @@ print(f"Unique clicks: {stats['summary']['unique_clicks']}")
 </CodeGroup>
 
 <Note>
-The public stats endpoint only serves links whose stats are public; links with private stats respond with a 404. Password-protected links require a `POST` request with the password in the JSON body. For account-wide analytics and your own private links, use the authenticated `GET /api/v1/stats` endpoints with [API key authentication](/api-keys).
+The public stats endpoint only serves links whose stats are public; links with private stats respond with a 404. Password-protected links require a `POST` request with the password in the JSON body. For account-wide analytics, use the authenticated `GET /api/v1/stats`; for a single link, including your private ones, use `GET /api/v1/stats/links/{url_id}`. Both require [API key authentication](/api-keys).
 </Note>
 
 ## Step 4: Additional Options

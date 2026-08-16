@@ -44,7 +44,7 @@ API keys can be granted specific permissions (scopes) to limit their access:
 | Scope | Description | Endpoints |
 |-------|-------------|-----------|
 | `shorten:create` | Create new shortened URLs | `POST /api/v1/shorten` |
-| `urls:read` | View URL details and list | `GET /api/v1/urls` |
+| `urls:read` | View URL details and list | `GET /api/v1/urls`, `GET /api/v1/stats*`, `GET /api/v1/export*` |
 | `urls:manage` | Update and delete URLs | `PATCH/DELETE /api/v1/urls/*` |
 | `stats:read` | Access analytics data | `GET /api/v1/stats*`, `GET /api/v1/export*` |
 | `admin:all` | Full administrative access | All endpoints |
@@ -108,7 +108,7 @@ curl -X GET "https://spoo.me/api/v1/urls?page=1&pageSize=20" \
 
 ## Rate Limits with API Keys
 
-API keys grant **authenticated rate limits**, which are significantly higher than anonymous limits:
+API keys grant **authenticated rate limits**, which are significantly higher than anonymous limits. The numbers below are the default API tier; some endpoints use their own limits, see [Rate Limits](/rate-limits) for the per-endpoint breakdown:
 
 <CardGroup cols={2}>
   <Card title="With API Key" icon="bolt" color="#10B981">
