@@ -1859,45 +1859,9 @@
                     "Statistics"
                 ],
                 "summary": "URL Statistics",
-                "description": "Get click statistics for URLs.\n\nRetrieve aggregated click analytics with flexible grouping, filtering,\nand time-range options. Results are computed in a single database round-trip\nusing `$facet` aggregation.\n\n**Authentication**: Optional for `scope=anon` (public stats on a single URL);\nrequired for `scope=all` (all URLs owned by the user).\n\n**API Key Scope**: `stats:read`, `urls:read`, or `admin:all`\n\n**Rate Limits**:\n- Authenticated: 60/min, 5,000/day\n- Anonymous: 20/min, 1,000/day\n\n**Scopes**:\n- `scope=anon` + `short_code=<alias>` \u2014 public stats for one URL (if stats are not private)\n- `scope=all` \u2014 aggregate stats across all URLs owned by the authenticated user\n\n**Grouping Dimensions**: `time`, `browser`, `os`, `country`, `city`,\n`referrer`, `short_code`\n\n**Metrics**: `clicks`, `unique_clicks`\n\n**Filtering**: Filter by `browser`, `os`, `country`, `city`, `referrer`,\nor `short_code` using query params or a JSON `filters` object.",
+                "description": "Get aggregated click statistics across all URLs you own.\n\nRetrieve click analytics with flexible grouping, filtering, and\ntime-range options.\n\n**Authentication**: Required.\n\n**API Key Scope**: `stats:read`, `urls:read`, or `admin:all`\n\n**Rate Limits**: 60/min, 5,000/day\n\n**Grouping Dimensions**: `time`, `browser`, `os`, `device`, `country`,\n`city`, `referrer`, `short_code`, `utm_source`, `utm_medium`,\n`utm_campaign`\n\n**Metrics**: `clicks`, `unique_clicks`\n\n**Filtering**: Filter by `browser`, `os`, `device`, `country`, `city`,\n`referrer`, `short_code`, `url_id`, or the `utm_*` tags using query\nparams or a JSON `filters` object. Filters slice your own aggregate \u2014\n`url_id` values you do not own simply match nothing. For statistics on\na single link, prefer `GET /stats/links/{url_id}`.",
                 "operationId": "getStats",
                 "parameters": [
-                    {
-                        "name": "scope",
-                        "in": "query",
-                        "required": true,
-                        "schema": {
-                            "enum": [
-                                "all",
-                                "anon"
-                            ],
-                            "type": "string",
-                            "description": "Statistics scope: `all` (authenticated only) or `anon` (public access).\n\n- `all` \u2014 aggregate stats across all URLs owned by the authenticated user. Requires authentication.\n- `anon` \u2014 public stats for a single URL. Requires `short_code` parameter. No authentication needed (unless stats are private).",
-                            "title": "Scope"
-                        },
-                        "description": "Statistics scope: `all` (authenticated only) or `anon` (public access).\n\n- `all` \u2014 aggregate stats across all URLs owned by the authenticated user. Requires authentication.\n- `anon` \u2014 public stats for a single URL. Requires `short_code` parameter. No authentication needed (unless stats are private)."
-                    },
-                    {
-                        "name": "short_code",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "anyOf": [
-                                {
-                                    "type": "string"
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "description": "URL alias to query stats for. **Required** when `scope=anon`. When `scope=all`, this is optional and filters stats to a specific URL.",
-                            "examples": [
-                                "mylink"
-                            ],
-                            "title": "Short Code"
-                        },
-                        "description": "URL alias to query stats for. **Required** when `scope=anon`. When `scope=all`, this is optional and filters stats to a specific URL."
-                    },
                     {
                         "name": "start_date",
                         "in": "query",
@@ -1905,19 +1869,20 @@
                         "schema": {
                             "anyOf": [
                                 {
-                                    "type": "string"
+                                    "type": "string",
+                                    "maxLength": 50
                                 },
                                 {
                                     "type": "null"
                                 }
                             ],
-                            "description": "Start of time range. Accepts ISO 8601 datetime string (e.g., `2025-01-01T00:00:00Z`) or Unix timestamp in seconds (e.g., `1735689600`). If omitted, defaults to the URL creation date.",
+                            "description": "Start of time range. Accepts ISO 8601 datetime string (e.g., `2025-01-01T00:00:00Z`) or Unix timestamp in seconds (e.g., `1735689600`). If omitted, defaults to 7 days before `end_date`.",
                             "examples": [
                                 "2025-01-01T00:00:00Z"
                             ],
                             "title": "Start Date"
                         },
-                        "description": "Start of time range. Accepts ISO 8601 datetime string (e.g., `2025-01-01T00:00:00Z`) or Unix timestamp in seconds (e.g., `1735689600`). If omitted, defaults to the URL creation date."
+                        "description": "Start of time range. Accepts ISO 8601 datetime string (e.g., `2025-01-01T00:00:00Z`) or Unix timestamp in seconds (e.g., `1735689600`). If omitted, defaults to 7 days before `end_date`."
                     },
                     {
                         "name": "end_date",
@@ -1926,7 +1891,8 @@
                         "schema": {
                             "anyOf": [
                                 {
-                                    "type": "string"
+                                    "type": "string",
+                                    "maxLength": 50
                                 },
                                 {
                                     "type": "null"
@@ -1947,13 +1913,14 @@
                         "schema": {
                             "anyOf": [
                                 {
-                                    "type": "string"
+                                    "type": "string",
+                                    "maxLength": 200
                                 },
                                 {
                                     "type": "null"
                                 }
                             ],
-                            "description": "Comma-separated grouping dimensions for the statistics breakdown. Defaults to `time` if omitted.\n\n**Available dimensions:**\n\n- `time` \u2014 group by time buckets (day/week/month, auto-selected based on range)\n- `browser` \u2014 group by browser name (e.g., Chrome, Firefox, Safari)\n- `os` \u2014 group by operating system (e.g., Windows, macOS, Linux)\n- `country` \u2014 group by country\n- `city` \u2014 group by city\n- `referrer` \u2014 group by referrer URL\n- `short_code` \u2014 group by URL alias (only with `scope=all`)\n\nMultiple dimensions can be combined: `time,browser` returns time series broken down by browser.",
+                            "description": "Comma-separated grouping dimensions for the statistics breakdown. Defaults to `time` if omitted.\n\n**Available dimensions:**\n\n- `time` \u2014 group by time buckets (day/week/month, auto-selected based on range)\n- `browser` \u2014 group by browser name (e.g., Chrome, Firefox, Safari)\n- `os` \u2014 group by operating system (e.g., Windows, macOS, Linux)\n- `device` \u2014 group by device type (`mobile`, `tablet`, `desktop`, `unknown`)\n- `country` \u2014 group by country\n- `city` \u2014 group by city\n- `referrer` \u2014 group by referrer URL\n- `short_code` \u2014 group by URL alias\n- `utm_source` \u2014 group by the `utm_source` tag on the short link (untagged clicks appear as `(none)`)\n- `utm_medium` \u2014 group by the `utm_medium` tag\n- `utm_campaign` \u2014 group by the `utm_campaign` tag\n\nMultiple dimensions can be combined: `time,browser` returns time series broken down by browser.",
                             "examples": [
                                 "time,browser",
                                 "country",
@@ -1961,7 +1928,7 @@
                             ],
                             "title": "Group By"
                         },
-                        "description": "Comma-separated grouping dimensions for the statistics breakdown. Defaults to `time` if omitted.\n\n**Available dimensions:**\n\n- `time` \u2014 group by time buckets (day/week/month, auto-selected based on range)\n- `browser` \u2014 group by browser name (e.g., Chrome, Firefox, Safari)\n- `os` \u2014 group by operating system (e.g., Windows, macOS, Linux)\n- `country` \u2014 group by country\n- `city` \u2014 group by city\n- `referrer` \u2014 group by referrer URL\n- `short_code` \u2014 group by URL alias (only with `scope=all`)\n\nMultiple dimensions can be combined: `time,browser` returns time series broken down by browser."
+                        "description": "Comma-separated grouping dimensions for the statistics breakdown. Defaults to `time` if omitted.\n\n**Available dimensions:**\n\n- `time` \u2014 group by time buckets (day/week/month, auto-selected based on range)\n- `browser` \u2014 group by browser name (e.g., Chrome, Firefox, Safari)\n- `os` \u2014 group by operating system (e.g., Windows, macOS, Linux)\n- `device` \u2014 group by device type (`mobile`, `tablet`, `desktop`, `unknown`)\n- `country` \u2014 group by country\n- `city` \u2014 group by city\n- `referrer` \u2014 group by referrer URL\n- `short_code` \u2014 group by URL alias\n- `utm_source` \u2014 group by the `utm_source` tag on the short link (untagged clicks appear as `(none)`)\n- `utm_medium` \u2014 group by the `utm_medium` tag\n- `utm_campaign` \u2014 group by the `utm_campaign` tag\n\nMultiple dimensions can be combined: `time,browser` returns time series broken down by browser."
                     },
                     {
                         "name": "metrics",
@@ -1970,7 +1937,8 @@
                         "schema": {
                             "anyOf": [
                                 {
-                                    "type": "string"
+                                    "type": "string",
+                                    "maxLength": 200
                                 },
                                 {
                                     "type": "null"
@@ -1991,6 +1959,7 @@
                         "required": false,
                         "schema": {
                             "type": "string",
+                            "maxLength": 50,
                             "description": "IANA timezone name for time-based grouping and output formatting (e.g., `UTC`, `America/New_York`, `Asia/Kolkata`). Defaults to `UTC`.",
                             "examples": [
                                 "UTC",
@@ -2008,20 +1977,21 @@
                         "schema": {
                             "anyOf": [
                                 {
-                                    "type": "string"
+                                    "type": "string",
+                                    "maxLength": 5000
                                 },
                                 {
                                     "type": "null"
                                 }
                             ],
-                            "description": "**Method 1: JSON Filters Object**\n\nJSON string containing dimension filters. Format: `{\"dimension\": [\"value1\", \"value2\"]}`\n\n**Available filter dimensions:**\n\n- `browser` \u2014 Filter by browser name (e.g., Chrome, Firefox, Safari, Edge)\n- `os` \u2014 Filter by operating system (e.g., Windows, macOS, Linux, iOS, Android)\n- `country` \u2014 Filter by country name (e.g., United States, Canada, Germany)\n- `city` \u2014 Filter by city name (e.g., New York, London, Mumbai)\n- `referrer` \u2014 Filter by referrer URL (e.g., https://google.com, https://twitter.com)\n- `short_code` \u2014 Filter by URL alias (e.g., mylink, promo2024) \u2014 **not allowed** with `scope=anon`\n\n**Value format:** Array of strings for each dimension.\n\n**Important:** Filter values are case-sensitive. Use exact capitalization as stored in the database.\n\n**Examples:**\n\n- `{\"browser\": [\"Chrome\", \"Firefox\"]}` \u2014 Chrome OR Firefox clicks\n- `{\"country\": [\"United States\", \"Canada\"], \"browser\": [\"Chrome\"]}` \u2014 US/CA clicks from Chrome\n- `{\"short_code\": [\"link1\", \"link2\"]}` \u2014 Stats for specific URLs (`scope=all` only)\n\n**Alternative:** You can also pass filters as individual query parameters (see `browser`, `os`, `country`, `city`, `referrer` parameters below).",
+                            "description": "**Method 1: JSON Filters Object**\n\nJSON string containing dimension filters. Format: `{\"dimension\": [\"value1\", \"value2\"]}`\n\n**Available filter dimensions:**\n\n- `browser` \u2014 Filter by browser name (e.g., Chrome, Firefox, Safari, Edge)\n- `os` \u2014 Filter by operating system (e.g., Windows, macOS, Linux, iOS, Android)\n- `device` \u2014 Filter by device type (`mobile`, `tablet`, `desktop`, `unknown`)\n- `country` \u2014 Filter by country name (e.g., United States, Canada, Germany)\n- `city` \u2014 Filter by city name (e.g., New York, London, Mumbai)\n- `referrer` \u2014 Filter by referrer URL (e.g., https://google.com, https://twitter.com)\n- `short_code` \u2014 Filter by URL alias (e.g., mylink, promo2024)\n- `url_id` \u2014 Filter by URL id (MongoDB ObjectId); ids you do not own match nothing\n- `utm_source` / `utm_medium` / `utm_campaign` \u2014 Filter by campaign tags; `(none)` matches untagged clicks\n\n**Value format:** Array of strings for each dimension.\n\n**Important:** Filter values are case-sensitive. Use exact capitalization as stored in the database.\n\n**Examples:**\n\n- `{\"browser\": [\"Chrome\", \"Firefox\"]}` \u2014 Chrome OR Firefox clicks\n- `{\"country\": [\"United States\", \"Canada\"], \"browser\": [\"Chrome\"]}` \u2014 US/CA clicks from Chrome\n- `{\"short_code\": [\"link1\", \"link2\"]}` \u2014 Stats for specific URLs\n\n**Alternative:** You can also pass filters as individual query parameters (see `browser`, `os`, `country`, `city`, `referrer` parameters below).",
                             "examples": [
                                 "{\"browser\":[\"Chrome\",\"Firefox\"]}",
                                 "{\"country\":[\"United States\",\"Canada\"],\"browser\":[\"Chrome\"]}"
                             ],
                             "title": "Filters"
                         },
-                        "description": "**Method 1: JSON Filters Object**\n\nJSON string containing dimension filters. Format: `{\"dimension\": [\"value1\", \"value2\"]}`\n\n**Available filter dimensions:**\n\n- `browser` \u2014 Filter by browser name (e.g., Chrome, Firefox, Safari, Edge)\n- `os` \u2014 Filter by operating system (e.g., Windows, macOS, Linux, iOS, Android)\n- `country` \u2014 Filter by country name (e.g., United States, Canada, Germany)\n- `city` \u2014 Filter by city name (e.g., New York, London, Mumbai)\n- `referrer` \u2014 Filter by referrer URL (e.g., https://google.com, https://twitter.com)\n- `short_code` \u2014 Filter by URL alias (e.g., mylink, promo2024) \u2014 **not allowed** with `scope=anon`\n\n**Value format:** Array of strings for each dimension.\n\n**Important:** Filter values are case-sensitive. Use exact capitalization as stored in the database.\n\n**Examples:**\n\n- `{\"browser\": [\"Chrome\", \"Firefox\"]}` \u2014 Chrome OR Firefox clicks\n- `{\"country\": [\"United States\", \"Canada\"], \"browser\": [\"Chrome\"]}` \u2014 US/CA clicks from Chrome\n- `{\"short_code\": [\"link1\", \"link2\"]}` \u2014 Stats for specific URLs (`scope=all` only)\n\n**Alternative:** You can also pass filters as individual query parameters (see `browser`, `os`, `country`, `city`, `referrer` parameters below)."
+                        "description": "**Method 1: JSON Filters Object**\n\nJSON string containing dimension filters. Format: `{\"dimension\": [\"value1\", \"value2\"]}`\n\n**Available filter dimensions:**\n\n- `browser` \u2014 Filter by browser name (e.g., Chrome, Firefox, Safari, Edge)\n- `os` \u2014 Filter by operating system (e.g., Windows, macOS, Linux, iOS, Android)\n- `device` \u2014 Filter by device type (`mobile`, `tablet`, `desktop`, `unknown`)\n- `country` \u2014 Filter by country name (e.g., United States, Canada, Germany)\n- `city` \u2014 Filter by city name (e.g., New York, London, Mumbai)\n- `referrer` \u2014 Filter by referrer URL (e.g., https://google.com, https://twitter.com)\n- `short_code` \u2014 Filter by URL alias (e.g., mylink, promo2024)\n- `url_id` \u2014 Filter by URL id (MongoDB ObjectId); ids you do not own match nothing\n- `utm_source` / `utm_medium` / `utm_campaign` \u2014 Filter by campaign tags; `(none)` matches untagged clicks\n\n**Value format:** Array of strings for each dimension.\n\n**Important:** Filter values are case-sensitive. Use exact capitalization as stored in the database.\n\n**Examples:**\n\n- `{\"browser\": [\"Chrome\", \"Firefox\"]}` \u2014 Chrome OR Firefox clicks\n- `{\"country\": [\"United States\", \"Canada\"], \"browser\": [\"Chrome\"]}` \u2014 US/CA clicks from Chrome\n- `{\"short_code\": [\"link1\", \"link2\"]}` \u2014 Stats for specific URLs\n\n**Alternative:** You can also pass filters as individual query parameters (see `browser`, `os`, `country`, `city`, `referrer` parameters below)."
                     },
                     {
                         "name": "browser",
@@ -2030,7 +2000,8 @@
                         "schema": {
                             "anyOf": [
                                 {
-                                    "type": "string"
+                                    "type": "string",
+                                    "maxLength": 500
                                 },
                                 {
                                     "type": "null"
@@ -2051,7 +2022,8 @@
                         "schema": {
                             "anyOf": [
                                 {
-                                    "type": "string"
+                                    "type": "string",
+                                    "maxLength": 500
                                 },
                                 {
                                     "type": "null"
@@ -2066,13 +2038,36 @@
                         "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated operating system names. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. Common values include: Windows, macOS, Linux, iOS, Android, Chrome OS.\n\n**Note:** Both `filters` JSON and individual parameters can be combined."
                     },
                     {
+                        "name": "device",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 200
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated device types. Alternative to using the `filters` JSON parameter.\n\n**Values:** `mobile`, `tablet`, `desktop`, `unknown`. `unknown` also matches clicks recorded before device tracking existed.\n\n**Note:** Both `filters` JSON and individual parameters can be combined.",
+                            "examples": [
+                                "mobile,desktop"
+                            ],
+                            "title": "Device"
+                        },
+                        "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated device types. Alternative to using the `filters` JSON parameter.\n\n**Values:** `mobile`, `tablet`, `desktop`, `unknown`. `unknown` also matches clicks recorded before device tracking existed.\n\n**Note:** Both `filters` JSON and individual parameters can be combined."
+                    },
+                    {
                         "name": "country",
                         "in": "query",
                         "required": false,
                         "schema": {
                             "anyOf": [
                                 {
-                                    "type": "string"
+                                    "type": "string",
+                                    "maxLength": 1000
                                 },
                                 {
                                     "type": "null"
@@ -2093,7 +2088,8 @@
                         "schema": {
                             "anyOf": [
                                 {
-                                    "type": "string"
+                                    "type": "string",
+                                    "maxLength": 1000
                                 },
                                 {
                                     "type": "null"
@@ -2114,7 +2110,8 @@
                         "schema": {
                             "anyOf": [
                                 {
-                                    "type": "string"
+                                    "type": "string",
+                                    "maxLength": 2000
                                 },
                                 {
                                     "type": "null"
@@ -2127,6 +2124,116 @@
                             "title": "Referrer"
                         },
                         "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated referrer URLs. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. Include the full URL including protocol.\n\n**Note:** Both `filters` JSON and individual parameters can be combined."
+                    },
+                    {
+                        "name": "utm_source",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 1000
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated campaign tag values. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. `(none)` matches clicks with no tag.\n\n**Note:** Both `filters` JSON and individual parameters can be combined.",
+                            "examples": [
+                                "newsletter,twitter"
+                            ],
+                            "title": "Utm Source"
+                        },
+                        "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated campaign tag values. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. `(none)` matches clicks with no tag.\n\n**Note:** Both `filters` JSON and individual parameters can be combined."
+                    },
+                    {
+                        "name": "utm_medium",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 1000
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated campaign tag values. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. `(none)` matches clicks with no tag.\n\n**Note:** Both `filters` JSON and individual parameters can be combined.",
+                            "examples": [
+                                "email,social"
+                            ],
+                            "title": "Utm Medium"
+                        },
+                        "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated campaign tag values. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. `(none)` matches clicks with no tag.\n\n**Note:** Both `filters` JSON and individual parameters can be combined."
+                    },
+                    {
+                        "name": "utm_campaign",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 1000
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated campaign tag values. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. `(none)` matches clicks with no tag.\n\n**Note:** Both `filters` JSON and individual parameters can be combined.",
+                            "examples": [
+                                "summer-launch"
+                            ],
+                            "title": "Utm Campaign"
+                        },
+                        "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated campaign tag values. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. `(none)` matches clicks with no tag.\n\n**Note:** Both `filters` JSON and individual parameters can be combined."
+                    },
+                    {
+                        "name": "short_code",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 50
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Comma-separated URL aliases to filter stats to specific URLs you own. Slices your own aggregate \u2014 aliases you do not own simply match nothing.\n\nFor statistics on a single link, prefer `GET /api/v1/stats/links/{url_id}`.",
+                            "examples": [
+                                "mylink"
+                            ],
+                            "title": "Short Code"
+                        },
+                        "description": "Comma-separated URL aliases to filter stats to specific URLs you own. Slices your own aggregate \u2014 aliases you do not own simply match nothing.\n\nFor statistics on a single link, prefer `GET /api/v1/stats/links/{url_id}`."
+                    },
+                    {
+                        "name": "url_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 1000
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Comma-separated URL ids (MongoDB ObjectIds) to filter stats to specific URLs you own. Slices your own aggregate \u2014 ids you do not own simply match nothing.\n\nFor statistics on a single link, prefer `GET /api/v1/stats/links/{url_id}`.",
+                            "examples": [
+                                "686cbf34cc37ed6bbcd82ab9"
+                            ],
+                            "title": "Url Id"
+                        },
+                        "description": "Comma-separated URL ids (MongoDB ObjectIds) to filter stats to specific URLs you own. Slices your own aggregate \u2014 ids you do not own simply match nothing.\n\nFor statistics on a single link, prefer `GET /api/v1/stats/links/{url_id}`."
                     }
                 ],
                 "responses": {
@@ -2200,16 +2307,7 @@
                             }
                         }
                     }
-                },
-                "security": [
-                    {},
-                    {
-                        "ApiKeyAuth": []
-                    },
-                    {
-                        "JWTAuth": []
-                    }
-                ]
+                }
             }
         },
         "/api/v1/export": {
@@ -2218,44 +2316,25 @@
                     "Statistics"
                 ],
                 "summary": "Export Statistics",
-                "description": "Export URL click statistics as a downloadable file.\n\nGenerate a file export of click analytics data in the specified format.\nThe response is a binary download with appropriate `Content-Disposition` header.\n\n**Authentication**: Optional for `scope=anon` (public stats on a single URL);\nrequired for `scope=all`.\n\n**API Key Scope**: `stats:read`, `urls:read`, or `admin:all`\n\n**Rate Limits**:\n- Authenticated: 30/min, 1,000/day\n- Anonymous: 10/min, 200/day\n\n**Export Formats**:\n- `json` \u2014 single JSON file\n- `xml` \u2014 single XML file\n- `xlsx` \u2014 Excel spreadsheet with multiple sheets\n- `csv` \u2014 **ZIP archive** containing `summary.csv` plus one CSV file per metrics dimension\n\n**Note**: Export generation is resource-intensive. Lower rate limits apply\ncompared to other endpoints.",
+                "description": "Export click statistics across all URLs you own as a downloadable file.\n\nGenerate a file export of click analytics data in the specified format.\nThe response is a binary download with appropriate `Content-Disposition` header.\n\n**Authentication**: Required.\n\n**API Key Scope**: `stats:read`, `urls:read`, or `admin:all`\n\n**Rate Limits**: 30/min, 1,000/day\n\n**Export Formats**:\n\n- `json` \u2014 single JSON file\n- `xml` \u2014 single XML file\n- `xlsx` \u2014 Excel spreadsheet with multiple sheets\n- `csv` \u2014 **ZIP archive** containing `summary.csv` plus one CSV file per metrics dimension\n\n**Filtering**: Same as `GET /stats` \u2014 including the `url_id` filter to\nslice the export to specific URLs you own. To export a single link,\nprefer `GET /export/links/{url_id}`.\n\n**Note**: Export generation is resource-intensive. Lower rate limits apply\ncompared to other endpoints.",
                 "operationId": "exportStats",
                 "parameters": [
                     {
-                        "name": "scope",
+                        "name": "format",
                         "in": "query",
                         "required": true,
                         "schema": {
                             "enum": [
-                                "all",
-                                "anon"
+                                "csv",
+                                "xlsx",
+                                "json",
+                                "xml"
                             ],
                             "type": "string",
-                            "description": "Statistics scope: `all` (authenticated only) or `anon` (public access).\n\n- `all` \u2014 aggregate stats across all URLs owned by the authenticated user. Requires authentication.\n- `anon` \u2014 public stats for a single URL. Requires `short_code` parameter. No authentication needed (unless stats are private).",
-                            "title": "Scope"
+                            "description": "Export file format.",
+                            "title": "Format"
                         },
-                        "description": "Statistics scope: `all` (authenticated only) or `anon` (public access).\n\n- `all` \u2014 aggregate stats across all URLs owned by the authenticated user. Requires authentication.\n- `anon` \u2014 public stats for a single URL. Requires `short_code` parameter. No authentication needed (unless stats are private)."
-                    },
-                    {
-                        "name": "short_code",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "anyOf": [
-                                {
-                                    "type": "string"
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "description": "URL alias to query stats for. **Required** when `scope=anon`. When `scope=all`, this is optional and filters stats to a specific URL.",
-                            "examples": [
-                                "mylink"
-                            ],
-                            "title": "Short Code"
-                        },
-                        "description": "URL alias to query stats for. **Required** when `scope=anon`. When `scope=all`, this is optional and filters stats to a specific URL."
+                        "description": "Export file format."
                     },
                     {
                         "name": "start_date",
@@ -2264,19 +2343,20 @@
                         "schema": {
                             "anyOf": [
                                 {
-                                    "type": "string"
+                                    "type": "string",
+                                    "maxLength": 50
                                 },
                                 {
                                     "type": "null"
                                 }
                             ],
-                            "description": "Start of time range. Accepts ISO 8601 datetime string (e.g., `2025-01-01T00:00:00Z`) or Unix timestamp in seconds (e.g., `1735689600`). If omitted, defaults to the URL creation date.",
+                            "description": "Start of time range. Accepts ISO 8601 datetime string (e.g., `2025-01-01T00:00:00Z`) or Unix timestamp in seconds (e.g., `1735689600`). If omitted, defaults to 7 days before `end_date`.",
                             "examples": [
                                 "2025-01-01T00:00:00Z"
                             ],
                             "title": "Start Date"
                         },
-                        "description": "Start of time range. Accepts ISO 8601 datetime string (e.g., `2025-01-01T00:00:00Z`) or Unix timestamp in seconds (e.g., `1735689600`). If omitted, defaults to the URL creation date."
+                        "description": "Start of time range. Accepts ISO 8601 datetime string (e.g., `2025-01-01T00:00:00Z`) or Unix timestamp in seconds (e.g., `1735689600`). If omitted, defaults to 7 days before `end_date`."
                     },
                     {
                         "name": "end_date",
@@ -2285,7 +2365,8 @@
                         "schema": {
                             "anyOf": [
                                 {
-                                    "type": "string"
+                                    "type": "string",
+                                    "maxLength": 50
                                 },
                                 {
                                     "type": "null"
@@ -2306,13 +2387,14 @@
                         "schema": {
                             "anyOf": [
                                 {
-                                    "type": "string"
+                                    "type": "string",
+                                    "maxLength": 200
                                 },
                                 {
                                     "type": "null"
                                 }
                             ],
-                            "description": "Comma-separated grouping dimensions for the statistics breakdown. Defaults to `time` if omitted.\n\n**Available dimensions:**\n\n- `time` \u2014 group by time buckets (day/week/month, auto-selected based on range)\n- `browser` \u2014 group by browser name (e.g., Chrome, Firefox, Safari)\n- `os` \u2014 group by operating system (e.g., Windows, macOS, Linux)\n- `country` \u2014 group by country\n- `city` \u2014 group by city\n- `referrer` \u2014 group by referrer URL\n- `short_code` \u2014 group by URL alias (only with `scope=all`)\n\nMultiple dimensions can be combined: `time,browser` returns time series broken down by browser.",
+                            "description": "Comma-separated grouping dimensions for the statistics breakdown. Defaults to `time` if omitted.\n\n**Available dimensions:**\n\n- `time` \u2014 group by time buckets (day/week/month, auto-selected based on range)\n- `browser` \u2014 group by browser name (e.g., Chrome, Firefox, Safari)\n- `os` \u2014 group by operating system (e.g., Windows, macOS, Linux)\n- `device` \u2014 group by device type (`mobile`, `tablet`, `desktop`, `unknown`)\n- `country` \u2014 group by country\n- `city` \u2014 group by city\n- `referrer` \u2014 group by referrer URL\n- `short_code` \u2014 group by URL alias\n- `utm_source` \u2014 group by the `utm_source` tag on the short link (untagged clicks appear as `(none)`)\n- `utm_medium` \u2014 group by the `utm_medium` tag\n- `utm_campaign` \u2014 group by the `utm_campaign` tag\n\nMultiple dimensions can be combined: `time,browser` returns time series broken down by browser.",
                             "examples": [
                                 "time,browser",
                                 "country",
@@ -2320,7 +2402,7 @@
                             ],
                             "title": "Group By"
                         },
-                        "description": "Comma-separated grouping dimensions for the statistics breakdown. Defaults to `time` if omitted.\n\n**Available dimensions:**\n\n- `time` \u2014 group by time buckets (day/week/month, auto-selected based on range)\n- `browser` \u2014 group by browser name (e.g., Chrome, Firefox, Safari)\n- `os` \u2014 group by operating system (e.g., Windows, macOS, Linux)\n- `country` \u2014 group by country\n- `city` \u2014 group by city\n- `referrer` \u2014 group by referrer URL\n- `short_code` \u2014 group by URL alias (only with `scope=all`)\n\nMultiple dimensions can be combined: `time,browser` returns time series broken down by browser."
+                        "description": "Comma-separated grouping dimensions for the statistics breakdown. Defaults to `time` if omitted.\n\n**Available dimensions:**\n\n- `time` \u2014 group by time buckets (day/week/month, auto-selected based on range)\n- `browser` \u2014 group by browser name (e.g., Chrome, Firefox, Safari)\n- `os` \u2014 group by operating system (e.g., Windows, macOS, Linux)\n- `device` \u2014 group by device type (`mobile`, `tablet`, `desktop`, `unknown`)\n- `country` \u2014 group by country\n- `city` \u2014 group by city\n- `referrer` \u2014 group by referrer URL\n- `short_code` \u2014 group by URL alias\n- `utm_source` \u2014 group by the `utm_source` tag on the short link (untagged clicks appear as `(none)`)\n- `utm_medium` \u2014 group by the `utm_medium` tag\n- `utm_campaign` \u2014 group by the `utm_campaign` tag\n\nMultiple dimensions can be combined: `time,browser` returns time series broken down by browser."
                     },
                     {
                         "name": "metrics",
@@ -2329,7 +2411,8 @@
                         "schema": {
                             "anyOf": [
                                 {
-                                    "type": "string"
+                                    "type": "string",
+                                    "maxLength": 200
                                 },
                                 {
                                     "type": "null"
@@ -2350,6 +2433,7 @@
                         "required": false,
                         "schema": {
                             "type": "string",
+                            "maxLength": 50,
                             "description": "IANA timezone name for time-based grouping and output formatting (e.g., `UTC`, `America/New_York`, `Asia/Kolkata`). Defaults to `UTC`.",
                             "examples": [
                                 "UTC",
@@ -2367,20 +2451,21 @@
                         "schema": {
                             "anyOf": [
                                 {
-                                    "type": "string"
+                                    "type": "string",
+                                    "maxLength": 5000
                                 },
                                 {
                                     "type": "null"
                                 }
                             ],
-                            "description": "**Method 1: JSON Filters Object**\n\nJSON string containing dimension filters. Format: `{\"dimension\": [\"value1\", \"value2\"]}`\n\n**Available filter dimensions:**\n\n- `browser` \u2014 Filter by browser name (e.g., Chrome, Firefox, Safari, Edge)\n- `os` \u2014 Filter by operating system (e.g., Windows, macOS, Linux, iOS, Android)\n- `country` \u2014 Filter by country name (e.g., United States, Canada, Germany)\n- `city` \u2014 Filter by city name (e.g., New York, London, Mumbai)\n- `referrer` \u2014 Filter by referrer URL (e.g., https://google.com, https://twitter.com)\n- `short_code` \u2014 Filter by URL alias (e.g., mylink, promo2024) \u2014 **not allowed** with `scope=anon`\n\n**Value format:** Array of strings for each dimension.\n\n**Important:** Filter values are case-sensitive. Use exact capitalization as stored in the database.\n\n**Examples:**\n\n- `{\"browser\": [\"Chrome\", \"Firefox\"]}` \u2014 Chrome OR Firefox clicks\n- `{\"country\": [\"United States\", \"Canada\"], \"browser\": [\"Chrome\"]}` \u2014 US/CA clicks from Chrome\n- `{\"short_code\": [\"link1\", \"link2\"]}` \u2014 Stats for specific URLs (`scope=all` only)\n\n**Alternative:** You can also pass filters as individual query parameters (see `browser`, `os`, `country`, `city`, `referrer` parameters below).",
+                            "description": "**Method 1: JSON Filters Object**\n\nJSON string containing dimension filters. Format: `{\"dimension\": [\"value1\", \"value2\"]}`\n\n**Available filter dimensions:**\n\n- `browser` \u2014 Filter by browser name (e.g., Chrome, Firefox, Safari, Edge)\n- `os` \u2014 Filter by operating system (e.g., Windows, macOS, Linux, iOS, Android)\n- `device` \u2014 Filter by device type (`mobile`, `tablet`, `desktop`, `unknown`)\n- `country` \u2014 Filter by country name (e.g., United States, Canada, Germany)\n- `city` \u2014 Filter by city name (e.g., New York, London, Mumbai)\n- `referrer` \u2014 Filter by referrer URL (e.g., https://google.com, https://twitter.com)\n- `short_code` \u2014 Filter by URL alias (e.g., mylink, promo2024)\n- `url_id` \u2014 Filter by URL id (MongoDB ObjectId); ids you do not own match nothing\n- `utm_source` / `utm_medium` / `utm_campaign` \u2014 Filter by campaign tags; `(none)` matches untagged clicks\n\n**Value format:** Array of strings for each dimension.\n\n**Important:** Filter values are case-sensitive. Use exact capitalization as stored in the database.\n\n**Examples:**\n\n- `{\"browser\": [\"Chrome\", \"Firefox\"]}` \u2014 Chrome OR Firefox clicks\n- `{\"country\": [\"United States\", \"Canada\"], \"browser\": [\"Chrome\"]}` \u2014 US/CA clicks from Chrome\n- `{\"short_code\": [\"link1\", \"link2\"]}` \u2014 Stats for specific URLs\n\n**Alternative:** You can also pass filters as individual query parameters (see `browser`, `os`, `country`, `city`, `referrer` parameters below).",
                             "examples": [
                                 "{\"browser\":[\"Chrome\",\"Firefox\"]}",
                                 "{\"country\":[\"United States\",\"Canada\"],\"browser\":[\"Chrome\"]}"
                             ],
                             "title": "Filters"
                         },
-                        "description": "**Method 1: JSON Filters Object**\n\nJSON string containing dimension filters. Format: `{\"dimension\": [\"value1\", \"value2\"]}`\n\n**Available filter dimensions:**\n\n- `browser` \u2014 Filter by browser name (e.g., Chrome, Firefox, Safari, Edge)\n- `os` \u2014 Filter by operating system (e.g., Windows, macOS, Linux, iOS, Android)\n- `country` \u2014 Filter by country name (e.g., United States, Canada, Germany)\n- `city` \u2014 Filter by city name (e.g., New York, London, Mumbai)\n- `referrer` \u2014 Filter by referrer URL (e.g., https://google.com, https://twitter.com)\n- `short_code` \u2014 Filter by URL alias (e.g., mylink, promo2024) \u2014 **not allowed** with `scope=anon`\n\n**Value format:** Array of strings for each dimension.\n\n**Important:** Filter values are case-sensitive. Use exact capitalization as stored in the database.\n\n**Examples:**\n\n- `{\"browser\": [\"Chrome\", \"Firefox\"]}` \u2014 Chrome OR Firefox clicks\n- `{\"country\": [\"United States\", \"Canada\"], \"browser\": [\"Chrome\"]}` \u2014 US/CA clicks from Chrome\n- `{\"short_code\": [\"link1\", \"link2\"]}` \u2014 Stats for specific URLs (`scope=all` only)\n\n**Alternative:** You can also pass filters as individual query parameters (see `browser`, `os`, `country`, `city`, `referrer` parameters below)."
+                        "description": "**Method 1: JSON Filters Object**\n\nJSON string containing dimension filters. Format: `{\"dimension\": [\"value1\", \"value2\"]}`\n\n**Available filter dimensions:**\n\n- `browser` \u2014 Filter by browser name (e.g., Chrome, Firefox, Safari, Edge)\n- `os` \u2014 Filter by operating system (e.g., Windows, macOS, Linux, iOS, Android)\n- `device` \u2014 Filter by device type (`mobile`, `tablet`, `desktop`, `unknown`)\n- `country` \u2014 Filter by country name (e.g., United States, Canada, Germany)\n- `city` \u2014 Filter by city name (e.g., New York, London, Mumbai)\n- `referrer` \u2014 Filter by referrer URL (e.g., https://google.com, https://twitter.com)\n- `short_code` \u2014 Filter by URL alias (e.g., mylink, promo2024)\n- `url_id` \u2014 Filter by URL id (MongoDB ObjectId); ids you do not own match nothing\n- `utm_source` / `utm_medium` / `utm_campaign` \u2014 Filter by campaign tags; `(none)` matches untagged clicks\n\n**Value format:** Array of strings for each dimension.\n\n**Important:** Filter values are case-sensitive. Use exact capitalization as stored in the database.\n\n**Examples:**\n\n- `{\"browser\": [\"Chrome\", \"Firefox\"]}` \u2014 Chrome OR Firefox clicks\n- `{\"country\": [\"United States\", \"Canada\"], \"browser\": [\"Chrome\"]}` \u2014 US/CA clicks from Chrome\n- `{\"short_code\": [\"link1\", \"link2\"]}` \u2014 Stats for specific URLs\n\n**Alternative:** You can also pass filters as individual query parameters (see `browser`, `os`, `country`, `city`, `referrer` parameters below)."
                     },
                     {
                         "name": "browser",
@@ -2389,7 +2474,8 @@
                         "schema": {
                             "anyOf": [
                                 {
-                                    "type": "string"
+                                    "type": "string",
+                                    "maxLength": 500
                                 },
                                 {
                                     "type": "null"
@@ -2410,7 +2496,8 @@
                         "schema": {
                             "anyOf": [
                                 {
-                                    "type": "string"
+                                    "type": "string",
+                                    "maxLength": 500
                                 },
                                 {
                                     "type": "null"
@@ -2425,13 +2512,36 @@
                         "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated operating system names. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. Common values include: Windows, macOS, Linux, iOS, Android, Chrome OS.\n\n**Note:** Both `filters` JSON and individual parameters can be combined."
                     },
                     {
+                        "name": "device",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 200
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated device types. Alternative to using the `filters` JSON parameter.\n\n**Values:** `mobile`, `tablet`, `desktop`, `unknown`. `unknown` also matches clicks recorded before device tracking existed.\n\n**Note:** Both `filters` JSON and individual parameters can be combined.",
+                            "examples": [
+                                "mobile,desktop"
+                            ],
+                            "title": "Device"
+                        },
+                        "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated device types. Alternative to using the `filters` JSON parameter.\n\n**Values:** `mobile`, `tablet`, `desktop`, `unknown`. `unknown` also matches clicks recorded before device tracking existed.\n\n**Note:** Both `filters` JSON and individual parameters can be combined."
+                    },
+                    {
                         "name": "country",
                         "in": "query",
                         "required": false,
                         "schema": {
                             "anyOf": [
                                 {
-                                    "type": "string"
+                                    "type": "string",
+                                    "maxLength": 1000
                                 },
                                 {
                                     "type": "null"
@@ -2452,7 +2562,8 @@
                         "schema": {
                             "anyOf": [
                                 {
-                                    "type": "string"
+                                    "type": "string",
+                                    "maxLength": 1000
                                 },
                                 {
                                     "type": "null"
@@ -2473,7 +2584,8 @@
                         "schema": {
                             "anyOf": [
                                 {
-                                    "type": "string"
+                                    "type": "string",
+                                    "maxLength": 2000
                                 },
                                 {
                                     "type": "null"
@@ -2488,21 +2600,114 @@
                         "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated referrer URLs. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. Include the full URL including protocol.\n\n**Note:** Both `filters` JSON and individual parameters can be combined."
                     },
                     {
-                        "name": "format",
+                        "name": "utm_source",
                         "in": "query",
-                        "required": true,
+                        "required": false,
                         "schema": {
-                            "enum": [
-                                "csv",
-                                "xlsx",
-                                "json",
-                                "xml"
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 1000
+                                },
+                                {
+                                    "type": "null"
+                                }
                             ],
-                            "type": "string",
-                            "description": "Export file format.",
-                            "title": "Format"
+                            "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated campaign tag values. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. `(none)` matches clicks with no tag.\n\n**Note:** Both `filters` JSON and individual parameters can be combined.",
+                            "examples": [
+                                "newsletter,twitter"
+                            ],
+                            "title": "Utm Source"
                         },
-                        "description": "Export file format."
+                        "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated campaign tag values. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. `(none)` matches clicks with no tag.\n\n**Note:** Both `filters` JSON and individual parameters can be combined."
+                    },
+                    {
+                        "name": "utm_medium",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 1000
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated campaign tag values. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. `(none)` matches clicks with no tag.\n\n**Note:** Both `filters` JSON and individual parameters can be combined.",
+                            "examples": [
+                                "email,social"
+                            ],
+                            "title": "Utm Medium"
+                        },
+                        "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated campaign tag values. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. `(none)` matches clicks with no tag.\n\n**Note:** Both `filters` JSON and individual parameters can be combined."
+                    },
+                    {
+                        "name": "utm_campaign",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 1000
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated campaign tag values. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. `(none)` matches clicks with no tag.\n\n**Note:** Both `filters` JSON and individual parameters can be combined.",
+                            "examples": [
+                                "summer-launch"
+                            ],
+                            "title": "Utm Campaign"
+                        },
+                        "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated campaign tag values. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. `(none)` matches clicks with no tag.\n\n**Note:** Both `filters` JSON and individual parameters can be combined."
+                    },
+                    {
+                        "name": "short_code",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 50
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Comma-separated URL aliases to filter stats to specific URLs you own. Slices your own aggregate \u2014 aliases you do not own simply match nothing.\n\nFor statistics on a single link, prefer `GET /api/v1/stats/links/{url_id}`.",
+                            "examples": [
+                                "mylink"
+                            ],
+                            "title": "Short Code"
+                        },
+                        "description": "Comma-separated URL aliases to filter stats to specific URLs you own. Slices your own aggregate \u2014 aliases you do not own simply match nothing.\n\nFor statistics on a single link, prefer `GET /api/v1/stats/links/{url_id}`."
+                    },
+                    {
+                        "name": "url_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 1000
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Comma-separated URL ids (MongoDB ObjectIds) to filter stats to specific URLs you own. Slices your own aggregate \u2014 ids you do not own simply match nothing.\n\nFor statistics on a single link, prefer `GET /api/v1/stats/links/{url_id}`.",
+                            "examples": [
+                                "686cbf34cc37ed6bbcd82ab9"
+                            ],
+                            "title": "Url Id"
+                        },
+                        "description": "Comma-separated URL ids (MongoDB ObjectIds) to filter stats to specific URLs you own. Slices your own aggregate \u2014 ids you do not own simply match nothing.\n\nFor statistics on a single link, prefer `GET /api/v1/stats/links/{url_id}`."
                     }
                 ],
                 "responses": {
@@ -2607,16 +2812,7 @@
                             }
                         }
                     }
-                },
-                "security": [
-                    {},
-                    {
-                        "ApiKeyAuth": []
-                    },
-                    {
-                        "JWTAuth": []
-                    }
-                ]
+                }
             }
         },
         "/api/v1/keys": {
@@ -2873,6 +3069,1243 @@
                     },
                     "429": {
                         "description": "Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/stats/links/{url_id}": {
+            "get": {
+                "tags": [
+                    "Statistics"
+                ],
+                "summary": "Link Statistics",
+                "description": "Get click statistics for a single URL you own.\n\nThe same aggregated analytics as `GET /stats`, pre-scoped to one link \u2014\nthe response additionally echoes the link's `url_id` and `alias`.\nCustom-domain links are safe here: clicks are matched by URL id, so a\nsame-alias link on another domain can never bleed in.\n\n**Authentication**: Required \u2014 you must own the URL.\n\n**API Key Scope**: `stats:read`, `urls:read`, or `admin:all`\n\n**Rate Limits**: 60/min, 5,000/day\n\n**Grouping Dimensions**: `time`, `browser`, `os`, `device`, `country`,\n`city`, `referrer`, `utm_source`, `utm_medium`, `utm_campaign`\n\n**Metrics**: `clicks`, `unique_clicks`\n\n**Filtering**: Filter by `browser`, `os`, `device`, `country`, `city`,\n`referrer`, or the `utm_*` tags using query params or a JSON `filters`\nobject. Link-identity filters (`short_code`, `url_id`) do not exist\nhere \u2014 the path already selects the link.\n\n**Errors**:\n\n- `400` \u2014 malformed id (not a valid ObjectId)\n- `404` \u2014 no URL with that id in your account. A URL owned by someone\n  else answers identically; this endpoint never confirms foreign ids.",
+                "operationId": "getLinkStats",
+                "parameters": [
+                    {
+                        "name": "url_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "description": "Unique identifier of the URL (MongoDB ObjectId).",
+                            "title": "Url Id"
+                        },
+                        "description": "Unique identifier of the URL (MongoDB ObjectId)."
+                    },
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 50
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Start of time range. Accepts ISO 8601 datetime string (e.g., `2025-01-01T00:00:00Z`) or Unix timestamp in seconds (e.g., `1735689600`). If omitted, defaults to 7 days before `end_date`.",
+                            "examples": [
+                                "2025-01-01T00:00:00Z"
+                            ],
+                            "title": "Start Date"
+                        },
+                        "description": "Start of time range. Accepts ISO 8601 datetime string (e.g., `2025-01-01T00:00:00Z`) or Unix timestamp in seconds (e.g., `1735689600`). If omitted, defaults to 7 days before `end_date`."
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 50
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "End of time range. Accepts ISO 8601 datetime string (e.g., `2025-12-31T23:59:59Z`) or Unix timestamp in seconds (e.g., `1767225599`). If omitted, defaults to now.",
+                            "examples": [
+                                "2025-12-31T23:59:59Z"
+                            ],
+                            "title": "End Date"
+                        },
+                        "description": "End of time range. Accepts ISO 8601 datetime string (e.g., `2025-12-31T23:59:59Z`) or Unix timestamp in seconds (e.g., `1767225599`). If omitted, defaults to now."
+                    },
+                    {
+                        "name": "group_by",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 200
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Comma-separated grouping dimensions for the statistics breakdown. Defaults to `time` if omitted.\n\n**Available dimensions:**\n\n- `time` \u2014 group by time buckets (day/week/month, auto-selected based on range)\n- `browser` \u2014 group by browser name (e.g., Chrome, Firefox, Safari)\n- `os` \u2014 group by operating system (e.g., Windows, macOS, Linux)\n- `device` \u2014 group by device type (`mobile`, `tablet`, `desktop`, `unknown`)\n- `country` \u2014 group by country\n- `city` \u2014 group by city\n- `referrer` \u2014 group by referrer URL\n- `utm_source` \u2014 group by the `utm_source` tag on the short link (untagged clicks appear as `(none)`)\n- `utm_medium` \u2014 group by the `utm_medium` tag\n- `utm_campaign` \u2014 group by the `utm_campaign` tag\n\nMultiple dimensions can be combined: `time,browser` returns time series broken down by browser.",
+                            "examples": [
+                                "time,browser",
+                                "country",
+                                "time,country,browser"
+                            ],
+                            "title": "Group By"
+                        },
+                        "description": "Comma-separated grouping dimensions for the statistics breakdown. Defaults to `time` if omitted.\n\n**Available dimensions:**\n\n- `time` \u2014 group by time buckets (day/week/month, auto-selected based on range)\n- `browser` \u2014 group by browser name (e.g., Chrome, Firefox, Safari)\n- `os` \u2014 group by operating system (e.g., Windows, macOS, Linux)\n- `device` \u2014 group by device type (`mobile`, `tablet`, `desktop`, `unknown`)\n- `country` \u2014 group by country\n- `city` \u2014 group by city\n- `referrer` \u2014 group by referrer URL\n- `utm_source` \u2014 group by the `utm_source` tag on the short link (untagged clicks appear as `(none)`)\n- `utm_medium` \u2014 group by the `utm_medium` tag\n- `utm_campaign` \u2014 group by the `utm_campaign` tag\n\nMultiple dimensions can be combined: `time,browser` returns time series broken down by browser."
+                    },
+                    {
+                        "name": "metrics",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 200
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Comma-separated metrics to include. Defaults to `clicks,unique_clicks` if omitted.\n\n**Available metrics:**\n\n- `clicks` \u2014 total click count\n- `unique_clicks` \u2014 unique visitor count (deduplicated by IP + User-Agent)",
+                            "examples": [
+                                "clicks,unique_clicks",
+                                "clicks"
+                            ],
+                            "title": "Metrics"
+                        },
+                        "description": "Comma-separated metrics to include. Defaults to `clicks,unique_clicks` if omitted.\n\n**Available metrics:**\n\n- `clicks` \u2014 total click count\n- `unique_clicks` \u2014 unique visitor count (deduplicated by IP + User-Agent)"
+                    },
+                    {
+                        "name": "timezone",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 50,
+                            "description": "IANA timezone name for time-based grouping and output formatting (e.g., `UTC`, `America/New_York`, `Asia/Kolkata`). Defaults to `UTC`.",
+                            "examples": [
+                                "UTC",
+                                "America/New_York"
+                            ],
+                            "default": "UTC",
+                            "title": "Timezone"
+                        },
+                        "description": "IANA timezone name for time-based grouping and output formatting (e.g., `UTC`, `America/New_York`, `Asia/Kolkata`). Defaults to `UTC`."
+                    },
+                    {
+                        "name": "filters",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 5000
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "**Method 1: JSON Filters Object**\n\nJSON string containing dimension filters. Format: `{\"dimension\": [\"value1\", \"value2\"]}`\n\n**Available filter dimensions:**\n\n- `browser` \u2014 Filter by browser name (e.g., Chrome, Firefox, Safari, Edge)\n- `os` \u2014 Filter by operating system (e.g., Windows, macOS, Linux, iOS, Android)\n- `device` \u2014 Filter by device type (`mobile`, `tablet`, `desktop`, `unknown`)\n- `country` \u2014 Filter by country name (e.g., United States, Canada, Germany)\n- `city` \u2014 Filter by city name (e.g., New York, London, Mumbai)\n- `referrer` \u2014 Filter by referrer URL (e.g., https://google.com, https://twitter.com)\n- `utm_source` / `utm_medium` / `utm_campaign` \u2014 Filter by campaign tags; `(none)` matches untagged clicks\n\n**Value format:** Array of strings for each dimension.\n\n**Important:** Filter values are case-sensitive. Use exact capitalization as stored in the database.\n\n**Examples:**\n\n- `{\"browser\": [\"Chrome\", \"Firefox\"]}` \u2014 Chrome OR Firefox clicks\n- `{\"country\": [\"United States\", \"Canada\"], \"browser\": [\"Chrome\"]}` \u2014 US/CA clicks from Chrome\n\n**Alternative:** You can also pass filters as individual query parameters (see `browser`, `os`, `country`, `city`, `referrer` parameters below).",
+                            "examples": [
+                                "{\"browser\":[\"Chrome\",\"Firefox\"]}",
+                                "{\"country\":[\"United States\",\"Canada\"],\"browser\":[\"Chrome\"]}"
+                            ],
+                            "title": "Filters"
+                        },
+                        "description": "**Method 1: JSON Filters Object**\n\nJSON string containing dimension filters. Format: `{\"dimension\": [\"value1\", \"value2\"]}`\n\n**Available filter dimensions:**\n\n- `browser` \u2014 Filter by browser name (e.g., Chrome, Firefox, Safari, Edge)\n- `os` \u2014 Filter by operating system (e.g., Windows, macOS, Linux, iOS, Android)\n- `device` \u2014 Filter by device type (`mobile`, `tablet`, `desktop`, `unknown`)\n- `country` \u2014 Filter by country name (e.g., United States, Canada, Germany)\n- `city` \u2014 Filter by city name (e.g., New York, London, Mumbai)\n- `referrer` \u2014 Filter by referrer URL (e.g., https://google.com, https://twitter.com)\n- `utm_source` / `utm_medium` / `utm_campaign` \u2014 Filter by campaign tags; `(none)` matches untagged clicks\n\n**Value format:** Array of strings for each dimension.\n\n**Important:** Filter values are case-sensitive. Use exact capitalization as stored in the database.\n\n**Examples:**\n\n- `{\"browser\": [\"Chrome\", \"Firefox\"]}` \u2014 Chrome OR Firefox clicks\n- `{\"country\": [\"United States\", \"Canada\"], \"browser\": [\"Chrome\"]}` \u2014 US/CA clicks from Chrome\n\n**Alternative:** You can also pass filters as individual query parameters (see `browser`, `os`, `country`, `city`, `referrer` parameters below)."
+                    },
+                    {
+                        "name": "browser",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 500
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated browser names. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. Common values include: Chrome, Firefox, Safari, Edge, Opera, Samsung Internet.\n\n**Note:** Both `filters` JSON and individual parameters can be combined.",
+                            "examples": [
+                                "Chrome,Firefox"
+                            ],
+                            "title": "Browser"
+                        },
+                        "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated browser names. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. Common values include: Chrome, Firefox, Safari, Edge, Opera, Samsung Internet.\n\n**Note:** Both `filters` JSON and individual parameters can be combined."
+                    },
+                    {
+                        "name": "os",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 500
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated operating system names. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. Common values include: Windows, macOS, Linux, iOS, Android, Chrome OS.\n\n**Note:** Both `filters` JSON and individual parameters can be combined.",
+                            "examples": [
+                                "Windows,macOS"
+                            ],
+                            "title": "Os"
+                        },
+                        "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated operating system names. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. Common values include: Windows, macOS, Linux, iOS, Android, Chrome OS.\n\n**Note:** Both `filters` JSON and individual parameters can be combined."
+                    },
+                    {
+                        "name": "device",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 200
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated device types. Alternative to using the `filters` JSON parameter.\n\n**Values:** `mobile`, `tablet`, `desktop`, `unknown`. `unknown` also matches clicks recorded before device tracking existed.\n\n**Note:** Both `filters` JSON and individual parameters can be combined.",
+                            "examples": [
+                                "mobile,desktop"
+                            ],
+                            "title": "Device"
+                        },
+                        "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated device types. Alternative to using the `filters` JSON parameter.\n\n**Values:** `mobile`, `tablet`, `desktop`, `unknown`. `unknown` also matches clicks recorded before device tracking existed.\n\n**Note:** Both `filters` JSON and individual parameters can be combined."
+                    },
+                    {
+                        "name": "country",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 1000
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated country names. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. Use full country names as stored in the database (e.g., United States, Canada, United Kingdom, India, Germany, France, Japan).\n\n**Note:** Both `filters` JSON and individual parameters can be combined.",
+                            "examples": [
+                                "United States,Germany"
+                            ],
+                            "title": "Country"
+                        },
+                        "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated country names. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. Use full country names as stored in the database (e.g., United States, Canada, United Kingdom, India, Germany, France, Japan).\n\n**Note:** Both `filters` JSON and individual parameters can be combined."
+                    },
+                    {
+                        "name": "city",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 1000
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated city names. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. Use exact capitalization as stored in the database.\n\n**Note:** Both `filters` JSON and individual parameters can be combined.",
+                            "examples": [
+                                "San Francisco,Berlin"
+                            ],
+                            "title": "City"
+                        },
+                        "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated city names. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. Use exact capitalization as stored in the database.\n\n**Note:** Both `filters` JSON and individual parameters can be combined."
+                    },
+                    {
+                        "name": "referrer",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 2000
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated referrer URLs. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. Include the full URL including protocol.\n\n**Note:** Both `filters` JSON and individual parameters can be combined.",
+                            "examples": [
+                                "https://google.com,https://twitter.com"
+                            ],
+                            "title": "Referrer"
+                        },
+                        "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated referrer URLs. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. Include the full URL including protocol.\n\n**Note:** Both `filters` JSON and individual parameters can be combined."
+                    },
+                    {
+                        "name": "utm_source",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 1000
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated campaign tag values. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. `(none)` matches clicks with no tag.\n\n**Note:** Both `filters` JSON and individual parameters can be combined.",
+                            "examples": [
+                                "newsletter,twitter"
+                            ],
+                            "title": "Utm Source"
+                        },
+                        "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated campaign tag values. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. `(none)` matches clicks with no tag.\n\n**Note:** Both `filters` JSON and individual parameters can be combined."
+                    },
+                    {
+                        "name": "utm_medium",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 1000
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated campaign tag values. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. `(none)` matches clicks with no tag.\n\n**Note:** Both `filters` JSON and individual parameters can be combined.",
+                            "examples": [
+                                "email,social"
+                            ],
+                            "title": "Utm Medium"
+                        },
+                        "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated campaign tag values. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. `(none)` matches clicks with no tag.\n\n**Note:** Both `filters` JSON and individual parameters can be combined."
+                    },
+                    {
+                        "name": "utm_campaign",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 1000
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated campaign tag values. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. `(none)` matches clicks with no tag.\n\n**Note:** Both `filters` JSON and individual parameters can be combined.",
+                            "examples": [
+                                "summer-launch"
+                            ],
+                            "title": "Utm Campaign"
+                        },
+                        "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated campaign tag values. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. `(none)` matches clicks with no tag.\n\n**Note:** Both `filters` JSON and individual parameters can be combined."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LinkStatsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request \u2014 invalid parameters",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized \u2014 missing or invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden \u2014 insufficient permissions or scope",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/public/stats/{short_code}": {
+            "get": {
+                "tags": [
+                    "Public"
+                ],
+                "summary": "Public URL Statistics",
+                "description": "Get public click statistics for a single short link.\n\nResolves both URL generations (plus emoji aliases) on the system\ndefault domain and returns link facts plus the standard stats wire.\n\n**Authentication**: Optional \u2014 an owner session additionally sees\nprivate-stats links and skips the password gate.\n\n**Privacy**: A link with private stats answers exactly like a missing\ncode (404, byte-identical). Password-protected links answer 401\n`password_required`; send the password via POST \u2014 never in the URL.\n\n**Rate Limits**:\n\n- Authenticated: 60/min, 2,000/day\n- Anonymous: 20/min, 500/day",
+                "operationId": "getPublicStats",
+                "parameters": [
+                    {
+                        "name": "short_code",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Short Code"
+                        }
+                    },
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 50
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Range start (ISO 8601). Defaults to 7 days before end_date.",
+                            "examples": [
+                                "2025-01-01T00:00:00Z"
+                            ],
+                            "title": "Start Date"
+                        },
+                        "description": "Range start (ISO 8601). Defaults to 7 days before end_date."
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 50
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Range end (ISO 8601). Defaults to now.",
+                            "examples": [
+                                "2025-12-31T23:59:59Z"
+                            ],
+                            "title": "End Date"
+                        },
+                        "description": "Range end (ISO 8601). Defaults to now."
+                    },
+                    {
+                        "name": "timezone",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 50,
+                            "description": "IANA timezone for time bucketing and formatting.",
+                            "examples": [
+                                "UTC",
+                                "America/New_York"
+                            ],
+                            "default": "UTC",
+                            "title": "Timezone"
+                        },
+                        "description": "IANA timezone for time bucketing and formatting."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PublicStatsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request \u2014 invalid parameters",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized \u2014 missing or invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden \u2014 insufficient permissions or scope",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {},
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "JWTAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Public"
+                ],
+                "summary": "Public URL Statistics (password unlock)",
+                "description": "Same as the GET variant, carrying a password in the JSON body.\n\nThe body is the ONLY way a password travels to this endpoint \u2014\nquery-string passwords are ignored so they can't land in URLs, logs,\nor referrers. Wrong passwords answer 401 `invalid_password`\n(retryable). The body may be absent or empty.",
+                "operationId": "getPublicStatsWithPassword",
+                "parameters": [
+                    {
+                        "name": "short_code",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Short Code"
+                        }
+                    },
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 50
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Range start (ISO 8601). Defaults to 7 days before end_date.",
+                            "examples": [
+                                "2025-01-01T00:00:00Z"
+                            ],
+                            "title": "Start Date"
+                        },
+                        "description": "Range start (ISO 8601). Defaults to 7 days before end_date."
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 50
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Range end (ISO 8601). Defaults to now.",
+                            "examples": [
+                                "2025-12-31T23:59:59Z"
+                            ],
+                            "title": "End Date"
+                        },
+                        "description": "Range end (ISO 8601). Defaults to now."
+                    },
+                    {
+                        "name": "timezone",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 50,
+                            "description": "IANA timezone for time bucketing and formatting.",
+                            "examples": [
+                                "UTC",
+                                "America/New_York"
+                            ],
+                            "default": "UTC",
+                            "title": "Timezone"
+                        },
+                        "description": "IANA timezone for time bucketing and formatting."
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "anyOf": [
+                                    {
+                                        "$ref": "#/components/schemas/PublicStatsBody"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "title": "Body"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PublicStatsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request \u2014 invalid parameters",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized \u2014 missing or invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden \u2014 insufficient permissions or scope",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {},
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "JWTAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/export/links/{url_id}": {
+            "get": {
+                "tags": [
+                    "Statistics"
+                ],
+                "summary": "Export Link Statistics",
+                "description": "Export click statistics for a single URL you own.\n\nThe export twin of `GET /stats/links/{url_id}` \u2014 the same formats as\n`GET /export`, pre-scoped to one link. The suggested filename carries\nthe link's alias.\n\n**Authentication**: Required \u2014 you must own the URL.\n\n**API Key Scope**: `stats:read`, `urls:read`, or `admin:all`\n\n**Rate Limits**: 30/min, 1,000/day\n\n**Export Formats**:\n\n- `json` \u2014 single JSON file\n- `xml` \u2014 single XML file\n- `xlsx` \u2014 Excel spreadsheet with multiple sheets\n- `csv` \u2014 **ZIP archive** containing `summary.csv` plus one CSV file per metrics dimension\n\n**Errors**:\n\n- `400` \u2014 malformed id (not a valid ObjectId)\n- `404` \u2014 no URL with that id in your account. A URL owned by someone\n  else answers identically; this endpoint never confirms foreign ids.\n\n**Note**: Export generation is resource-intensive. Lower rate limits apply\ncompared to other endpoints.",
+                "operationId": "exportLinkStats",
+                "parameters": [
+                    {
+                        "name": "url_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "description": "Unique identifier of the URL (MongoDB ObjectId).",
+                            "title": "Url Id"
+                        },
+                        "description": "Unique identifier of the URL (MongoDB ObjectId)."
+                    },
+                    {
+                        "name": "format",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "enum": [
+                                "csv",
+                                "xlsx",
+                                "json",
+                                "xml"
+                            ],
+                            "type": "string",
+                            "description": "Export file format.",
+                            "title": "Format"
+                        },
+                        "description": "Export file format."
+                    },
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 50
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Start of time range. Accepts ISO 8601 datetime string (e.g., `2025-01-01T00:00:00Z`) or Unix timestamp in seconds (e.g., `1735689600`). If omitted, defaults to 7 days before `end_date`.",
+                            "examples": [
+                                "2025-01-01T00:00:00Z"
+                            ],
+                            "title": "Start Date"
+                        },
+                        "description": "Start of time range. Accepts ISO 8601 datetime string (e.g., `2025-01-01T00:00:00Z`) or Unix timestamp in seconds (e.g., `1735689600`). If omitted, defaults to 7 days before `end_date`."
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 50
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "End of time range. Accepts ISO 8601 datetime string (e.g., `2025-12-31T23:59:59Z`) or Unix timestamp in seconds (e.g., `1767225599`). If omitted, defaults to now.",
+                            "examples": [
+                                "2025-12-31T23:59:59Z"
+                            ],
+                            "title": "End Date"
+                        },
+                        "description": "End of time range. Accepts ISO 8601 datetime string (e.g., `2025-12-31T23:59:59Z`) or Unix timestamp in seconds (e.g., `1767225599`). If omitted, defaults to now."
+                    },
+                    {
+                        "name": "group_by",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 200
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Comma-separated grouping dimensions for the statistics breakdown. Defaults to `time` if omitted.\n\n**Available dimensions:**\n\n- `time` \u2014 group by time buckets (day/week/month, auto-selected based on range)\n- `browser` \u2014 group by browser name (e.g., Chrome, Firefox, Safari)\n- `os` \u2014 group by operating system (e.g., Windows, macOS, Linux)\n- `device` \u2014 group by device type (`mobile`, `tablet`, `desktop`, `unknown`)\n- `country` \u2014 group by country\n- `city` \u2014 group by city\n- `referrer` \u2014 group by referrer URL\n- `utm_source` \u2014 group by the `utm_source` tag on the short link (untagged clicks appear as `(none)`)\n- `utm_medium` \u2014 group by the `utm_medium` tag\n- `utm_campaign` \u2014 group by the `utm_campaign` tag\n\nMultiple dimensions can be combined: `time,browser` returns time series broken down by browser.",
+                            "examples": [
+                                "time,browser",
+                                "country",
+                                "time,country,browser"
+                            ],
+                            "title": "Group By"
+                        },
+                        "description": "Comma-separated grouping dimensions for the statistics breakdown. Defaults to `time` if omitted.\n\n**Available dimensions:**\n\n- `time` \u2014 group by time buckets (day/week/month, auto-selected based on range)\n- `browser` \u2014 group by browser name (e.g., Chrome, Firefox, Safari)\n- `os` \u2014 group by operating system (e.g., Windows, macOS, Linux)\n- `device` \u2014 group by device type (`mobile`, `tablet`, `desktop`, `unknown`)\n- `country` \u2014 group by country\n- `city` \u2014 group by city\n- `referrer` \u2014 group by referrer URL\n- `utm_source` \u2014 group by the `utm_source` tag on the short link (untagged clicks appear as `(none)`)\n- `utm_medium` \u2014 group by the `utm_medium` tag\n- `utm_campaign` \u2014 group by the `utm_campaign` tag\n\nMultiple dimensions can be combined: `time,browser` returns time series broken down by browser."
+                    },
+                    {
+                        "name": "metrics",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 200
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Comma-separated metrics to include. Defaults to `clicks,unique_clicks` if omitted.\n\n**Available metrics:**\n\n- `clicks` \u2014 total click count\n- `unique_clicks` \u2014 unique visitor count (deduplicated by IP + User-Agent)",
+                            "examples": [
+                                "clicks,unique_clicks",
+                                "clicks"
+                            ],
+                            "title": "Metrics"
+                        },
+                        "description": "Comma-separated metrics to include. Defaults to `clicks,unique_clicks` if omitted.\n\n**Available metrics:**\n\n- `clicks` \u2014 total click count\n- `unique_clicks` \u2014 unique visitor count (deduplicated by IP + User-Agent)"
+                    },
+                    {
+                        "name": "timezone",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 50,
+                            "description": "IANA timezone name for time-based grouping and output formatting (e.g., `UTC`, `America/New_York`, `Asia/Kolkata`). Defaults to `UTC`.",
+                            "examples": [
+                                "UTC",
+                                "America/New_York"
+                            ],
+                            "default": "UTC",
+                            "title": "Timezone"
+                        },
+                        "description": "IANA timezone name for time-based grouping and output formatting (e.g., `UTC`, `America/New_York`, `Asia/Kolkata`). Defaults to `UTC`."
+                    },
+                    {
+                        "name": "filters",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 5000
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "**Method 1: JSON Filters Object**\n\nJSON string containing dimension filters. Format: `{\"dimension\": [\"value1\", \"value2\"]}`\n\n**Available filter dimensions:**\n\n- `browser` \u2014 Filter by browser name (e.g., Chrome, Firefox, Safari, Edge)\n- `os` \u2014 Filter by operating system (e.g., Windows, macOS, Linux, iOS, Android)\n- `device` \u2014 Filter by device type (`mobile`, `tablet`, `desktop`, `unknown`)\n- `country` \u2014 Filter by country name (e.g., United States, Canada, Germany)\n- `city` \u2014 Filter by city name (e.g., New York, London, Mumbai)\n- `referrer` \u2014 Filter by referrer URL (e.g., https://google.com, https://twitter.com)\n- `utm_source` / `utm_medium` / `utm_campaign` \u2014 Filter by campaign tags; `(none)` matches untagged clicks\n\n**Value format:** Array of strings for each dimension.\n\n**Important:** Filter values are case-sensitive. Use exact capitalization as stored in the database.\n\n**Examples:**\n\n- `{\"browser\": [\"Chrome\", \"Firefox\"]}` \u2014 Chrome OR Firefox clicks\n- `{\"country\": [\"United States\", \"Canada\"], \"browser\": [\"Chrome\"]}` \u2014 US/CA clicks from Chrome\n\n**Alternative:** You can also pass filters as individual query parameters (see `browser`, `os`, `country`, `city`, `referrer` parameters below).",
+                            "examples": [
+                                "{\"browser\":[\"Chrome\",\"Firefox\"]}",
+                                "{\"country\":[\"United States\",\"Canada\"],\"browser\":[\"Chrome\"]}"
+                            ],
+                            "title": "Filters"
+                        },
+                        "description": "**Method 1: JSON Filters Object**\n\nJSON string containing dimension filters. Format: `{\"dimension\": [\"value1\", \"value2\"]}`\n\n**Available filter dimensions:**\n\n- `browser` \u2014 Filter by browser name (e.g., Chrome, Firefox, Safari, Edge)\n- `os` \u2014 Filter by operating system (e.g., Windows, macOS, Linux, iOS, Android)\n- `device` \u2014 Filter by device type (`mobile`, `tablet`, `desktop`, `unknown`)\n- `country` \u2014 Filter by country name (e.g., United States, Canada, Germany)\n- `city` \u2014 Filter by city name (e.g., New York, London, Mumbai)\n- `referrer` \u2014 Filter by referrer URL (e.g., https://google.com, https://twitter.com)\n- `utm_source` / `utm_medium` / `utm_campaign` \u2014 Filter by campaign tags; `(none)` matches untagged clicks\n\n**Value format:** Array of strings for each dimension.\n\n**Important:** Filter values are case-sensitive. Use exact capitalization as stored in the database.\n\n**Examples:**\n\n- `{\"browser\": [\"Chrome\", \"Firefox\"]}` \u2014 Chrome OR Firefox clicks\n- `{\"country\": [\"United States\", \"Canada\"], \"browser\": [\"Chrome\"]}` \u2014 US/CA clicks from Chrome\n\n**Alternative:** You can also pass filters as individual query parameters (see `browser`, `os`, `country`, `city`, `referrer` parameters below)."
+                    },
+                    {
+                        "name": "browser",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 500
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated browser names. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. Common values include: Chrome, Firefox, Safari, Edge, Opera, Samsung Internet.\n\n**Note:** Both `filters` JSON and individual parameters can be combined.",
+                            "examples": [
+                                "Chrome,Firefox"
+                            ],
+                            "title": "Browser"
+                        },
+                        "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated browser names. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. Common values include: Chrome, Firefox, Safari, Edge, Opera, Samsung Internet.\n\n**Note:** Both `filters` JSON and individual parameters can be combined."
+                    },
+                    {
+                        "name": "os",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 500
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated operating system names. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. Common values include: Windows, macOS, Linux, iOS, Android, Chrome OS.\n\n**Note:** Both `filters` JSON and individual parameters can be combined.",
+                            "examples": [
+                                "Windows,macOS"
+                            ],
+                            "title": "Os"
+                        },
+                        "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated operating system names. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. Common values include: Windows, macOS, Linux, iOS, Android, Chrome OS.\n\n**Note:** Both `filters` JSON and individual parameters can be combined."
+                    },
+                    {
+                        "name": "device",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 200
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated device types. Alternative to using the `filters` JSON parameter.\n\n**Values:** `mobile`, `tablet`, `desktop`, `unknown`. `unknown` also matches clicks recorded before device tracking existed.\n\n**Note:** Both `filters` JSON and individual parameters can be combined.",
+                            "examples": [
+                                "mobile,desktop"
+                            ],
+                            "title": "Device"
+                        },
+                        "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated device types. Alternative to using the `filters` JSON parameter.\n\n**Values:** `mobile`, `tablet`, `desktop`, `unknown`. `unknown` also matches clicks recorded before device tracking existed.\n\n**Note:** Both `filters` JSON and individual parameters can be combined."
+                    },
+                    {
+                        "name": "country",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 1000
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated country names. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. Use full country names as stored in the database (e.g., United States, Canada, United Kingdom, India, Germany, France, Japan).\n\n**Note:** Both `filters` JSON and individual parameters can be combined.",
+                            "examples": [
+                                "United States,Germany"
+                            ],
+                            "title": "Country"
+                        },
+                        "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated country names. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. Use full country names as stored in the database (e.g., United States, Canada, United Kingdom, India, Germany, France, Japan).\n\n**Note:** Both `filters` JSON and individual parameters can be combined."
+                    },
+                    {
+                        "name": "city",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 1000
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated city names. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. Use exact capitalization as stored in the database.\n\n**Note:** Both `filters` JSON and individual parameters can be combined.",
+                            "examples": [
+                                "San Francisco,Berlin"
+                            ],
+                            "title": "City"
+                        },
+                        "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated city names. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. Use exact capitalization as stored in the database.\n\n**Note:** Both `filters` JSON and individual parameters can be combined."
+                    },
+                    {
+                        "name": "referrer",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 2000
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated referrer URLs. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. Include the full URL including protocol.\n\n**Note:** Both `filters` JSON and individual parameters can be combined.",
+                            "examples": [
+                                "https://google.com,https://twitter.com"
+                            ],
+                            "title": "Referrer"
+                        },
+                        "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated referrer URLs. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. Include the full URL including protocol.\n\n**Note:** Both `filters` JSON and individual parameters can be combined."
+                    },
+                    {
+                        "name": "utm_source",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 1000
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated campaign tag values. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. `(none)` matches clicks with no tag.\n\n**Note:** Both `filters` JSON and individual parameters can be combined.",
+                            "examples": [
+                                "newsletter,twitter"
+                            ],
+                            "title": "Utm Source"
+                        },
+                        "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated campaign tag values. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. `(none)` matches clicks with no tag.\n\n**Note:** Both `filters` JSON and individual parameters can be combined."
+                    },
+                    {
+                        "name": "utm_medium",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 1000
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated campaign tag values. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. `(none)` matches clicks with no tag.\n\n**Note:** Both `filters` JSON and individual parameters can be combined.",
+                            "examples": [
+                                "email,social"
+                            ],
+                            "title": "Utm Medium"
+                        },
+                        "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated campaign tag values. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. `(none)` matches clicks with no tag.\n\n**Note:** Both `filters` JSON and individual parameters can be combined."
+                    },
+                    {
+                        "name": "utm_campaign",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 1000
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated campaign tag values. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. `(none)` matches clicks with no tag.\n\n**Note:** Both `filters` JSON and individual parameters can be combined.",
+                            "examples": [
+                                "summer-launch"
+                            ],
+                            "title": "Utm Campaign"
+                        },
+                        "description": "**Method 2: Individual Filter Parameter**\n\nComma-separated campaign tag values. Alternative to using the `filters` JSON parameter.\n\n**Important:** Values are case-sensitive. `(none)` matches clicks with no tag.\n\n**Note:** Both `filters` JSON and individual parameters can be combined."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Export file download",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            },
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            },
+                            "application/zip": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                },
+                                "x-description": "CSV export \u2014 ZIP archive containing summary.csv plus one file per dimension"
+                            },
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                },
+                                "x-description": "XLSX export \u2014 Excel workbook with multiple sheets"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request \u2014 invalid parameters",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized \u2014 missing or invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden \u2014 insufficient permissions or scope",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error \u2014 export generation failed",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3447,9 +4880,9 @@
                         "type": "string",
                         "title": "Error"
                     },
-                    "error_code": {
+                    "code": {
                         "type": "string",
-                        "title": "Error Code"
+                        "title": "Code"
                     },
                     "field": {
                         "anyOf": [
@@ -3475,7 +4908,7 @@
                 "type": "object",
                 "required": [
                     "error",
-                    "error_code"
+                    "code"
                 ],
                 "title": "ErrorResponse",
                 "description": "Standard error JSON body produced by the AppError exception handler."
@@ -3822,11 +5255,15 @@
             "StatsResponse": {
                 "properties": {
                     "scope": {
-                        "type": "string",
-                        "title": "Scope"
+                        "$ref": "#/components/schemas/StatsScope"
                     },
                     "filters": {
-                        "additionalProperties": true,
+                        "additionalProperties": {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
                         "type": "object",
                         "title": "Filters"
                     },
@@ -3862,7 +5299,8 @@
                     "generated_at": {
                         "anyOf": [
                             {
-                                "type": "string"
+                                "type": "string",
+                                "format": "date-time"
                             },
                             {
                                 "type": "null"
@@ -3938,7 +5376,8 @@
                     "first_click": {
                         "anyOf": [
                             {
-                                "type": "string"
+                                "type": "string",
+                                "format": "date-time"
                             },
                             {
                                 "type": "null"
@@ -3949,7 +5388,8 @@
                     "last_click": {
                         "anyOf": [
                             {
-                                "type": "string"
+                                "type": "string",
+                                "format": "date-time"
                             },
                             {
                                 "type": "null"
@@ -3958,15 +5398,21 @@
                         "title": "Last Click"
                     },
                     "avg_redirection_time": {
-                        "type": "number",
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
                         "title": "Avg Redirection Time"
                     }
                 },
                 "type": "object",
                 "required": [
                     "total_clicks",
-                    "unique_clicks",
-                    "avg_redirection_time"
+                    "unique_clicks"
                 ],
                 "title": "StatsSummary",
                 "description": "Summary statistics block inside StatsResponse."
@@ -3976,7 +5422,8 @@
                     "start_date": {
                         "anyOf": [
                             {
-                                "type": "string"
+                                "type": "string",
+                                "format": "date-time"
                             },
                             {
                                 "type": "null"
@@ -3987,7 +5434,8 @@
                     "end_date": {
                         "anyOf": [
                             {
-                                "type": "string"
+                                "type": "string",
+                                "format": "date-time"
                             },
                             {
                                 "type": "null"
@@ -4794,6 +6242,259 @@
                 ],
                 "title": "VerifyEmailResponse",
                 "description": "Response body for POST /auth/verify-email (200)."
+            },
+            "StatsScope": {
+                "type": "string",
+                "enum": [
+                    "all",
+                    "anon"
+                ],
+                "title": "StatsScope",
+                "description": "Stats wire scope.\n\nResponse-only: the ``scope`` request parameter no longer exists (auth\nis mandatory), but the response wire keeps its ``scope`` key and the\npublic stats endpoint's frozen contract still carries ``anon``."
+            },
+            "PublicStatsBody": {
+                "properties": {
+                    "password": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 200
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Password",
+                        "description": "Password for a password-protected link's stats."
+                    }
+                },
+                "type": "object",
+                "title": "PublicStatsBody",
+                "description": "Optional JSON body carrying the stats-page password."
+            },
+            "PublicStatsResponse": {
+                "properties": {
+                    "generation": {
+                        "type": "string",
+                        "enum": [
+                            "v1",
+                            "v2"
+                        ],
+                        "title": "Generation"
+                    },
+                    "link": {
+                        "$ref": "#/components/schemas/PublicLinkFacts"
+                    },
+                    "stats": {
+                        "additionalProperties": true,
+                        "type": "object",
+                        "title": "Stats",
+                        "description": "The modern stats wire shape (same as GET /api/v1/stats): summary, metrics keyed '{metric}_by_{dimension}', time_range, time_bucket_info, computed_metrics. v1 links carry a 'clicks_by_bots' dimension and no 'city'/'device'; v2 the reverse."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "generation",
+                    "link",
+                    "stats"
+                ],
+                "title": "PublicStatsResponse",
+                "description": "Response body for GET|POST /api/v1/public/stats/{short_code}."
+            },
+            "PublicLinkFacts": {
+                "properties": {
+                    "alias": {
+                        "type": "string",
+                        "title": "Alias"
+                    },
+                    "short_url": {
+                        "type": "string",
+                        "title": "Short Url"
+                    },
+                    "long_url": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Long Url"
+                    },
+                    "created_at": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Created At"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "active",
+                            "inactive",
+                            "expired",
+                            "blocked"
+                        ],
+                        "title": "Status"
+                    },
+                    "max_clicks": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Max Clicks"
+                    },
+                    "block_bots": {
+                        "type": "boolean",
+                        "title": "Block Bots"
+                    },
+                    "password_protected": {
+                        "type": "boolean",
+                        "title": "Password Protected"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "alias",
+                    "short_url",
+                    "status",
+                    "block_bots",
+                    "password_protected"
+                ],
+                "title": "PublicLinkFacts",
+                "description": "Public facts about the link shown above the charts."
+            },
+            "LinkStatsResponse": {
+                "properties": {
+                    "scope": {
+                        "$ref": "#/components/schemas/StatsScope"
+                    },
+                    "filters": {
+                        "additionalProperties": {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        "type": "object",
+                        "title": "Filters"
+                    },
+                    "group_by": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Group By"
+                    },
+                    "timezone": {
+                        "type": "string",
+                        "title": "Timezone"
+                    },
+                    "time_range": {
+                        "$ref": "#/components/schemas/StatsTimeRange"
+                    },
+                    "summary": {
+                        "$ref": "#/components/schemas/StatsSummary"
+                    },
+                    "metrics": {
+                        "additionalProperties": {
+                            "items": {
+                                "additionalProperties": true,
+                                "type": "object"
+                            },
+                            "type": "array"
+                        },
+                        "type": "object",
+                        "title": "Metrics",
+                        "description": "Keyed by '{metric}_by_{dimension}' (e.g. 'clicks_by_browser', 'unique_clicks_by_time'). Each value is a list of data-point objects whose keys are the dimension name, the metric name, and '{metric}_percentage'."
+                    },
+                    "generated_at": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Generated At"
+                    },
+                    "api_version": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Api Version"
+                    },
+                    "short_code": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Short Code"
+                    },
+                    "time_bucket_info": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/TimeBucketInfo"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "computed_metrics": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/ComputedMetrics"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "url_id": {
+                        "type": "string",
+                        "title": "Url Id"
+                    },
+                    "alias": {
+                        "type": "string",
+                        "title": "Alias"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "scope",
+                    "filters",
+                    "group_by",
+                    "timezone",
+                    "time_range",
+                    "summary",
+                    "url_id",
+                    "alias"
+                ],
+                "title": "LinkStatsResponse",
+                "description": "Response body for GET /api/v1/stats/links/{url_id}.\n\nThe standard stats wire plus the identity of the selected link.\n``scope`` stays ``all`` \u2014 the link is part of the owner's aggregate."
             }
         },
         "securitySchemes": {

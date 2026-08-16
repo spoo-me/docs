@@ -124,7 +124,11 @@ The following endpoints are part of the legacy v0 API. They do not support authe
 
 | Endpoint | Authenticated | Anonymous | Notes |
 |----------|--------------|-----------|-------|
-| `GET /api/v1/stats` | 60/min, 5000/day | 20/min, 1000/day | Anonymous read tier; public URLs only |
+| `GET /api/v1/stats` | 60/min, 5000/day | Not allowed | Requires auth |
+| `GET /api/v1/stats/links/{url_id}` | 60/min, 5000/day | Not allowed | Requires auth |
+| `GET /api/v1/export` | 30/min, 1000/day | Not allowed | Requires auth |
+| `GET /api/v1/export/links/{url_id}` | 30/min, 1000/day | Not allowed | Requires auth |
+| `GET/POST /api/v1/public/stats/{short_code}` | 60/min, 2000/day | 20/min, 500/day | Auth optional |
 | `POST /stats/{code}` | - | 20/min, 1000/day | v0 API (legacy) |
 | `POST /export/{code}/{format}` | - | 10/min, 200/day | v0 API (legacy) |
 
@@ -139,7 +143,7 @@ How you authenticate directly affects your rate limits:
     **Benefits**:
     - Far higher rate limits than anonymous
     - Access to URL management endpoints
-    - Private stats support
+    - Full analytics and export for all your links
     - Long-lived tokens for automation
     
     **How to use**: [Create an API key](/api-keys) and include it in the `Authorization` header:
@@ -164,12 +168,12 @@ How you authenticate directly affects your rate limits:
   </Accordion>
   
   <Accordion title="Anonymous (No Authentication)" icon="user">
-    **Rate Limits**: 20/min, 200/day (public stats reads: 1,000/day)
+    **Rate Limits**: 20/min, 200/day (public per-link stats: 20/min, 500/day)
     
     **Limitations**:
     - Far lower rate limits
     - Cannot manage URLs later
-    - No access to private stats
+    - Stats limited to the public per-link endpoint (links with private stats appear as 404)
     - Cannot use URL management endpoints
     
     **How to use**: Simply make requests without authentication header.

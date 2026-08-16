@@ -48,7 +48,17 @@
                 "icon": "chart-line",
                 "pages": [
                   "GET /api/v1/stats",
-                  "GET /api/v1/export"
+                  "GET /api/v1/stats/links/{url_id}",
+                  "GET /api/v1/export",
+                  "GET /api/v1/export/links/{url_id}"
+                ]
+              },
+              {
+                "group": "Public Statistics",
+                "icon": "globe",
+                "pages": [
+                  "GET /api/v1/public/stats/{short_code}",
+                  "POST /api/v1/public/stats/{short_code}"
                 ]
               }
             ]
