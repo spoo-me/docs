@@ -1,0 +1,61 @@
+---
+title: "Platform Patterns"
+description: "How the official CLI, browser extension, and Raycast apps each get the auth code back, and which pattern fits your platform"
+icon: "shapes"
+---
+
+The consent and token endpoints are identical everywhere; the only part that changes per platform is how the code gets back to your app. The official apps cover the common shapes, and each is open source.
+
+## CLI and desktop: loopback redirect
+
+[Spoo CLI](https://github.com/spoo-me/spoo-cli) registers a loopback URI (`http://127.0.0.1:53682/callback`), starts a throwaway local HTTP listener before opening the browser, captures the single redirect, and shuts the listener down. The user never touches a code by hand.
+
+```
+1. bind 127.0.0.1:53682
+2. open https://spoo.me/auth/device/login?...&redirect_uri=http://127.0.0.1:53682/callback
+3. await one request, read ?code and ?state
+4. verify state, respond with a "you can close this tab" page
+5. close the listener, exchange the code
+```
+
+Use this pattern for anything that can bind a local port: CLIs, desktop apps, dev tools.
+
+## Browser extensions: hosted callback page
+
+Extensions cannot receive an HTTP redirect, so the [browser extension](https://github.com/spoo-me/spoo-snap) omits `redirect_uri` entirely. The flow ends on the hosted `/auth/device/callback` page on spoo.me, and a content script running on that origin reads the code off the page, verifies the `state` it stashed in extension storage before the flow began, and hands the code to the background worker for the token exchange.
+
+The state check matters: without it, any page could feed your extension a code it did not ask for.
+
+## OAuth frameworks: point and go
+
+Platforms with a built-in PKCE client just need pointing at the right endpoint. The [Raycast extension](https://github.com/spoo-me/spoo-raycast) wires Raycast's `OAuth.PKCEClient` to `/auth/device/login`, passing the `app_id` as an extra query parameter, and lets the framework handle verifier generation, the redirect, and code capture:
+
+```typescript
+const oauthClient = new OAuth.PKCEClient({
+  redirectMethod: OAuth.RedirectMethod.Web,
+  providerName: "spoo.me",
+  providerId: "spoo",
+});
+
+const request = await oauthClient.authorizationRequest({
+  endpoint: "https://spoo.me/auth/device/login",
+  clientId: APP_ID,
+  scope: "",
+  extraParameters: { app_id: APP_ID },
+});
+```
+
+Any OAuth 2 library that supports PKCE with S256 can be adapted the same way.
+
+## No redirect at all: manual copy
+
+When your app cannot listen anywhere and has no content-script trick available (a headless environment, a TV app, a constrained plugin sandbox), omit `redirect_uri` and let the user copy the code from the hosted callback page into your app. It is the least polished experience, so treat it as the fallback, not the default.
+
+## Choosing
+
+| Your platform | Pattern |
+|---------------|---------|
+| CLI, desktop app, dev tool | Loopback redirect |
+| Browser extension | Hosted callback page + content script |
+| Raycast, editor plugins, anything with an OAuth client | Framework PKCE client |
+| Headless or heavily sandboxed | Manual copy |

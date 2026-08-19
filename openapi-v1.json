@@ -1858,7 +1858,7 @@
                 "tags": [
                     "Statistics"
                 ],
-                "summary": "URL Statistics",
+                "summary": "Account Statistics",
                 "description": "Get aggregated click statistics across all URLs you own.\n\nRetrieve click analytics with flexible grouping, filtering, and\ntime-range options.\n\n**Authentication**: Required.\n\n**API Key Scope**: `stats:read`, `urls:read`, or `admin:all`\n\n**Rate Limits**: 60/min, 5,000/day\n\n**Grouping Dimensions**: `time`, `browser`, `os`, `device`, `country`,\n`city`, `referrer`, `short_code`, `utm_source`, `utm_medium`,\n`utm_campaign`\n\n**Metrics**: `clicks`, `unique_clicks`\n\n**Filtering**: Filter by `browser`, `os`, `device`, `country`, `city`,\n`referrer`, `short_code`, `url_id`, or the `utm_*` tags using query\nparams or a JSON `filters` object. Filters slice your own aggregate \u2014\n`url_id` values you do not own simply match nothing. For statistics on\na single link, prefer `GET /stats/links/{url_id}`.",
                 "operationId": "getStats",
                 "parameters": [
@@ -2315,7 +2315,7 @@
                 "tags": [
                     "Statistics"
                 ],
-                "summary": "Export Statistics",
+                "summary": "Export Account Statistics",
                 "description": "Export click statistics across all URLs you own as a downloadable file.\n\nGenerate a file export of click analytics data in the specified format.\nThe response is a binary download with appropriate `Content-Disposition` header.\n\n**Authentication**: Required.\n\n**API Key Scope**: `stats:read`, `urls:read`, or `admin:all`\n\n**Rate Limits**: 30/min, 1,000/day\n\n**Export Formats**:\n\n- `json` \u2014 single JSON file\n- `xml` \u2014 single XML file\n- `xlsx` \u2014 Excel spreadsheet with multiple sheets\n- `csv` \u2014 **ZIP archive** containing `summary.csv` plus one CSV file per metrics dimension\n\n**Filtering**: Same as `GET /stats` \u2014 including the `url_id` filter to\nslice the export to specific URLs you own. To export a single link,\nprefer `GET /export/links/{url_id}`.\n\n**Note**: Export generation is resource-intensive. Lower rate limits apply\ncompared to other endpoints.",
                 "operationId": "exportStats",
                 "parameters": [
@@ -3519,7 +3519,7 @@
                 "tags": [
                     "Public"
                 ],
-                "summary": "Public URL Statistics",
+                "summary": "Public Link Statistics",
                 "description": "Get public click statistics for a single short link.\n\nResolves both URL generations (plus emoji aliases) on the system\ndefault domain and returns link facts plus the standard stats wire.\n\n**Authentication**: Optional \u2014 an owner session additionally sees\nprivate-stats links and skips the password gate.\n\n**Privacy**: A link with private stats answers exactly like a missing\ncode (404, byte-identical). Password-protected links answer 401\n`password_required`; send the password via POST \u2014 never in the URL.\n\n**Rate Limits**:\n\n- Authenticated: 60/min, 2,000/day\n- Anonymous: 20/min, 500/day",
                 "operationId": "getPublicStats",
                 "parameters": [
@@ -3680,7 +3680,7 @@
                 "tags": [
                     "Public"
                 ],
-                "summary": "Public URL Statistics (password unlock)",
+                "summary": "Unlock Protected Link Statistics",
                 "description": "Same as the GET variant, carrying a password in the JSON body.\n\nThe body is the ONLY way a password travels to this endpoint \u2014\nquery-string passwords are ignored so they can't land in URLs, logs,\nor referrers. Wrong passwords answer 401 `invalid_password`\n(retryable). The body may be absent or empty.",
                 "operationId": "getPublicStatsWithPassword",
                 "parameters": [
@@ -4325,6 +4325,712 @@
                         }
                     }
                 }
+            }
+        },
+        "/api/v1/shorten/check-alias": {
+            "get": {
+                "tags": [
+                    "URL Shortening"
+                ],
+                "summary": "Check Alias Availability",
+                "description": "Check whether a proposed alias would be accepted by POST /api/v1/shorten.\n\nReason codes on a negative result (``length``/``format``/``reserved``/\n``taken``/``emoji_policy``) let the UI render precise inline feedback\nwithout duplicating the validation rules. Emoji aliases are checked in\ncanonical form (variation selectors stripped).\n\nPass ``domain`` to scope the check to a custom-domain tenant \u2014 required\nfor the create modal's live availability indicator when the user has\npicked a non-default domain. Authz mirrors the shorten endpoint: anon\ncallers can't probe custom domains; authed callers must own the target.\n\n**Authentication**: Optional \u2014 higher rate limits when authenticated.\nRequired if ``domain`` is supplied.",
+                "operationId": "checkAliasAvailability",
+                "parameters": [
+                    {
+                        "name": "alias",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 64,
+                            "description": "Candidate alias to check (alphanumeric or emoji-only).",
+                            "examples": [
+                                "mylink",
+                                "\ud83d\ude80\ud83d\udd25"
+                            ],
+                            "title": "Alias"
+                        },
+                        "description": "Candidate alias to check (alphanumeric or emoji-only)."
+                    },
+                    {
+                        "name": "domain",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "maxLength": 253
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Scope the availability check to a custom domain fqdn. Requires authentication + ownership of an ACTIVE custom domain. Omit for the system default namespace.",
+                            "examples": [
+                                "links.acme.com"
+                            ],
+                            "title": "Domain"
+                        },
+                        "description": "Scope the availability check to a custom domain fqdn. Requires authentication + ownership of an ACTIVE custom domain. Omit for the system default namespace."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AliasCheckResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request \u2014 invalid parameters",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized \u2014 missing or invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden \u2014 insufficient permissions or scope",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict \u2014 resource already exists",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {},
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "JWTAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/urls/claim": {
+            "post": {
+                "tags": [
+                    "Link Management"
+                ],
+                "summary": "Claim anonymous URLs",
+                "description": "Claim anonymously-created URLs into your account.\n\nEach item pairs a URL id with the one-time `claim_token` returned by\nthe anonymous shorten call \u2014 the bearer proof of creation. Items\nresolve independently and the batch never hard-fails: `claimed`\n(ownership transferred, token burned), `already_yours` (idempotent\nrepeat), or `invalid` (unknown id, wrong token, or a link that is not\nclaimable \u2014 deliberately indistinguishable).\n\nThe claim_token is single-use and is invalidated immediately on\nsuccess. Claimed links join the account like any owned link:\ndashboard, management, and full stats history included.\n\n**Authentication**: Required.\n\n**API Key Scope**: `urls:manage` or `admin:all`\n\n**Rate Limits**: 30/min, 500/day",
+                "operationId": "claimUrls",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ClaimUrlsRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ClaimUrlsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request \u2014 invalid parameters",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized \u2014 missing or invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden \u2014 insufficient permissions or scope",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict \u2014 resource already exists",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/urls/bulk/delete": {
+            "post": {
+                "tags": [
+                    "Link Management"
+                ],
+                "summary": "Bulk Delete URLs",
+                "description": "Permanently delete up to 100 URLs you own, addressed by id.\n\n**This action is irreversible.** Deleted aliases become available\nfor anyone to claim. Historical analytics are not removed.\n\nNot to be confused with `DELETE /api/v1/urls?domain=` (bulk delete\nby custom domain): that operation answers \"everything on this\ndomain\", this one answers \"exactly these links\".\n\n**Per-item verdicts** (`error_code`): `not_found` \u2014 no such URL in\nyour account (an id you don't own answers the same); `forbidden` \u2014\nthe URL is admin-blocked and cannot be deleted.\n\n**Retry semantics**: re-sending the batch after a timeout is safe;\nalready-deleted ids report `not_found`, which a client should treat\nas success-equivalent for delete.\n\n**Rate Limits**: 30/min, 100/day \u2014 counted per request, not per id.",
+                "operationId": "bulkDeleteUrlsByIds",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BulkDeleteUrlsRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BulkUrlOperationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request \u2014 invalid parameters",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized \u2014 missing or invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden \u2014 insufficient permissions or scope",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/urls/bulk/status": {
+            "post": {
+                "tags": [
+                    "Link Management"
+                ],
+                "summary": "Bulk Update URL Status",
+                "description": "Activate or deactivate up to 100 URLs you own in one request.\n\nSemantics match the single-item status endpoint exactly: `ACTIVE`\nenables redirects, `INACTIVE` disables them, `EXPIRED` URLs set to\n`ACTIVE` reactivate, and setting the status a link already has is a\nsuccess no-op.\n\n**Per-item verdicts** (`error_code`): `not_found` \u2014 no such URL in\nyour account; `forbidden` \u2014 the URL is admin-blocked and cannot be\nmodified.\n\n**Rate Limits**: 60/min, 200/day \u2014 counted per request, not per id.",
+                "operationId": "bulkUpdateUrlStatus",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BulkUpdateStatusRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BulkUrlOperationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request \u2014 invalid parameters",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized \u2014 missing or invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden \u2014 insufficient permissions or scope",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/urls/bulk/expiry": {
+            "post": {
+                "tags": [
+                    "Link Management"
+                ],
+                "summary": "Bulk Update URL Expiry",
+                "description": "Set or clear the expiration on up to 100 URLs you own.\n\nOne value for the whole batch \u2014 ISO 8601 or epoch seconds, must be\nin the future (a past value rejects the whole request; it could\nnever be right for any item). `null` clears expiry. `EXPIRED` URLs\nwhose expiry is extended or cleared reactivate, exactly like the\nsingle-item update.\n\n**Per-item verdicts** (`error_code`): `not_found` \u2014 no such URL in\nyour account; `forbidden` \u2014 the URL is admin-blocked and cannot be\nmodified.\n\n**Rate Limits**: 60/min, 200/day \u2014 counted per request, not per id.",
+                "operationId": "bulkUpdateUrlExpiry",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BulkUpdateExpiryRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BulkUrlOperationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request \u2014 invalid parameters",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized \u2014 missing or invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden \u2014 insufficient permissions or scope",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/device/token": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Exchange Device Auth Code",
+                "description": "Exchange a one-time device auth code for JWT tokens.\n\nThe code is obtained from the callback page after the user authenticates\non spoo.me. The PKCE ``code_verifier`` must match the ``code_challenge``\nthe app sent when initiating the flow. Returns access and refresh tokens\nscoped to the app's grant.\n\n**Authentication**: Not required (public endpoint)\n\n**Rate Limits**: 10/min",
+                "operationId": "exchangeDeviceCode",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DeviceTokenRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DeviceTokenResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request \u2014 invalid parameters",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized \u2014 missing or invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden \u2014 insufficient permissions or scope",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": []
+            }
+        },
+        "/auth/device/refresh": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Refresh Device Auth Tokens",
+                "description": "Refresh an app's JWT tokens using a refresh token.\n\nAccepts the refresh token in the request body (not cookies) for use\nby external apps (browser extensions, desktop, CLI, bots).  If the\nrefresh token contains an ``app_id`` claim, the server verifies the\napp grant is still active \u2014 revoked apps cannot refresh \u2014 and re-reads\nthe grant's scopes so scope changes propagate on the next refresh.\n\n**Authentication**: Not required (the refresh token itself is the credential)\n\n**Rate Limits**: 20/min",
+                "operationId": "refreshDeviceTokens",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DeviceRefreshRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DeviceRefreshResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request \u2014 invalid parameters",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized \u2014 missing or invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden \u2014 insufficient permissions or scope",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": []
             }
         }
     },
@@ -6495,6 +7201,446 @@
                 ],
                 "title": "LinkStatsResponse",
                 "description": "Response body for GET /api/v1/stats/links/{url_id}.\n\nThe standard stats wire plus the identity of the selected link.\n``scope`` stays ``all`` \u2014 the link is part of the owner's aggregate."
+            },
+            "BulkUpdateStatusRequest": {
+                "properties": {
+                    "ids": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "maxItems": 100,
+                        "minItems": 1,
+                        "title": "Ids",
+                        "description": "URL ids (MongoDB ObjectIds, as returned by the list endpoint). 1 to 100 per request; duplicates are deduplicated server-side (first occurrence wins). One malformed id rejects the whole request \u2014 nothing is attempted.",
+                        "examples": [
+                            [
+                                "665f0c2f9e7a4b1d2c3d4e5f",
+                                "665f0c2f9e7a4b1d2c3d4e60"
+                            ]
+                        ]
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "ACTIVE",
+                            "INACTIVE"
+                        ],
+                        "title": "Status",
+                        "description": "Status applied to every id. `ACTIVE` enables redirects, `INACTIVE` disables them. `BLOCKED`/`EXPIRED` are not caller-settable, same as the single-item status endpoint.",
+                        "examples": [
+                            "INACTIVE"
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "ids",
+                    "status"
+                ],
+                "title": "BulkUpdateStatusRequest",
+                "description": "Request body for bulk activate/deactivate."
+            },
+            "BulkUpdateExpiryRequest": {
+                "properties": {
+                    "ids": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "maxItems": 100,
+                        "minItems": 1,
+                        "title": "Ids",
+                        "description": "URL ids (MongoDB ObjectIds, as returned by the list endpoint). 1 to 100 per request; duplicates are deduplicated server-side (first occurrence wins). One malformed id rejects the whole request \u2014 nothing is attempted.",
+                        "examples": [
+                            [
+                                "665f0c2f9e7a4b1d2c3d4e5f",
+                                "665f0c2f9e7a4b1d2c3d4e60"
+                            ]
+                        ]
+                    },
+                    "expire_after": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Expire After",
+                        "description": "Expiration applied to every id \u2014 ISO 8601 or epoch seconds, must be in the future. Pass `null` to clear expiry. One value for the whole batch.",
+                        "examples": [
+                            1767225600
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "ids",
+                    "expire_after"
+                ],
+                "title": "BulkUpdateExpiryRequest",
+                "description": "Request body for bulk set/clear expiry."
+            },
+            "DeviceTokenRequest": {
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "minLength": 1,
+                        "title": "Code",
+                        "description": "One-time auth code from the device callback page"
+                    },
+                    "code_verifier": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "minLength": 43,
+                        "pattern": "^[A-Za-z0-9\\-._~]+$",
+                        "title": "Code Verifier",
+                        "description": "PKCE code verifier (RFC 7636). Must hash (S256) to the code_challenge sent at /auth/device/login."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "code",
+                    "code_verifier"
+                ],
+                "title": "DeviceTokenRequest",
+                "description": "Request body for POST /auth/device/token."
+            },
+            "BulkDeleteUrlsRequest": {
+                "properties": {
+                    "ids": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "maxItems": 100,
+                        "minItems": 1,
+                        "title": "Ids",
+                        "description": "URL ids (MongoDB ObjectIds, as returned by the list endpoint). 1 to 100 per request; duplicates are deduplicated server-side (first occurrence wins). One malformed id rejects the whole request \u2014 nothing is attempted.",
+                        "examples": [
+                            [
+                                "665f0c2f9e7a4b1d2c3d4e5f",
+                                "665f0c2f9e7a4b1d2c3d4e60"
+                            ]
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "ids"
+                ],
+                "title": "BulkDeleteUrlsRequest",
+                "description": "Request body for bulk delete \u2014 ids only, no parameters."
+            },
+            "DeviceTokenResponse": {
+                "properties": {
+                    "access_token": {
+                        "type": "string",
+                        "title": "Access Token",
+                        "description": "JWT access token"
+                    },
+                    "refresh_token": {
+                        "type": "string",
+                        "title": "Refresh Token",
+                        "description": "JWT refresh token"
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/UserProfileResponse",
+                        "description": "User profile"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "access_token",
+                    "refresh_token",
+                    "user"
+                ],
+                "title": "DeviceTokenResponse",
+                "description": "Response body for POST /auth/device/token (200)."
+            },
+            "ClaimUrlsResponse": {
+                "properties": {
+                    "results": {
+                        "items": {
+                            "$ref": "#/components/schemas/ClaimResultItem"
+                        },
+                        "type": "array",
+                        "title": "Results",
+                        "description": "One outcome per submitted item, in request order."
+                    },
+                    "claimed": {
+                        "type": "integer",
+                        "title": "Claimed",
+                        "description": "Convenience count of `claimed` results."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "results",
+                    "claimed"
+                ],
+                "title": "ClaimUrlsResponse",
+                "description": "Response body for POST /api/v1/urls/claim.\n\nThe batch never hard-fails: every submitted item gets a result, in\nrequest order."
+            },
+            "ClaimResultItem": {
+                "properties": {
+                    "url_id": {
+                        "type": "string",
+                        "title": "Url Id",
+                        "description": "The url_id from the request item."
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "claimed",
+                            "already_yours",
+                            "invalid"
+                        ],
+                        "title": "Status",
+                        "description": "`claimed` \u2014 ownership transferred and the token burned; `already_yours` \u2014 you already own this URL (idempotent repeat); `invalid` \u2014 unknown id, wrong token, or a link that is not claimable (deliberately indistinguishable)."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "url_id",
+                    "status"
+                ],
+                "title": "ClaimResultItem",
+                "description": "Per-item outcome of a claim batch."
+            },
+            "AliasCheckResponse": {
+                "properties": {
+                    "available": {
+                        "type": "boolean",
+                        "title": "Available",
+                        "description": "Whether the alias is free to use."
+                    },
+                    "reason": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Reason",
+                        "description": "When unavailable: 'length', 'format', 'reserved', 'taken', or 'emoji_policy' (emoji alias contains sequences outside the accepted set \u2014 ZWJ, flags, keycaps, or too-new emoji).",
+                        "examples": [
+                            "taken"
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "available"
+                ],
+                "title": "AliasCheckResponse",
+                "description": "Response body for GET /api/v1/shorten/check-alias.\n\n``available`` is true only when the alias passes format/length validation\nAND is not already taken. When false, ``reason`` explains why so the UI\ncan render a precise, non-generic message."
+            },
+            "BulkUrlOperationResponse": {
+                "properties": {
+                    "summary": {
+                        "$ref": "#/components/schemas/BulkOperationSummary"
+                    },
+                    "results": {
+                        "items": {
+                            "$ref": "#/components/schemas/BulkUrlResultRow"
+                        },
+                        "type": "array",
+                        "title": "Results",
+                        "description": "One row per unique requested id, in request order."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "summary",
+                    "results"
+                ],
+                "title": "BulkUrlOperationResponse",
+                "description": "Envelope for every bulk URL operation."
+            },
+            "BulkUrlResultRow": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "title": "Id",
+                        "description": "The requested URL id."
+                    },
+                    "alias": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Alias",
+                        "description": "Echoed when the id resolved to a URL you own; null otherwise."
+                    },
+                    "ok": {
+                        "type": "boolean",
+                        "title": "Ok",
+                        "description": "Whether the operation succeeded for this id."
+                    },
+                    "error_code": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "enum": [
+                                    "not_found",
+                                    "forbidden",
+                                    "conflict",
+                                    "validation_error",
+                                    "internal",
+                                    "not_attempted"
+                                ]
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Error Code",
+                        "description": "Machine-readable failure cause; null when ok."
+                    },
+                    "error": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Error",
+                        "description": "Human-readable failure message; null when ok."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "ok"
+                ],
+                "title": "BulkUrlResultRow",
+                "description": "Per-item verdict.\n\n``error_code`` reuses the API's error-code slugs so clients share\none mapping with the single-item routes: ``not_found`` (no such URL\nin your account \u2014 someone else's id answers the same, deliberately),\n``forbidden`` (blocked link), ``conflict``, ``validation_error``,\nplus ``internal`` (unexpected per-item failure, logged server-side)\nand ``not_attempted`` (processing aborted before this item).\n``error`` is display-safe but not stable; ``error_code`` is the key\nto branch on."
+            },
+            "BulkOperationSummary": {
+                "properties": {
+                    "total": {
+                        "type": "integer",
+                        "title": "Total",
+                        "description": "Unique ids in the request (after dedupe)."
+                    },
+                    "succeeded": {
+                        "type": "integer",
+                        "title": "Succeeded",
+                        "description": "Rows with ok=true."
+                    },
+                    "failed": {
+                        "type": "integer",
+                        "title": "Failed",
+                        "description": "Rows with ok=false."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "total",
+                    "succeeded",
+                    "failed"
+                ],
+                "title": "BulkOperationSummary",
+                "description": "Counts derived from the result rows."
+            },
+            "ClaimUrlsRequest": {
+                "properties": {
+                    "claims": {
+                        "items": {
+                            "$ref": "#/components/schemas/ClaimItemRequest"
+                        },
+                        "type": "array",
+                        "maxItems": 16,
+                        "minItems": 1,
+                        "title": "Claims",
+                        "description": "URLs to claim. Each item resolves independently."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "claims"
+                ],
+                "title": "ClaimUrlsRequest",
+                "description": "Request body for POST /api/v1/urls/claim (bulk-first, like reports)."
+            },
+            "ClaimItemRequest": {
+                "properties": {
+                    "url_id": {
+                        "type": "string",
+                        "maxLength": 24,
+                        "minLength": 24,
+                        "pattern": "^[0-9a-f]{24}$",
+                        "title": "Url Id",
+                        "description": "ObjectId of the URL to claim (from the shorten response).",
+                        "examples": [
+                            "507f1f77bcf86cd799439011"
+                        ]
+                    },
+                    "token": {
+                        "type": "string",
+                        "maxLength": 256,
+                        "minLength": 43,
+                        "title": "Token",
+                        "description": "The one-time claim_token returned by the anonymous shorten call \u2014 the bearer proof of creation."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "url_id",
+                    "token"
+                ],
+                "title": "ClaimItemRequest",
+                "description": "One (url_id, token) pair in a claim batch."
+            },
+            "DeviceRefreshRequest": {
+                "properties": {
+                    "refresh_token": {
+                        "type": "string",
+                        "minLength": 1,
+                        "title": "Refresh Token",
+                        "description": "JWT refresh token issued by /auth/device/token"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "refresh_token"
+                ],
+                "title": "DeviceRefreshRequest",
+                "description": "Request body for POST /auth/device/refresh."
+            },
+            "DeviceRefreshResponse": {
+                "properties": {
+                    "access_token": {
+                        "type": "string",
+                        "title": "Access Token",
+                        "description": "New JWT access token"
+                    },
+                    "refresh_token": {
+                        "type": "string",
+                        "title": "Refresh Token",
+                        "description": "New JWT refresh token"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "access_token",
+                    "refresh_token"
+                ],
+                "title": "DeviceRefreshResponse",
+                "description": "Response body for POST /auth/device/refresh (200)."
             }
         },
         "securitySchemes": {

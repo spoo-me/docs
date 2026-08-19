@@ -1,0 +1,83 @@
+---
+title: "Registering Your App"
+description: "Develop against a local instance today, then get your app registered and verified for production spoo.me"
+icon: "badge-check"
+---
+
+## How registration works
+
+Apps are identified by an `app_id` from a curated registry. Each registry entry defines everything users see on the consent screen and everything the platform enforces:
+
+| Field | Purpose |
+|-------|---------|
+| `app_id` | The identifier your app sends to the consent endpoint |
+| `name` | Display name on the consent screen and the dashboard Apps page |
+| `description` | One-line summary shown to users |
+| `icon` | SVG icon rendered on consent and the Apps page |
+| `scopes` | The permissions your app may request; consent lists these exactly |
+| `redirect_uris` | Exact-match allowlist for the `redirect_uri` parameter |
+| `links` | Install or homepage links shown on the Apps page |
+| `status` | Lifecycle state; only `live` apps can start the consent flow |
+| `verified` | Marks apps reviewed by the Spoo.me team |
+
+There is no self-serve app dashboard yet. Registration is a lightweight review, and you can build and test your entire integration before requesting it.
+
+## Develop locally first
+
+Spoo.me is open source and the registry is a config file, so the full flow runs on a [self-hosted instance](/self-hosting/introduction) with your own app entry. Nothing about the flow behaves differently locally.
+
+<Steps>
+  <Step title="Run Spoo.me locally">
+    Follow the [local development setup](/self-hosting/local-development). The Docker route brings up the API with MongoDB and Redis bundled.
+  </Step>
+
+  <Step title="Add your app to the registry">
+    Add an entry for your app to `config/apps.yaml` in your local checkout:
+
+    ```yaml
+    apps:
+      my-app:
+        name: My App
+        icon: my-app.svg
+        description: What my app does, in one line
+        verified: false
+        status: live
+        type: device_auth
+        redirect_uris:
+          - http://127.0.0.1:53682/callback
+        scopes:
+          - shorten:create
+          - urls:read
+    ```
+
+    The registry loads at startup, so restart the app container after editing.
+  </Step>
+
+  <Step title="Build against your instance">
+    Point your app's base URL at your local instance and implement the [authorization flow](/sign-in-with-spoo/authorization-flow). Everything works identically: consent screen, code exchange, refresh, revocation from the dashboard.
+  </Step>
+</Steps>
+
+## Requesting production registration
+
+When your integration works locally, [open an issue on GitHub](https://github.com/spoo-me/spoo/issues) requesting an app registration. Include:
+
+- **App name and one-line description** as they should appear on the consent screen
+- **What your app does** and a link to its repository or homepage
+- **The scopes you need**, with a sentence on why each one; see the [scope list](/sign-in-with-spoo/tokens-and-scopes#scopes)
+- **Your exact redirect URIs**: a loopback URI for native apps, an HTTPS URL otherwise, or none if you rely on the hosted callback page
+- **An SVG icon** for the consent screen
+
+## What review looks at
+
+Requests are reviewed manually. Expect the review to push back on:
+
+- **Over-broad scopes.** Request the minimum your features need; a shortener widget does not need `urls:manage`.
+- **Loose redirect URIs.** URIs match exactly, no wildcards. Loopback (`http://127.0.0.1:<port>/...`) is the expected shape for CLIs and desktop apps; anything else should be HTTPS.
+- **Unclear identity.** The name and description must say plainly what the app is and who runs it; users approve based on this screen.
+
+The `verified` badge on the consent screen and Apps page means the app has been through this review. Approved apps enter the registry and go `live`, at which point your production `app_id` starts working.
+
+<Tip>
+  Registration only gates the production registry entry. You never need approval to develop, test, or run your app against your own self-hosted instance.
+</Tip>

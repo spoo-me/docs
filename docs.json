@@ -23,6 +23,16 @@
             ]
           },
           {
+            "group": "Sign in with Spoo",
+            "pages": [
+              "sign-in-with-spoo/introduction",
+              "sign-in-with-spoo/authorization-flow",
+              "sign-in-with-spoo/registering-your-app",
+              "sign-in-with-spoo/platform-patterns",
+              "sign-in-with-spoo/tokens-and-scopes"
+            ]
+          },
+          {
             "group": "API v1 Reference",
             "openapi": "openapi-v1.json",
             "pages": [
@@ -30,7 +40,8 @@
                 "group": "URL Shortening",
                 "icon": "link",
                 "pages": [
-                  "POST /api/v1/shorten"
+                  "POST /api/v1/shorten",
+                  "GET /api/v1/shorten/check-alias"
                 ]
               },
               {
@@ -40,7 +51,17 @@
                   "GET /api/v1/urls",
                   "PATCH /api/v1/urls/{url_id}",
                   "PATCH /api/v1/urls/{url_id}/status",
-                  "DELETE /api/v1/urls/{url_id}"
+                  "DELETE /api/v1/urls/{url_id}",
+                  "POST /api/v1/urls/claim"
+                ]
+              },
+              {
+                "group": "Bulk Operations",
+                "icon": "layers",
+                "pages": [
+                  "POST /api/v1/urls/bulk/status",
+                  "POST /api/v1/urls/bulk/expiry",
+                  "POST /api/v1/urls/bulk/delete"
                 ]
               },
               {
@@ -59,6 +80,14 @@
                 "pages": [
                   "GET /api/v1/public/stats/{short_code}",
                   "POST /api/v1/public/stats/{short_code}"
+                ]
+              },
+              {
+                "group": "Device Authorization",
+                "icon": "plug",
+                "pages": [
+                  "POST /auth/device/token",
+                  "POST /auth/device/refresh"
                 ]
               }
             ]

@@ -1,0 +1,131 @@
+---
+title: "Authorization Flow"
+description: "The step-by-step Sign in with Spoo protocol: PKCE, the consent URL, code exchange, and token refresh"
+icon: "route"
+---
+
+Every Sign in with Spoo integration performs the same seven steps. The consent and token endpoints are identical on every platform; only [how the code gets back to your app](/sign-in-with-spoo/platform-patterns) differs.
+
+<Steps>
+  <Step title="Generate a PKCE pair">
+    Create a random `code_verifier` of 43 to 128 characters from the set `A-Z a-z 0-9 - . _ ~`, then derive the challenge:
+
+    ```
+    code_challenge = BASE64URL( SHA256( code_verifier ) )
+    ```
+
+    Only the `S256` method is accepted. Requests without a valid challenge are rejected before the user ever sees a consent screen.
+
+    <CodeGroup>
+    ```python Python
+    import base64, hashlib, secrets
+
+    verifier = secrets.token_urlsafe(64)[:128]
+    challenge = base64.urlsafe_b64encode(
+        hashlib.sha256(verifier.encode()).digest()
+    ).rstrip(b"=").decode()
+    ```
+
+    ```javascript Node.js
+    const crypto = require("crypto");
+
+    const verifier = crypto.randomBytes(64).toString("base64url");
+    const challenge = crypto
+      .createHash("sha256")
+      .update(verifier)
+      .digest("base64url");
+    ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Send the user to the consent URL">
+    Open this URL in the user's browser:
+
+    ```
+    https://spoo.me/auth/device/login
+      ?app_id=YOUR_APP_ID
+      &code_challenge=CHALLENGE
+      &code_challenge_method=S256
+      &state=RANDOM_STATE
+      &redirect_uri=REGISTERED_URI   (optional)
+    ```
+
+    - `state` is echoed back untouched. Generate a random value and verify it when the code arrives.
+    - `redirect_uri` must exactly match one of the URIs registered for your app. Omit it and Spoo.me shows a hosted page where the user copies the code manually, which is a fine fallback when your app cannot listen for a redirect.
+
+    If the user is signed out they are routed through login first, then back into the flow.
+  </Step>
+
+  <Step title="User approves (or is waved through)">
+    First-time users see a consent screen listing your app's name and the exact permissions it requests. Users who already granted your app skip consent entirely and the code is issued immediately, so repeat sign-ins are one redirect long.
+  </Step>
+
+  <Step title="Capture the code">
+    The browser lands on your `redirect_uri` with `?code=...&state=...` appended. Verify `state` matches what you sent.
+
+    <Warning>
+      The code is **single use** and expires in **5 minutes**. Exchange it right away.
+    </Warning>
+  </Step>
+
+  <Step title="Exchange the code for tokens">
+    ```bash
+    curl -X POST https://spoo.me/auth/device/token \
+      -H "Content-Type: application/json" \
+      -d '{
+        "code": "THE_CODE",
+        "code_verifier": "THE_ORIGINAL_VERIFIER"
+      }'
+    ```
+
+    A successful response returns the token pair plus the user's profile:
+
+    ```json
+    {
+      "access_token": "eyJ...",
+      "refresh_token": "eyJ...",
+      "user": { "id": "...", "email": "...", "user_name": "...", "plan": "..." }
+    }
+    ```
+
+    See the [token endpoint reference](/api-reference/authentication/exchange-device-auth-code) for error shapes.
+  </Step>
+
+  <Step title="Call the API">
+    Send the access token as a bearer token on any v1 endpoint your scopes allow:
+
+    ```bash
+    curl https://spoo.me/api/v1/urls \
+      -H "Authorization: Bearer eyJ..."
+    ```
+  </Step>
+
+  <Step title="Refresh when it expires">
+    Access tokens live **15 minutes**; refresh tokens live **30 days**. When you get a `401`, refresh and retry once:
+
+    ```bash
+    curl -X POST https://spoo.me/auth/device/refresh \
+      -H "Content-Type: application/json" \
+      -d '{ "refresh_token": "eyJ..." }'
+    ```
+
+    Every refresh returns a **new pair**. Persist the new refresh token immediately; the old one should be considered spent. Full details in [Tokens & Scopes](/sign-in-with-spoo/tokens-and-scopes).
+  </Step>
+</Steps>
+
+## Handling failure paths
+
+- **Consent denied or abandoned**: your listener simply never fires. Time out after a couple of minutes with a clear message instead of hanging forever.
+- **Code expired or reused**: the token endpoint rejects it; restart the flow from a fresh PKCE pair.
+- **`state` mismatch**: discard the code. Something other than your flow produced it.
+
+## Endpoint reference
+
+<CardGroup cols={2}>
+  <Card title="Exchange Device Auth Code" icon="right-left" href="/api-reference/authentication/exchange-device-auth-code">
+    POST /auth/device/token
+  </Card>
+  <Card title="Refresh Device Auth Tokens" icon="rotate" href="/api-reference/authentication/refresh-device-auth-tokens">
+    POST /auth/device/refresh
+  </Card>
+</CardGroup>

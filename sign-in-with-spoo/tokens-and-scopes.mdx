@@ -1,0 +1,53 @@
+---
+title: "Tokens & Scopes"
+description: "Token lifetimes, refresh rotation, the scope model, and how revocation actually takes effect"
+icon: "key"
+---
+
+## The token pair
+
+A successful code exchange returns two JWTs:
+
+| Token | Lifetime | Carries |
+|-------|----------|---------|
+| `access_token` | 15 minutes | Your `app_id` and the granted scopes (`scp` claim) |
+| `refresh_token` | 30 days | Your `app_id` only |
+
+Send the access token as `Authorization: Bearer <token>` on API calls. When it expires, exchange the refresh token at [`POST /auth/device/refresh`](/api-reference/authentication/refresh-device-auth-tokens) for a new pair.
+
+### Rotation
+
+Every refresh returns a **new** access and refresh token. Persist the new refresh token immediately and treat the old one as spent. If your app runs long sessions, refresh eagerly a minute before expiry rather than reacting to a `401`; users never see spurious auth errors that way.
+
+### Storage
+
+Store the refresh token in the OS keychain or your platform's secret storage, never in a plaintext dotfile. It is a 30-day credential to someone's account.
+
+## Scopes
+
+Your app only ever receives the scopes listed in its registry entry, embedded in the access token's `scp` claim. Request the minimum your features need.
+
+| Scope | Grants |
+|-------|--------|
+| `shorten:create` | Create short links |
+| `urls:read` | List and read links |
+| `urls:manage` | Edit and delete links |
+| `stats:read` | Read analytics data |
+| `domains:read` | List custom domains |
+| `domains:manage` | Add and remove domains |
+| `reports:create` | Submit abuse reports |
+| `webhooks:read` | List webhook endpoints and delivery logs |
+| `webhooks:manage` | Create and manage webhook endpoints |
+| `keys:manage` | List and revoke the user's API keys |
+
+Scopes live on the **access token only**; the refresh token carries just your `app_id`. If a grant's scopes change, the change takes effect at the next refresh rather than being frozen into the long-lived credential.
+
+<Note>
+  `keys:manage` lets an app list and revoke API keys but never **create** them. Key creation requires an interactive dashboard session by design, so a leaked app token cannot mint itself a revocation-proof credential. For the same reason, `keys:manage` is only grantable through app registry entries, never on API keys themselves.
+</Note>
+
+## Revocation
+
+Users revoke apps from their dashboard's Apps page, and your app can end its own session too. The refresh endpoint checks the grant on every call, so a revoked app is locked out within one access token lifetime: 15 minutes at most.
+
+Handle it gracefully: when a refresh fails because the grant is gone, clear stored tokens and return the user to your signed-out state instead of retrying in a loop.
