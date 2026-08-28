@@ -194,5 +194,12 @@
   },
   "topbar": {
     "style": "gradient"
+  },
+  "thumbnails": {
+    "appearance": "dark",
+    "background": "https://spoo.me/og/docs-bg.png",
+    "fonts": {
+      "family": "Geist"
+    }
   }
 }
