@@ -1,0 +1,77 @@
+---
+title: "Account Deletion"
+description: "How to permanently delete your Spoo.me account, and how to cancel a pending deletion"
+icon: "user-x"
+---
+
+Deleting your account permanently erases your data from Spoo.me. Every deletion starts with a 7 day grace period, so a request stays reversible until the period ends.
+
+## How Deletion Works
+
+<Steps>
+  <Step title="Request deletion">
+    In your [dashboard](https://spoo.me/dashboard), open **Settings** and scroll to the **Danger zone**. You confirm the request with your password. Accounts that sign in only through OAuth have no password, so they confirm by typing their account email instead.
+  </Step>
+  <Step title="Grace period">
+    The account is now pending deletion for 7 days. Signing in is blocked for the entire period. A deletion notice is sent to your email address.
+  </Step>
+  <Step title="Erasure">
+    After the grace period, erasure runs automatically. Once it has run, the account and its data cannot be recovered.
+  </Step>
+</Steps>
+
+## Cancelling a Pending Deletion
+
+The deletion notice email contains a one-time cancel link. It works for every account type and requires no login.
+
+Accounts with a password have a second path: the login page offers a restore option while a deletion is pending, so you can cancel by signing in with your credentials.
+
+Either way, the account is restored immediately and a confirmation email is sent.
+
+<Warning>
+  The cancel link is the only way back for OAuth-only accounts. If the grace period ends without a restore, erasure is permanent.
+</Warning>
+
+## What Is Erased
+
+Everything tied to the account:
+
+- The account record itself
+- Every short link you created
+- All click analytics
+- API keys
+- Webhooks
+- Connected app grants
+- Custom domains
+- Uploaded images
+- Your analytics profile
+
+## What Is Retained
+
+Two exceptions:
+
+- Links disabled for abuse or policy violations are kept, with all creator data removed. This is the abuse-prevention exception in GDPR Article 17(3).
+- Backup copies of the database expire automatically, within roughly 15 days.
+
+## Deleting via the API
+
+`DELETE /api/v1/me` schedules the same deletion. It accepts session (JWT) tokens only. API keys are rejected on purpose, so a leaked key cannot destroy the account. The response includes `purge_after`, the instant erasure becomes due.
+
+`POST /auth/restore` cancels a pending deletion with either email and password or the token from the cancel link. It is a public endpoint and returns the same 403 for every failure, so it does not reveal whether an email is registered.
+
+<CardGroup cols={2}>
+  <Card
+    title="Delete Account"
+    icon="user-x"
+    href="/api-reference/me/delete-account"
+  >
+    Reference for DELETE /api/v1/me
+  </Card>
+  <Card
+    title="Restore Account"
+    icon="rotate-ccw"
+    href="/api-reference/authentication/restore-account"
+  >
+    Reference for POST /auth/restore
+  </Card>
+</CardGroup>
