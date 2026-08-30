@@ -19,7 +19,8 @@
               "introduction",
               "quickstart",
               "api-keys",
-              "rate-limits"
+              "rate-limits",
+              "account-deletion"
             ]
           },
           {
@@ -59,6 +60,14 @@
                 "pages": [
                   "GET /api/v1/public/stats/{short_code}",
                   "POST /api/v1/public/stats/{short_code}"
+                ]
+              },
+              {
+                "group": "Account",
+                "icon": "user-x",
+                "pages": [
+                  "DELETE /api/v1/me",
+                  "POST /auth/restore"
                 ]
               }
             ]
