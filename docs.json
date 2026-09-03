@@ -23,6 +23,12 @@
             ]
           },
           {
+            "group": "Link Features",
+            "pages": [
+              "features/ab-testing"
+            ]
+          },
+          {
             "group": "Sign in with Spoo",
             "pages": [
               "sign-in-with-spoo/introduction",

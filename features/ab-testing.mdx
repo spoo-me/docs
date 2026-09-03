@@ -1,0 +1,98 @@
+---
+title: "A/B Testing"
+description: "Split a short link's visitors between several destinations and read the clicks per variant"
+icon: "split"
+---
+
+A link with A/B variants sends each visitor to one of several destinations at random, by the shares you set. Clicks are recorded with the variant that served them, so the stats API can compare destinations on the same short link.
+
+<Info>
+A/B testing is enabled per account. The API answers `403` on `ab_variants` for accounts that do not have it, and `GET /api/v1/me/features` reports the state under `ab_testing`.
+</Info>
+
+## Setting variants
+
+Variants live on the link as `ab_variants`, a list of `{url, weight}` entries. `weight` is the percentage of visitors sent to that URL. Weights are integers from 1 to 100 and may add up to at most 100. Whatever the weights leave over goes to the link's own `long_url`.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://spoo.me/api/v1/shorten \
+  -H "Authorization: Bearer $SPOO_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "long_url": "https://example.com/pricing",
+    "ab_variants": [
+      { "url": "https://example.com/pricing-b", "weight": 60 },
+      { "url": "https://example.com/pricing-c", "weight": 30 }
+    ]
+  }'
+```
+
+```python Python
+import requests
+
+resp = requests.post(
+    "https://spoo.me/api/v1/shorten",
+    headers={"Authorization": f"Bearer {API_KEY}"},
+    json={
+        "long_url": "https://example.com/pricing",
+        "ab_variants": [
+            {"url": "https://example.com/pricing-b", "weight": 60},
+            {"url": "https://example.com/pricing-c", "weight": 30},
+        ],
+    },
+)
+```
+
+</CodeGroup>
+
+With those weights, 60% of visitors land on `pricing-b`, 30% on `pricing-c`, and the remaining 10% on `pricing`. Every link response echoes `ab_variants` back.
+
+`PATCH /api/v1/urls/{url_id}` replaces the whole list. Pass `null` or `[]` to remove all variants; leave the field out to keep them.
+
+## How visitors are split
+
+Each request draws a number from 0 to 99 and walks the variants in order, adding up weights. The first variant whose running total is above the number wins; a number past the last total means the default destination. Over many visitors the counts settle on the weights. A single visitor is not pinned to a variant, so the same person can see different destinations on repeat visits.
+
+Two things follow from that:
+
+- Responses carry `Cache-Control: no-store`, since the answer differs per request.
+- If the link also has geo rules and the visitor's country matches one, the geo rule wins and the split is skipped. Variants only divide the default destination.
+
+## Reading the results
+
+Group any stats query by `variant`:
+
+```bash
+curl "https://spoo.me/api/v1/stats/links/$URL_ID?group_by=variant" \
+  -H "Authorization: Bearer $SPOO_API_KEY"
+```
+
+```json
+{
+  "metrics": {
+    "clicks_by_variant": [
+      { "variant": "0", "clicks": 118, "clicks_percentage": 59.0 },
+      { "variant": "1", "clicks": 82, "clicks_percentage": 41.0 }
+    ]
+  }
+}
+```
+
+Values are the variant's position in `ab_variants` as a string, and `(default)` for clicks that went to `long_url`. Clicks recorded before a link had variants also read as `(default)`. The same values work as a filter, either as the `variant` query parameter or inside the `filters` JSON.
+
+<Warning>
+Positions are what get stored on each click. If you reorder or remove variants later, older clicks keep the position they were stamped with.
+</Warning>
+
+## Limits
+
+| Rule | Value |
+|---|---|
+| Variants per link | 10 |
+| Weight per variant | 1 to 100 |
+| Sum of weights | at most 100 |
+| URL length | 8192 characters |
+
+Every variant URL passes the same safety checks as `long_url`, and the public preview page (`spoo.me/{alias}+`) lists every variant with its share, so nobody can hide a destination behind a split.
